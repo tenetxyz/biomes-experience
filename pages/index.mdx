@@ -1,11 +1,41 @@
-# Introduction
- 
-Welcome to Nextra! This is a basic docs template. You can use it as a starting point for your own project :)
+# Get Started
 
-## What is Nextra?
+## Requirements
 
-A **simple**, **powerful** and **flexible** site generation framework with everything you love from Next.js.
+Before you begin, you need to install the following tools:
 
-## Documentation
+- [Node (>= v18.17)](https://nodejs.org/en/download/)
+- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
+- [Git](https://git-scm.com/downloads)
 
-The documentation is available at [https://nextra.site](https://nextra.site).
+## Quickstart
+
+1. Clone this repo & install dependencies
+
+```
+git clone https://github.com/tenetxyz/biomes-scaffold.git
+cd biomes-scaffold
+yarn install
+```
+
+2. Create an `.env` under `packages/hardhat` and set your deployer private key to `DEPLOYER_PRIVATE_KEY`. Deploy the extension contract.
+
+```
+yarn deploy --network garnet
+```
+
+This command deploys a test smart contract to the Redstone garnet testnet. The contract is located in `packages/hardhat/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/hardhat/deploy` to deploy the contract to the network. You can also customize the deploy script.
+
+3. On a third terminal, start your NextJS app:
+
+```
+yarn start
+```
+
+Visit your app on: `http://localhost:3000`. By default, it will connect to the Redstone garnet Testnet. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
+
+Run smart contract test with `yarn hardhat:test`
+
+- Edit your smart contract `Game.sol` in `packages/hardhat/contracts`
+- Edit your frontend in `packages/nextjs/pages`
+- Edit your deployment scripts in `packages/hardhat/deploy`
