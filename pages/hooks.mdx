@@ -4,7 +4,7 @@ By inherting the hooks standard, your smart contract will be able to execute cus
  
 Players will need to give permission for your smart contract to hook on to their actions. You can define the logic which executes when permission is given or revoked using `onRegisterHook` and `onUnregisterHook`.
 
-Your client's permissions button will need to specify the player actions that your smart contract will hook on to.
+Your client's Register Hooks button will need to specify the player actions that your smart contract will hook on to.
 
 ## Smart Contract
 
@@ -103,6 +103,13 @@ In `/packages/nextjs/components/RegisterBiomes.tsx`, define the player actions t
 The player actions you can hook on to are:  `"SpawnSystem", "BuildSystem", "MineSystem", "TeleportSystem", "CraftSystem", "DropSystem", "EquipSystem", "UnequipSystem", "HitSystem", "LoginSystem", "LogoffSystem", "MoveSystem", "TransferSystem"`.
 
 ```typescript
-//Example: Your smart contract hooks on to the MineSystem.
-const GameRequiredHooks: string[] = ["MineSystem"];
+//Example: Your smart contract hooks on to the MoveSystem.
+const GameRequiredHooks: string[] = ["MoveSystem"];
 ```
+
+This will render as a Registeration Button in the client's UI:
+
+<img
+src="/images/hooks.png"
+style={{marginTop: "20px", borderRadius: "4px"}}
+/>

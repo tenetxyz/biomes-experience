@@ -1,10 +1,32 @@
 # Delegations
 
-Call actions like build, mine, hit, move, etc on the behalf of another player. The player will use the client to register (and conditionally unregister) delegation to this contract.
+By inherting the delegations standard, your smart contract will be able to execute actions on the behalf of a player.
 
-Copy `packages/hardhat/examples/Delegate.sol` to get started.
+Players will need to give permission to delegate to your smart contract. You can define the logic which executes when this permission is revoked using `canUnregister`.
 
-Define the logic for `canUnregister` - the only required function of the inherited `ICustomUnregisterDelegation` contract.
+## Smart Contract
+
+### 1. Inherit Delegations
+
+Inherit the `ICustomUnregisterDelegation` interface in your smart contract. 
+
+```solidity
+contract YourContract is ICustomUnregisterDelegation {
+
+    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
+        return interfaceId == type(ICustomUnregisterDelegation).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
+}
+```
+
+### 2. Define Player Unregister Conditions
+
+Players will use the client to give permission to your smart contract to be able to call actions on behalf of them.
+
+Players can revoke this permission by calling `canUnregister`. Define any logic that should be executed when this happens, or leave it empty if you don't need to.
+
+In many experiences, you may want to punish a player for revoking delegation before intended. In these cases, you can require a player to submit a stake or a join fee which gets slashed if they prematurely call `canUnregister`. 
 
 ```solidity
 contract Game is ICustomUnregisterDelegation {
@@ -16,10 +38,11 @@ contract Game is ICustomUnregisterDelegation {
   function canUnregister(address delegator) external returns (bool);
 
 }
-
 ```
 
-Use `callFrom()` to call an action on behalf of the delegator. For example:
+### 3. Call Player Actions On Behalf Of Them
+
+Use `callFrom(delegator, systemID, callData)` to call an action on behalf of the delegator. For example:
 
 ```solidity
  bytes memory dropCallData = abi.encodeCall(IDropSystem.drop, (inventoryEntityIds, dropCoord));

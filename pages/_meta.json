@@ -2,7 +2,8 @@
   "index": "Introduction",
   "getstarted": "Get Started",
 
-  "concepts": {
+  "contract": {
+    "title": "Smart Contract",
     "type": "separator"
   },
 
@@ -11,12 +12,19 @@
   "clientgetters": "Client Getters",
   "utils": "Utils",
 
-  "onchain": {
+  "client": {
+    "title": "Client",
+    "type": "separator"
+  },
+
+  "clienttemplate": "Client Template",
+
+  "sep": {
     "type": "separator"
   },
 
   "examples": "Examples",
-
+  
   "about": {
     "title": "About",
     "type": "page",
