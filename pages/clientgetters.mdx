@@ -1,23 +1,102 @@
 # Getters
 
-The Biomes client will call these getters to display information about your experience.
+The Biomes client will periodically fetch these getter functions to display information about your experience.
+
+## Experience Details
 
 ```solidity
+//Name of Experience
 function getDisplayName() external view returns (string memory);
 
-function getAvatars() external view returns (bytes32[] memory);
-
-function getAreas() external view returns (NamedArea[] memory);
-
-function getBuilds() external view returns (NamedBuild[] memory);
-
-function getBuildsWithPos() external view returns (NamedBuildWithPos[] memory);
-
+//Optional: Dynamic Instructions to Show Player
 function getStatus() external view returns (string);
 
+//Optional: Timestamp When Game Starts or Ends
 function getCountdownEndTimestamp() external view returns (uint256);
 
+//Optional: Blocknumber Before Game Starts or Ends
 function getCountdownEndBlock() external view returns (uint256);
 
+//Optional: What Happens When Player Unregisters Hooks/Delegations
 function getUnregisterMessage() external view returns (string);
 ```
+
+<div style={{display: "flex", gap: "8px"}}>
+    <img
+    src="/images/join.png"
+    style={{marginTop: "20px", borderRadius: "4px", height: "300px"}}
+    />
+    <img
+    src="/images/permissions.png"
+    style={{marginTop: "20px", borderRadius: "4px", width: "40%"}}
+    />
+</div>
+
+## Avatars
+
+```solidity
+//Avatars - Purple Beams Will Be Displayed On Them
+function getAvatars() external view returns (bytes32[] memory);
+```
+<img
+src="/images/avatar.png"
+style={{marginTop: "20px", borderRadius: "4px", height: "300px"}}
+/>
+
+## Areas
+
+```solidity
+struct Area {
+  VoxelCoord lowerSouthwestCorner;
+  VoxelCoord size;
+}
+
+struct NamedArea {
+  string name;
+  Area area;
+}
+
+//Areas - Red Borders Will Be Displayed Around Them
+function getAreas() external view returns (NamedArea[] memory);
+```
+
+<img
+src="/images/area.png"
+style={{marginTop: "20px", borderRadius: "4px", height: "400px"}}
+/>
+
+## Builds
+
+```solidity
+struct Build {
+  uint8[] objectTypeIds;
+  VoxelCoord[] relativePositions;
+}
+
+struct BuildWithPos {
+  uint8[] objectTypeIds;
+  VoxelCoord[] relativePositions;
+  VoxelCoord baseWorldCoord;
+}
+
+struct NamedBuild {
+  string name;
+  Build build;
+}
+
+struct NamedBuildWithPos {
+  string name;
+  BuildWithPos build;
+}
+
+//Builds - Players Will Be Able To Place Their Outlines
+function getBuilds() external view returns (NamedBuild[] memory);
+
+//Builds Which Must Be Placed At A Specific Position
+function getBuildsWithPos() external view returns (NamedBuildWithPos[] memory);
+```
+
+<img
+src="/images/build.png"
+style={{marginTop: "20px", borderRadius: "4px", width: "90%"}}
+/>
