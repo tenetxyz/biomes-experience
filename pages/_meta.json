@@ -1,15 +1,32 @@
 {
   "index": "Introduction",
-  "another": "Another Page",
-  "advanced": "Advanced (A Folder)",
+  "getstarted": "Get Started",
+
+  "concepts": {
+    "type": "separator"
+  },
+
+  "hooks": "Hooks",
+  "delegations": "Delegations",
+  "clientgetters": "Client Getters",
+  "utils": "Utils",
+
+  "onchain": {
+    "type": "separator"
+  },
+
+  "examples": "Examples",
+
   "about": {
     "title": "About",
-    "type": "page"
+    "type": "page",
+    "href": "https://biomes.aw/",
+    "newWindow": true
   },
   "contact": {
-    "title": "Contact ↗",
+    "title": "Twitter ↗",
     "type": "page",
-    "href": "https://twitter.com/shuding_",
+    "href": "https://twitter.com/biomesAW",
     "newWindow": true
   }
 }

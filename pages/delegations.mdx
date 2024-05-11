@@ -1,0 +1,28 @@
+# Delegations
+
+Call actions like build, mine, hit, move, etc on the behalf of another player. The player will use the client to register (and conditionally unregister) delegation to this contract.
+
+Copy `packages/hardhat/examples/Delegate.sol` to get started.
+
+Define the logic for `canUnregister` - the only required function of the inherited `ICustomUnregisterDelegation` contract.
+
+```solidity
+contract Game is ICustomUnregisterDelegation {
+
+  /**
+   * @notice Executes logic before unregistering the user's delegation to this contract.
+   * @param delegator The address which has delegated control to this contract.
+  */
+  function canUnregister(address delegator) external returns (bool);
+
+}
+
+```
+
+Use `callFrom()` to call an action on behalf of the delegator. For example:
+
+```solidity
+ bytes memory dropCallData = abi.encodeCall(IDropSystem.drop, (inventoryEntityIds, dropCoord));
+
+ IWorld(biomeWorldAddress).callFrom(delegatorAddress, DropSystemId, dropCallData);
+```

@@ -1,17 +1,18 @@
-import React from 'react'
-import { DocsThemeConfig } from 'nextra-theme-docs'
+import React from 'react';
+import NavLogo from "./components/NavLogo";
+import { DocsThemeConfig } from 'nextra-theme-docs';
 
 const config: DocsThemeConfig = {
-  logo: <span>My Project</span>,
+  logo: NavLogo,
   project: {
-    link: 'https://github.com/shuding/nextra-docs-template',
+    link: 'https://github.com/tenetxyz/biomes-scaffold',
   },
   chat: {
-    link: 'https://discord.com',
+    link: 'https://discord.gg/J75hkmtmM4',
   },
-  docsRepositoryBase: 'https://github.com/shuding/nextra-docs-template',
+  docsRepositoryBase: 'https://github.com/tenetxyz/biomes-scaffold',
   footer: {
-    text: 'Nextra Docs Template',
+    text: 'BIOMES EXPERIENCES',
   },
 }
 

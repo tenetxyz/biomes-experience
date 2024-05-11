@@ -1,0 +1,78 @@
+# Hooks
+
+A hook is a piece of extra logic which executes before and after player actions like build, mine, hit, move, etc. The player will use the client to register (and conditionally unregister) this contract to hook on to their actions.
+
+## Smart Contract
+
+Define the logic for onRegisterHook, onUnregisterHook, onBeforeCallSystem, and onAfterCallSystem - the required functions of the inherited IOptionalSystemHook contract.
+
+```solidity
+contract Game is IOptionalSystemHook {
+
+   /**
+   * @notice Executes when a system hook is registered by the user.
+   * @dev Provides the ability to add custom logic or checks when a system hook is registered.
+   * @param msgSender The original sender of the system call.
+   * @param systemId The ID of the system
+   * @param enabledHooksBitmap Bitmap indicating which hooks are enabled
+   * @param callDataHash The hash of the call data for the system hook
+   */
+  function onRegisterHook(
+    address msgSender,
+    ResourceId systemId,
+    uint8 enabledHooksBitmap,
+    bytes32 callDataHash
+  ) external override onlyBiomeWorld {}
+
+   /**
+   * @notice Executes when a system hook is unregistered by the user.
+   * @dev Provides the ability to add custom logic or checks when a system hook is unregistered.
+   * @param msgSender The original sender of the system call.
+   * @param systemId The ID of the system
+   * @param enabledHooksBitmap Bitmap indicating which hooks are enabled
+   * @param callDataHash The hash of the call data for the system hook
+   */
+  function onUnregisterHook(
+    address msgSender,
+    ResourceId systemId,
+    uint8 enabledHooksBitmap,
+    bytes32 callDataHash
+  ) external override onlyBiomeWorld {}
+
+  /**
+   * @notice Executes before the systemID.
+   * @param msgSender The original sender of the system call.
+   * @dev Provides the ability to add custom logic or checks before the systemID executes.
+   * @param systemId The ID of the system
+   * @param callData The hash of the call data for the system hook
+   */
+  function onBeforeCallSystem(
+    address msgSender,
+    ResourceId systemId,
+    bytes memory callData
+  ) external override onlyBiomeWorld {}
+
+  /**
+   * @notice Executes after the systemID.
+   * @param msgSender The original sender of the system call.
+   * @dev Provides the ability to add custom logic or checks after the systemID executes.
+   * @param systemId The ID of the system
+   * @param callData The hash of the call data for the system hook
+  */
+  function onAfterCallSystem(
+    address msgSender,
+    ResourceId systemId,
+    bytes memory callData
+  ) external override onlyBiomeWorld {}
+
+}
+```
+
+
+## Client Setup
+
+In `/packages/nextjs/components/RegisterBiomes.tsx`, enter the player actions that your smart contract should hook on to in the GameRequiredHooks array.
+
+```typescript
+const GameRequiredHooks: string[] = ["MineSystem"];
+```
