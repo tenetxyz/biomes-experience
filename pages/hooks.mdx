@@ -1,14 +1,36 @@
 # Hooks
 
-A hook is a piece of extra logic which executes before and after player actions like build, mine, hit, move, etc. The player will use the client to register (and conditionally unregister) this contract to hook on to their actions.
+By inherting the hooks standard, your smart contract will be able to execute custom logic before and/or after specific player actions using `onBeforeCallSystem` and `onAfterCallSystem`.
+ 
+Players will need to give permission for your smart contract to hook on to their actions. You can define the logic which executes when permission is given or revoked using `onRegisterHook` and `onUnregisterHook`.
+
+Your client's permissions button will need to specify the player actions that your smart contract will hook on to.
 
 ## Smart Contract
 
-Define the logic for onRegisterHook, onUnregisterHook, onBeforeCallSystem, and onAfterCallSystem - the required functions of the inherited IOptionalSystemHook contract.
+### 1. Inherit Hooks
+
+Inherit the `IOptionalSystemHook` interface in your smart contract. 
 
 ```solidity
-contract Game is IOptionalSystemHook {
+contract YourContract is IOptionalSystemHook {
 
+    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
+        return interfaceId == type(IOptionalSystemHook).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
+
+}
+```
+
+### 2. Define Player Register & Unregister Conditions
+
+Players give permission for your smart contract to hook on to their actions by calling `onRegisterHook`. Players can also revoke this permission by calling `onUnregisterHook`. Define any logic that should be executed during both cases.
+
+You can leave the functions empty if you don't need to execute any logic.
+
+In many experiences, you may want to punish a player for opting out before intended. In these cases, you can require a player to submit a stake or a join fee which gets slashed if they prematurely call `onUnregisterHook`. 
+
+```solidity
    /**
    * @notice Executes when a system hook is registered by the user.
    * @dev Provides the ability to add custom logic or checks when a system hook is registered.
@@ -38,7 +60,13 @@ contract Game is IOptionalSystemHook {
     uint8 enabledHooksBitmap,
     bytes32 callDataHash
   ) external override onlyBiomeWorld {}
+```
 
+### 3. Define Custom Logic
+
+Define the custom logic you want to execute before a player action using `onBeforeCallSystem` and after a player action using `onAfterCallSystem`.
+
+```solidity
   /**
    * @notice Executes before the systemID.
    * @param msgSender The original sender of the system call.
@@ -64,15 +92,17 @@ contract Game is IOptionalSystemHook {
     ResourceId systemId,
     bytes memory callData
   ) external override onlyBiomeWorld {}
-
 }
 ```
 
 
 ## Client Setup
 
-In `/packages/nextjs/components/RegisterBiomes.tsx`, enter the player actions that your smart contract should hook on to in the GameRequiredHooks array.
+In `/packages/nextjs/components/RegisterBiomes.tsx`, define the player actions that your smart contract should hook on to in the `GameRequiredHooks` array.
+
+The player actions you can hook on to are:  `"SpawnSystem", "BuildSystem", "MineSystem", "TeleportSystem", "CraftSystem", "DropSystem", "EquipSystem", "UnequipSystem", "HitSystem", "LoginSystem", "LogoffSystem", "MoveSystem", "TransferSystem"`.
 
 ```typescript
+//Example: Your smart contract hooks on to the MineSystem.
 const GameRequiredHooks: string[] = ["MineSystem"];
 ```
