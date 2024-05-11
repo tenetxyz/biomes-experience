@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "export": "next export",
+    "deploy": "next export && firebase use biomes-docs && firebase deploy"
   },
   "repository": {
     "type": "git",
