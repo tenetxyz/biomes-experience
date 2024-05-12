@@ -1,17 +1,86 @@
 # Utils
 
-## Area Utils
+## Areas
 
-Check if an entity is `insideArea`, or `getEntitiesInArea`.
+Check if an object at a position, denoted as `baseWorldCoord`, is inside an area using `insideArea`.
 
-## Build Utils
+```solidity
+struct Area {
+  VoxelCoord lowerSouthwestCorner;
+  VoxelCoord size;
+}
 
-Check if a building has been built using `buildExistsInWorld`; or if it has been built in a specific position using `buildWithPosExistsInWorld`.
+function insideArea(Area memory area, VoxelCoord memory baseWorldCoord) pure returns (bool);
+```
 
-## Entity Utils
+## Builds
 
-For all entities: `getObjectTypeAtCoord`, `getPosition`, `getObjectType`, `getEntityAtCoord`.
+A build is a specific configuration of blocks in the world.
 
-For player entities: `getEntityFromPlayer`, `getPlayerFromEntity`, `getEquipped`, `getHealth`, `getStamina`, `getIsLoggedOff`, `getLastHitTime`, `getInventory`, `getCount`, `getNumSlotsUsed`.
+Check if a build in the world matches what was expected by calling `buildExistsInWorld` with the blueprint of the expected build, and the position of the actual build in the world.
 
-For item entities: `getStackable`, `getDamage`, `getDurability`, `getNumUsesLeft`.
+Call `buildWithPosExistsInWorld` if the expected build exists in the world and at a specific desired position.
+
+```solidity
+struct Build {
+  uint8[] objectTypeIds;
+  VoxelCoord[] relativePositions;
+}
+
+struct BuildWithPos {
+  uint8[] objectTypeIds;
+  VoxelCoord[] relativePositions;
+  VoxelCoord baseWorldCoord;
+}
+
+function buildExistsInWorld(address biomeWorldAddress, Build memory buildData, VoxelCoord memory baseWorldCoord) returns (bool);
+
+function buildWithPosExistsInWorld(address biomeWorldAddress, BuildWithPos memory buildData, VoxelCoord memory baseWorldCoord) returns (bool);
+```
+
+## Entities (Avatars, Blocks, Items)
+
+```solidity
+function getEntityAtCoord(VoxelCoord memory coord) view returns (bytes32); //Only Returns If That Area Has Been Called Procedural Generation On 
+
+function getObjectType(bytes32 entityId) view returns (uint8);
+
+function getPosition(bytes32 entityId) view returns (VoxelCoord memory);
+
+function getObjectTypeAtCoord(address biomeWorldAddress, VoxelCoord memory coord) returns (uint8); //Always Returns Even If That Area Hasn't Been Called Procedural Generation On
+```
+
+### Avatar and Player Details
+
+```solidity
+function getEntityFromPlayer(address playerAddress) view returns (bytes32);
+
+function getPlayerFromEntity(bytes32 entityId) view returns (address);
+
+function getEquipped(bytes32 playerEntityId) view returns (bytes32);
+
+function getHealth(bytes32 playerEntityId) view returns (uint16);
+
+function getStamina(bytes32 playerEntityId) view returns (uint32);
+
+function getIsLoggedOff(bytes32 playerEntityId) view returns (bool);
+
+function getLastHitTime(bytes32 playerEntityId) view returns (uint256);
+```
+
+### Player Inventory Details
+
+```solidity
+function getInventoryObjects(bytes32 playerEntityId) view returns (uint8[] memory); //Returns all the object types in the player's inventory
+
+function getInventoryTool(bytes32 playerEntityId) view returns (bytes32[] memory); //Returns only the tools in the player's inventory
+
+function getCount(bytes32 playerEntityId, uint8 objectTypeId) view returns (uint16); //Returns how many of a certain object the player has in their inventory
+
+function getNumSlotsUsed(bytes32 playerEntityId) view returns (uint16); //Returns the number of slots used in the player's inventory
+```
+
+### Items
+```solidity
+function getNumUsesLeft(bytes32 toolEntityId) view returns (uint24); //Returns the number of times that tool can still be used
+``` 
