@@ -1,9 +1,16 @@
 import React from 'react';
 import NavLogo from "./components/NavLogo";
 import { DocsThemeConfig } from 'nextra-theme-docs';
+import { useRouter } from 'next/router';
 
 const config: DocsThemeConfig = {
   logo: NavLogo,
+  useNextSeoProps() {
+    const { asPath } = useRouter();
+    return {
+      titleTemplate: asPath === "/" ? "Biomes Experiences Docs" : "%s - Biomes",
+    };
+  },
   project: {
     link: 'https://github.com/tenetxyz/biomes-scaffold',
   },
