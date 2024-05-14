@@ -6,7 +6,7 @@
         "description": "Join Monument Chains: Build One Yourself, Reward existing builders, and earn from future builders.",
         "backgroundImage": "https://static.biomes.aw/splash/projects/moonumentslanding.png",
         "gameSite": "https://biomes-build-a-nomics.web.app",
-        "eventDate": ""
+        "startDate": ""
       },
       {
         "contractAddress": "0x9833c73B82039950e1fc6e6C03492D79f32c5CE5",
@@ -14,7 +14,7 @@
         "description": "Kill players to get their ether. Stay alive to keep it.",
         "backgroundImage": "https://static.biomes.aw/splash/projects/bountyhunter.png",
         "gameSite": "https://biomes-bounty-hunter.web.app",
-        "eventDate": ""
+        "startDate": ""
       },
       {
         "contractAddress": "0x6D8ce1C01345Bcaf15E271C80EB6b2008a88A57E",
@@ -22,7 +22,7 @@
         "description": "First to reach the designated area in the sky wins the ETH",
         "backgroundImage": "https://static.biomes.aw/splash/projects/racetothetop.png",
         "gameSite": "https://biomes-race-to-the-sky.web.app",
-        "eventDate": "2024-05-03T17:00:00Z"
+        "startDate": "2024-05-03T17:00:00Z"
       },
       {
         "contractAddress": "0xcCF3DD4D55c03B7fE19d598E1E05548Ab3792e92",
@@ -30,7 +30,7 @@
         "description": "Stay inside the match area and kill as many players as you can! Most kills after 30 minutes gets reward pool.",
         "backgroundImage": "https://static.biomes.aw/splash/projects/deathmatch.webp",
         "gameSite": "https://biomes-deathmatch.web.app",
-        "eventDate": "2024-05-03T19:00:00Z"
+        "startDate": "2024-05-03T19:00:00Z"
       }
     ]
   }
