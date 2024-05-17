@@ -1,7 +1,7 @@
 {
     "biome1.biomes.aw": [
       {
-        "contractAddress": "0x129786538F698b0AA47f0A9F8a8f11a3Ff1726E6",
+        "contractAddress": "0x0900Ca30477b05e9Cc3512B99259EA8aC6728384",
         "title": "Build-a-Nomics",
         "description": "Join Monument Chains: Build One Yourself, Reward existing builders, and earn from future builders.",
         "backgroundImage": "https://static.biomes.aw/splash/projects/moonumentslanding.png",
@@ -9,7 +9,7 @@
         "startDate": ""
       },
       {
-        "contractAddress": "0x9833c73B82039950e1fc6e6C03492D79f32c5CE5",
+        "contractAddress": "0x4941Bf9a1B5EAFEde0e311140BD6b05a86C9908f",
         "title": "Bounty Hunter",
         "description": "Kill players to get their ether. Stay alive to keep it.",
         "backgroundImage": "https://static.biomes.aw/splash/projects/bountyhunter.png",
