@@ -6,6 +6,7 @@
   "scripts": {
     "build": "mud build",
     "clean": "forge clean && rimraf src/codegen",
+    "deploy:extension": "./deployToWorld.bash",
     "deploy:garnet": "mud deploy --profile=garnet",
     "deploy:local": "mud deploy",
     "deploy:redstone": "mud deploy --profile=redstone",
@@ -16,11 +17,11 @@
     "test": "tsc --noEmit && mud test"
   },
   "dependencies": {
-    "@latticexyz/cli": "2.0.12",
-    "@latticexyz/schema-type": "2.0.12",
-    "@latticexyz/store": "2.0.12",
-    "@latticexyz/world": "2.0.12",
-    "@latticexyz/world-modules": "2.0.12"
+    "@latticexyz/cli": "link:../../../../mud/packages/cli",
+    "@latticexyz/schema-type": "link:../../../../mud/packages/schema-type",
+    "@latticexyz/store": "link:../../../../mud/packages/store",
+    "@latticexyz/world": "link:../../../../mud/packages/world",
+    "@latticexyz/world-modules": "link:../../../../mud/packages/world-modules"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
