@@ -1,7 +1,0 @@
-procs:
-  client:
-    cwd: packages/client
-    shell: pnpm run dev
-  contracts:
-    cwd: packages/contracts
-    shell: pnpm run deploy:extension
