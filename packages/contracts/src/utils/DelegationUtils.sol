@@ -22,15 +22,15 @@ import { IActivateSystem } from "@biomesaw/world/src/codegen/world/IActivateSyst
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { getObjectType } from "./EntityUtils.sol";
 
-function getSystemId(bytes16 systemName) view returns (ResourceId) {
+function getSystemId(bytes16 systemName) pure returns (ResourceId) {
   return WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: "", name: systemName });
 }
 
-function getNamespaceSystemId(bytes14 namespace, bytes16 systemName) view returns (ResourceId) {
+function getNamespaceSystemId(bytes14 namespace, bytes16 systemName) pure returns (ResourceId) {
   return WorldResourceIdLib.encode({ typeId: RESOURCE_SYSTEM, namespace: namespace, name: systemName });
 }
 
-function isSystemId(ResourceId checkSystemId, bytes16 systemId) view returns (bool) {
+function isSystemId(ResourceId checkSystemId, bytes16 systemId) pure returns (bool) {
   return ResourceId.unwrap(checkSystemId) == ResourceId.unwrap(getSystemId(systemId));
 }
 

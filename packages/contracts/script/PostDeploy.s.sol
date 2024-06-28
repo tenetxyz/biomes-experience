@@ -13,6 +13,7 @@ import { ExperienceMetadata, ExperienceMetadataData } from "../src/codegen/table
 import { DisplayMetadata, DisplayMetadataData } from "../src/codegen/tables/DisplayMetadata.sol";
 
 import { getSystemId, getNamespaceSystemId } from "../src/utils/DelegationUtils.sol";
+import { EXPERIENCE_NAMESPACE } from "../src/Constants.sol";
 
 contract PostDeploy is Script {
   function run(address worldAddress) external {
@@ -33,7 +34,7 @@ contract PostDeploy is Script {
       })
     );
 
-    address experienceSystemAddress = Systems.getSystem(getNamespaceSystemId("experience", "ExperienceSystem"));
+    address experienceSystemAddress = Systems.getSystem(getNamespaceSystemId(EXPERIENCE_NAMESPACE, "ExperienceSystem"));
     require(experienceSystemAddress != address(0), "ExperienceSystem not found");
 
     bytes32[] memory hookSystemIds = new bytes32[](1);

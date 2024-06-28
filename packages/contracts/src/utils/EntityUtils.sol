@@ -40,7 +40,7 @@ function hasBeforeAndAfterSystemHook(address hookAddress, address player, Resour
   return false;
 }
 
-function getObjectTypeAtCoord(address biomeWorldAddress, VoxelCoord memory coord) returns (uint8) {
+function getObjectTypeAtCoord(address biomeWorldAddress, VoxelCoord memory coord) view returns (uint8) {
   bytes32 entityId = getEntityAtCoord(coord);
 
   uint8 objectTypeId;

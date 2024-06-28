@@ -23,7 +23,7 @@ function buildExistsInWorld(
   address biomeWorldAddress,
   Build memory buildData,
   VoxelCoord memory baseWorldCoord
-) returns (bool) {
+) view returns (bool) {
   // Go through each relative position, apply it to the base world coord, and check if the object type id matches
   for (uint256 i = 0; i < buildData.objectTypeIds.length; i++) {
     VoxelCoord memory absolutePosition = VoxelCoord({
@@ -52,7 +52,7 @@ function buildWithPosExistsInWorld(
   address biomeWorldAddress,
   BuildWithPos memory buildData,
   VoxelCoord memory baseWorldCoord
-) returns (bool) {
+) view returns (bool) {
   if (!voxelCoordsAreEqual(buildData.baseWorldCoord, baseWorldCoord)) {
     return false;
   }
