@@ -30,6 +30,12 @@ export default defineWorld({
       key: [],
       type: "offchainTable"
     },
+    Players: {
+      schema: {
+        players: "address[]",
+      },
+      key: [],
+    },
     Areas: {
       schema: {
         id: "bytes32",
@@ -38,6 +44,38 @@ export default defineWorld({
         size: "bytes", // VoxelCoord
       },
       key: ["id"],
+    },
+    Builds: {
+      schema: {
+        id: "bytes32",
+        name: "string",
+        objectTypeIds: "uint8[]",
+        relativePositions: "bytes", // VoxelCoord[]
+      },
+      key: ["id"],
+    },
+    BuildsWithPos: {
+      schema: {
+        id: "bytes32",
+        name: "string",
+        objectTypeIds: "uint8[]",
+        relativePositions: "bytes", // VoxelCoord[]
+        baseWorldCoord: "bytes", // VoxelCoord
+      },
+      key: ["id"],
+    },
+    Countdown: {
+      schema: {
+        countdownEndTimestamp: "uint256",
+        countdownEndBlock: "uint256",
+      },
+      key: [],
+    },
+    Tokens: {
+      schema: {
+        tokens: "address[]",
+      },
+      key: [],
     },
   },
 });
