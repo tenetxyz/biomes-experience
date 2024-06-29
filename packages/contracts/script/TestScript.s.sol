@@ -7,7 +7,17 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 
 import { IWorld } from "../src/codegen/world/IWorld.sol";
 
+import { ExperienceMetadata, ExperienceMetadataData } from "../src/codegen/tables/ExperienceMetadata.sol";
+import { DisplayMetadata, DisplayMetadataData } from "../src/codegen/tables/DisplayMetadata.sol";
 import { Notifications } from "../src/codegen/tables/Notifications.sol";
+import { Players } from "../src/codegen/tables/Players.sol";
+import { Areas } from "../src/codegen/tables/Areas.sol";
+import { Builds } from "../src/codegen/tables/Builds.sol";
+import { BuildsWithPos } from "../src/codegen/tables/BuildsWithPos.sol";
+import { Countdown } from "../src/codegen/tables/Countdown.sol";
+import { Tokens } from "../src/codegen/tables/Tokens.sol";
+
+import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 
 contract TestScript is Script {
   function run(address worldAddress) external {

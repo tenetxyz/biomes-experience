@@ -15,6 +15,7 @@ import { AccessControlLib } from "@latticexyz/world-modules/src/utils/AccessCont
 import { IERC165 } from "@latticexyz/world/src/IERC165.sol";
 import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
 
+import { ExperienceMetadata, ExperienceMetadataData } from "../codegen/tables/ExperienceMetadata.sol";
 import { DisplayMetadata, DisplayMetadataData } from "../codegen/tables/DisplayMetadata.sol";
 import { Notifications } from "../codegen/tables/Notifications.sol";
 import { Players } from "../codegen/tables/Players.sol";
