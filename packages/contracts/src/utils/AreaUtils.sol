@@ -3,11 +3,41 @@ pragma solidity >=0.8.24;
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 
+import { Areas, AreasData } from "../codegen/tables/Areas.sol";
 import { getEntityAtCoord, getObjectType } from "./EntityUtils.sol";
 
 struct Area {
   VoxelCoord lowerSouthwestCorner;
   VoxelCoord size;
+}
+
+function getArea(bytes32 areaId) view returns (Area memory) {
+  AreasData memory areaData = Areas.get(areaId);
+
+  return
+    Area({
+      lowerSouthwestCorner: VoxelCoord(
+        areaData.lowerSouthwestCornerX,
+        areaData.lowerSouthwestCornerY,
+        areaData.lowerSouthwestCornerZ
+      ),
+      size: VoxelCoord(areaData.sizeX, areaData.sizeY, areaData.sizeZ)
+    });
+}
+
+function setArea(bytes32 areaId, string memory name, Area memory area) {
+  Areas.set(
+    areaId,
+    AreasData({
+      name: name,
+      lowerSouthwestCornerX: area.lowerSouthwestCorner.x,
+      lowerSouthwestCornerY: area.lowerSouthwestCorner.y,
+      lowerSouthwestCornerZ: area.lowerSouthwestCorner.z,
+      sizeX: area.size.x,
+      sizeY: area.size.y,
+      sizeZ: area.size.z
+    })
+  );
 }
 
 function insideArea(Area memory area, VoxelCoord memory baseWorldCoord) pure returns (bool) {

@@ -8,6 +8,9 @@ import { voxelCoordsAreEqual } from "@biomesaw/utils/src/VoxelCoordUtils.sol";
 
 import { getEntityAtCoord, getObjectType } from "./EntityUtils.sol";
 
+import { Builds, BuildsData } from "../codegen/tables/Builds.sol";
+import { BuildsWithPos, BuildsWithPosData } from "../codegen/tables/BuildsWithPos.sol";
+
 struct Build {
   uint8[] objectTypeIds;
   VoxelCoord[] relativePositions;
@@ -17,6 +20,86 @@ struct BuildWithPos {
   uint8[] objectTypeIds;
   VoxelCoord[] relativePositions;
   VoxelCoord baseWorldCoord;
+}
+
+function getBuild(bytes32 buildId) view returns (Build memory) {
+  BuildsData memory buildData = Builds.get(buildId);
+
+  VoxelCoord[] memory relativePositions = new VoxelCoord[](buildData.relativePositionsX.length);
+  for (uint256 i = 0; i < buildData.relativePositionsX.length; i++) {
+    relativePositions[i] = VoxelCoord(
+      buildData.relativePositionsX[i],
+      buildData.relativePositionsY[i],
+      buildData.relativePositionsZ[i]
+    );
+  }
+
+  return Build({ objectTypeIds: buildData.objectTypeIds, relativePositions: relativePositions });
+}
+
+function setBuild(bytes32 buildId, string memory name, Build memory build) {
+  int16[] memory relativePositionsX = new int16[](build.relativePositions.length);
+  int16[] memory relativePositionsY = new int16[](build.relativePositions.length);
+  int16[] memory relativePositionsZ = new int16[](build.relativePositions.length);
+  for (uint256 i = 0; i < build.relativePositions.length; i++) {
+    relativePositionsX[i] = build.relativePositions[i].x;
+    relativePositionsY[i] = build.relativePositions[i].y;
+    relativePositionsZ[i] = build.relativePositions[i].z;
+  }
+  Builds.set(
+    buildId,
+    BuildsData({
+      name: name,
+      objectTypeIds: build.objectTypeIds,
+      relativePositionsX: relativePositionsX,
+      relativePositionsY: relativePositionsY,
+      relativePositionsZ: relativePositionsZ
+    })
+  );
+}
+
+function getBuildWithPos(bytes32 buildId) view returns (BuildWithPos memory) {
+  BuildsWithPosData memory buildData = BuildsWithPos.get(buildId);
+
+  VoxelCoord[] memory relativePositions = new VoxelCoord[](buildData.relativePositionsX.length);
+  for (uint256 i = 0; i < buildData.relativePositionsX.length; i++) {
+    relativePositions[i] = VoxelCoord(
+      buildData.relativePositionsX[i],
+      buildData.relativePositionsY[i],
+      buildData.relativePositionsZ[i]
+    );
+  }
+
+  return
+    BuildWithPos({
+      objectTypeIds: buildData.objectTypeIds,
+      relativePositions: relativePositions,
+      baseWorldCoord: VoxelCoord(buildData.baseWorldCoordX, buildData.baseWorldCoordY, buildData.baseWorldCoordZ)
+    });
+}
+
+function setBuildWithPos(bytes32 buildId, string memory name, BuildWithPos memory build) {
+  int16[] memory relativePositionsX = new int16[](build.relativePositions.length);
+  int16[] memory relativePositionsY = new int16[](build.relativePositions.length);
+  int16[] memory relativePositionsZ = new int16[](build.relativePositions.length);
+  for (uint256 i = 0; i < build.relativePositions.length; i++) {
+    relativePositionsX[i] = build.relativePositions[i].x;
+    relativePositionsY[i] = build.relativePositions[i].y;
+    relativePositionsZ[i] = build.relativePositions[i].z;
+  }
+  BuildsWithPos.set(
+    buildId,
+    BuildsWithPosData({
+      name: name,
+      objectTypeIds: build.objectTypeIds,
+      relativePositionsX: relativePositionsX,
+      relativePositionsY: relativePositionsY,
+      relativePositionsZ: relativePositionsZ,
+      baseWorldCoordX: build.baseWorldCoord.x,
+      baseWorldCoordY: build.baseWorldCoord.y,
+      baseWorldCoordZ: build.baseWorldCoord.z
+    })
+  );
 }
 
 function buildExistsInWorld(
