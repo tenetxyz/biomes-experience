@@ -16,7 +16,9 @@ import { IERC165 } from "@latticexyz/world/src/IERC165.sol";
 import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
 
 import { ExperienceMetadata, ExperienceMetadataData } from "../codegen/tables/ExperienceMetadata.sol";
-import { DisplayMetadata, DisplayMetadataData } from "../codegen/tables/DisplayMetadata.sol";
+import { DisplayStatus } from "../codegen/tables/DisplayStatus.sol";
+import { DisplayRegisterMsg } from "../codegen/tables/DisplayRegisterMsg.sol";
+import { DisplayUnregisterMsg } from "../codegen/tables/DisplayUnregisterMsg.sol";
 import { Notifications } from "../codegen/tables/Notifications.sol";
 import { Players } from "../codegen/tables/Players.sol";
 import { Areas } from "../codegen/tables/Areas.sol";
@@ -32,7 +34,7 @@ import { voxelCoordsAreEqual, inSurroundingCube } from "@biomesaw/utils/src/Voxe
 // See ObjectTypeIds.sol for all available object types
 import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
 import { getBuildArgs, getMineArgs, getMoveArgs, getHitArgs, getDropArgs, getTransferArgs, getCraftArgs, getEquipArgs, getLoginArgs, getSpawnArgs } from "../utils/HookUtils.sol";
-import { getSystemId, isSystemId, callBuild, callMine, callMove, callHit, callDrop, callTransfer, callCraft, callEquip, callUnequip, callLogin, callLogout, callSpawn, callActivate } from "../utils/DelegationUtils.sol";
+import { getSystemId, getNamespaceSystemId, isSystemId, callBuild, callMine, callMove, callHit, callDrop, callTransfer, callCraft, callEquip, callUnequip, callLogin, callLogout, callSpawn, callActivate } from "../utils/DelegationUtils.sol";
 import { hasBeforeAndAfterSystemHook, hasDelegated, getObjectTypeAtCoord, getEntityAtCoord, getPosition, getObjectType, getMiningDifficulty, getStackable, getDamage, getDurability, isTool, isBlock, getEntityFromPlayer, getPlayerFromEntity, getEquipped, getHealth, getStamina, getIsLoggedOff, getLastHitTime, getInventoryTool, getInventoryObjects, getCount, getNumSlotsUsed, getNumUsesLeft } from "../utils/EntityUtils.sol";
 import { Area, insideArea, insideAreaIgnoreY, getEntitiesInArea } from "../utils/AreaUtils.sol";
 import { Build, BuildWithPos, buildExistsInWorld, buildWithPosExistsInWorld } from "../utils/BuildUtils.sol";

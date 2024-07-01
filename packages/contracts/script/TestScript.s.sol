@@ -8,7 +8,9 @@ import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { ExperienceMetadata, ExperienceMetadataData } from "../src/codegen/tables/ExperienceMetadata.sol";
-import { DisplayMetadata, DisplayMetadataData } from "../src/codegen/tables/DisplayMetadata.sol";
+import { DisplayStatus } from "../src/codegen/tables/DisplayStatus.sol";
+import { DisplayRegisterMsg } from "../src/codegen/tables/DisplayRegisterMsg.sol";
+import { DisplayUnregisterMsg } from "../src/codegen/tables/DisplayUnregisterMsg.sol";
 import { Notifications } from "../src/codegen/tables/Notifications.sol";
 import { Players } from "../src/codegen/tables/Players.sol";
 import { Areas } from "../src/codegen/tables/Areas.sol";

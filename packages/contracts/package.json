@@ -13,7 +13,7 @@
     "cp-abi": "cp out/IWorld.sol/IWorld.abi.json IWorld.abi.json",
     "build:js": "tsup",
     "clean": "forge clean && rimraf src/codegen",
-    "deploy": "./deployToWorld.bash",
+    "deploy": "pnpm run build && ./deployToWorld.bash",
     "deploy:garnet": "mud deploy --profile=garnet",
     "deploy:local": "mud deploy",
     "deploy:redstone": "mud deploy --profile=redstone",

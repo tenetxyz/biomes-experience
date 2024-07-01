@@ -171,6 +171,20 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "experience__initExperience",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "experience__joinExperience",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
     "name": "experience__onAfterCallSystem",
     "inputs": [
       {
@@ -214,13 +228,6 @@ declare const abi: [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "experience__onRegister",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "payable"
   },
   {
     "type": "function",

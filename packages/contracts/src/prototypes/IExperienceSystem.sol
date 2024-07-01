@@ -2,13 +2,13 @@
 pragma solidity >=0.8.24;
 
 import { System } from "@latticexyz/world/src/System.sol";
+import { ResourceId, WorldResourceIdLib, WorldResourceIdInstance } from "@latticexyz/world/src/WorldResourceId.sol";
 
 import { ExperienceMetadata, ExperienceMetadataData } from "../codegen/tables/ExperienceMetadata.sol";
-import { ResourceId, WorldResourceIdLib, WorldResourceIdInstance } from "@latticexyz/world/src/WorldResourceId.sol";
 import { hasBeforeAndAfterSystemHook, hasDelegated } from "../utils/EntityUtils.sol";
 
 abstract contract IExperienceSystem is System {
-  function onRegister() public payable virtual {
+  function joinExperience() public payable virtual {
     require(_msgValue() >= ExperienceMetadata.getJoinFee(), "The player hasn't paid the join fee");
 
     address experienceAddress = ExperienceMetadata.getContractAddress();

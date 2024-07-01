@@ -1,6 +1,10 @@
 import { defineWorld } from "@latticexyz/world";
 
 export default defineWorld({
+  // Note: this is required as the Biome world is deployed with this
+  deploy: {
+    upgradeableWorldImplementation: true,
+  },
   namespace: "experience",
   tables: {
     ExperienceMetadata: {
@@ -14,11 +18,23 @@ export default defineWorld({
       },
       key: []
     },
-    DisplayMetadata: {
+    DisplayStatus: {
       schema: {
         status: "string",
+      },
+      key: [],
+      type: "offchainTable"
+    },
+    DisplayRegisterMsg: {
+      schema: {
         registerMessage: "string",
-        unregisterMessage: "string",
+      },
+      key: [],
+      type: "offchainTable"
+    },
+    DisplayUnregisterMsg: {
+      schema: {
+        unRegisterMessage: "string",
       },
       key: [],
       type: "offchainTable"
@@ -40,9 +56,13 @@ export default defineWorld({
     Areas: {
       schema: {
         id: "bytes32",
+        lowerSouthwestCornerX: "int16",
+        lowerSouthwestCornerY: "int16",
+        lowerSouthwestCornerZ: "int16",
+        sizeX: "int16",
+        sizeY: "int16",
+        sizeZ: "int16",
         name: "string",
-        lowerSouthwestCorner: "bytes", // VoxelCoord
-        size: "bytes", // VoxelCoord
       },
       key: ["id"],
     },
@@ -51,17 +71,23 @@ export default defineWorld({
         id: "bytes32",
         name: "string",
         objectTypeIds: "uint8[]",
-        relativePositions: "bytes", // VoxelCoord[]
+        relativePositionsX: "int16[]",
+        relativePositionsY: "int16[]",
+        relativePositionsZ: "int16[]",
       },
       key: ["id"],
     },
     BuildsWithPos: {
       schema: {
         id: "bytes32",
+        baseWorldCoordX: "int16",
+        baseWorldCoordY: "int16",
+        baseWorldCoordZ: "int16",
         name: "string",
         objectTypeIds: "uint8[]",
-        relativePositions: "bytes", // VoxelCoord[]
-        baseWorldCoord: "bytes", // VoxelCoord
+        relativePositionsX: "int16[]",
+        relativePositionsY: "int16[]",
+        relativePositionsZ: "int16[]"
       },
       key: ["id"],
     },

@@ -17,9 +17,13 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 struct AreasData {
+  int16 lowerSouthwestCornerX;
+  int16 lowerSouthwestCornerY;
+  int16 lowerSouthwestCornerZ;
+  int16 sizeX;
+  int16 sizeY;
+  int16 sizeZ;
   string name;
-  bytes lowerSouthwestCorner;
-  bytes size;
 }
 
 library Areas {
@@ -27,12 +31,12 @@ library Areas {
   ResourceId constant _tableId = ResourceId.wrap(0x7462657870657269656e63650000000041726561730000000000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0000000300000000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x000c060102020202020200000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (bytes32)
   Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (string, bytes, bytes)
-  Schema constant _valueSchema = Schema.wrap(0x00000003c5c4c400000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (int16, int16, int16, int16, int16, int16, string)
+  Schema constant _valueSchema = Schema.wrap(0x000c0601212121212121c5000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -48,10 +52,14 @@ library Areas {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](3);
-    fieldNames[0] = "name";
-    fieldNames[1] = "lowerSouthwestCorner";
-    fieldNames[2] = "size";
+    fieldNames = new string[](7);
+    fieldNames[0] = "lowerSouthwestCornerX";
+    fieldNames[1] = "lowerSouthwestCornerY";
+    fieldNames[2] = "lowerSouthwestCornerZ";
+    fieldNames[3] = "sizeX";
+    fieldNames[4] = "sizeY";
+    fieldNames[5] = "sizeZ";
+    fieldNames[6] = "name";
   }
 
   /**
@@ -66,6 +74,258 @@ library Areas {
    */
   function _register() internal {
     StoreCore.registerTable(_tableId, _fieldLayout, _keySchema, _valueSchema, getKeyNames(), getFieldNames());
+  }
+
+  /**
+   * @notice Get lowerSouthwestCornerX.
+   */
+  function getLowerSouthwestCornerX(bytes32 id) internal view returns (int16 lowerSouthwestCornerX) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Get lowerSouthwestCornerX.
+   */
+  function _getLowerSouthwestCornerX(bytes32 id) internal view returns (int16 lowerSouthwestCornerX) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Set lowerSouthwestCornerX.
+   */
+  function setLowerSouthwestCornerX(bytes32 id, int16 lowerSouthwestCornerX) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((lowerSouthwestCornerX)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set lowerSouthwestCornerX.
+   */
+  function _setLowerSouthwestCornerX(bytes32 id, int16 lowerSouthwestCornerX) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((lowerSouthwestCornerX)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get lowerSouthwestCornerY.
+   */
+  function getLowerSouthwestCornerY(bytes32 id) internal view returns (int16 lowerSouthwestCornerY) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Get lowerSouthwestCornerY.
+   */
+  function _getLowerSouthwestCornerY(bytes32 id) internal view returns (int16 lowerSouthwestCornerY) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Set lowerSouthwestCornerY.
+   */
+  function setLowerSouthwestCornerY(bytes32 id, int16 lowerSouthwestCornerY) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((lowerSouthwestCornerY)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set lowerSouthwestCornerY.
+   */
+  function _setLowerSouthwestCornerY(bytes32 id, int16 lowerSouthwestCornerY) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((lowerSouthwestCornerY)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get lowerSouthwestCornerZ.
+   */
+  function getLowerSouthwestCornerZ(bytes32 id) internal view returns (int16 lowerSouthwestCornerZ) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Get lowerSouthwestCornerZ.
+   */
+  function _getLowerSouthwestCornerZ(bytes32 id) internal view returns (int16 lowerSouthwestCornerZ) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Set lowerSouthwestCornerZ.
+   */
+  function setLowerSouthwestCornerZ(bytes32 id, int16 lowerSouthwestCornerZ) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((lowerSouthwestCornerZ)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set lowerSouthwestCornerZ.
+   */
+  function _setLowerSouthwestCornerZ(bytes32 id, int16 lowerSouthwestCornerZ) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((lowerSouthwestCornerZ)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get sizeX.
+   */
+  function getSizeX(bytes32 id) internal view returns (int16 sizeX) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Get sizeX.
+   */
+  function _getSizeX(bytes32 id) internal view returns (int16 sizeX) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 3, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Set sizeX.
+   */
+  function setSizeX(bytes32 id, int16 sizeX) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((sizeX)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set sizeX.
+   */
+  function _setSizeX(bytes32 id, int16 sizeX) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 3, abi.encodePacked((sizeX)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get sizeY.
+   */
+  function getSizeY(bytes32 id) internal view returns (int16 sizeY) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Get sizeY.
+   */
+  function _getSizeY(bytes32 id) internal view returns (int16 sizeY) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 4, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Set sizeY.
+   */
+  function setSizeY(bytes32 id, int16 sizeY) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((sizeY)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set sizeY.
+   */
+  function _setSizeY(bytes32 id, int16 sizeY) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 4, abi.encodePacked((sizeY)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get sizeZ.
+   */
+  function getSizeZ(bytes32 id) internal view returns (int16 sizeZ) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Get sizeZ.
+   */
+  function _getSizeZ(bytes32 id) internal view returns (int16 sizeZ) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 5, _fieldLayout);
+    return (int16(uint16(bytes2(_blob))));
+  }
+
+  /**
+   * @notice Set sizeZ.
+   */
+  function setSizeZ(bytes32 id, int16 sizeZ) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((sizeZ)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set sizeZ.
+   */
+  function _setSizeZ(bytes32 id, int16 sizeZ) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = id;
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 5, abi.encodePacked((sizeZ)), _fieldLayout);
   }
 
   /**
@@ -231,330 +491,6 @@ library Areas {
   }
 
   /**
-   * @notice Get lowerSouthwestCorner.
-   */
-  function getLowerSouthwestCorner(bytes32 id) internal view returns (bytes memory lowerSouthwestCorner) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 1);
-    return (bytes(_blob));
-  }
-
-  /**
-   * @notice Get lowerSouthwestCorner.
-   */
-  function _getLowerSouthwestCorner(bytes32 id) internal view returns (bytes memory lowerSouthwestCorner) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 1);
-    return (bytes(_blob));
-  }
-
-  /**
-   * @notice Set lowerSouthwestCorner.
-   */
-  function setLowerSouthwestCorner(bytes32 id, bytes memory lowerSouthwestCorner) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 1, bytes((lowerSouthwestCorner)));
-  }
-
-  /**
-   * @notice Set lowerSouthwestCorner.
-   */
-  function _setLowerSouthwestCorner(bytes32 id, bytes memory lowerSouthwestCorner) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreCore.setDynamicField(_tableId, _keyTuple, 1, bytes((lowerSouthwestCorner)));
-  }
-
-  /**
-   * @notice Get the length of lowerSouthwestCorner.
-   */
-  function lengthLowerSouthwestCorner(bytes32 id) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 1);
-    unchecked {
-      return _byteLength / 1;
-    }
-  }
-
-  /**
-   * @notice Get the length of lowerSouthwestCorner.
-   */
-  function _lengthLowerSouthwestCorner(bytes32 id) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 1);
-    unchecked {
-      return _byteLength / 1;
-    }
-  }
-
-  /**
-   * @notice Get an item of lowerSouthwestCorner.
-   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
-   */
-  function getItemLowerSouthwestCorner(bytes32 id, uint256 _index) internal view returns (bytes memory) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    unchecked {
-      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
-      return (bytes(_blob));
-    }
-  }
-
-  /**
-   * @notice Get an item of lowerSouthwestCorner.
-   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
-   */
-  function _getItemLowerSouthwestCorner(bytes32 id, uint256 _index) internal view returns (bytes memory) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    unchecked {
-      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 1, _index * 1, (_index + 1) * 1);
-      return (bytes(_blob));
-    }
-  }
-
-  /**
-   * @notice Push a slice to lowerSouthwestCorner.
-   */
-  function pushLowerSouthwestCorner(bytes32 id, bytes memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
-  }
-
-  /**
-   * @notice Push a slice to lowerSouthwestCorner.
-   */
-  function _pushLowerSouthwestCorner(bytes32 id, bytes memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreCore.pushToDynamicField(_tableId, _keyTuple, 1, bytes((_slice)));
-  }
-
-  /**
-   * @notice Pop a slice from lowerSouthwestCorner.
-   */
-  function popLowerSouthwestCorner(bytes32 id) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 1, 1);
-  }
-
-  /**
-   * @notice Pop a slice from lowerSouthwestCorner.
-   */
-  function _popLowerSouthwestCorner(bytes32 id) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreCore.popFromDynamicField(_tableId, _keyTuple, 1, 1);
-  }
-
-  /**
-   * @notice Update a slice of lowerSouthwestCorner at `_index`.
-   */
-  function updateLowerSouthwestCorner(bytes32 id, uint256 _index, bytes memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    unchecked {
-      bytes memory _encoded = bytes((_slice));
-      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
-    }
-  }
-
-  /**
-   * @notice Update a slice of lowerSouthwestCorner at `_index`.
-   */
-  function _updateLowerSouthwestCorner(bytes32 id, uint256 _index, bytes memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    unchecked {
-      bytes memory _encoded = bytes((_slice));
-      StoreCore.spliceDynamicData(_tableId, _keyTuple, 1, uint40(_index * 1), uint40(_encoded.length), _encoded);
-    }
-  }
-
-  /**
-   * @notice Get size.
-   */
-  function getSize(bytes32 id) internal view returns (bytes memory size) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    bytes memory _blob = StoreSwitch.getDynamicField(_tableId, _keyTuple, 2);
-    return (bytes(_blob));
-  }
-
-  /**
-   * @notice Get size.
-   */
-  function _getSize(bytes32 id) internal view returns (bytes memory size) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    bytes memory _blob = StoreCore.getDynamicField(_tableId, _keyTuple, 2);
-    return (bytes(_blob));
-  }
-
-  /**
-   * @notice Set size.
-   */
-  function setSize(bytes32 id, bytes memory size) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreSwitch.setDynamicField(_tableId, _keyTuple, 2, bytes((size)));
-  }
-
-  /**
-   * @notice Set size.
-   */
-  function _setSize(bytes32 id, bytes memory size) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreCore.setDynamicField(_tableId, _keyTuple, 2, bytes((size)));
-  }
-
-  /**
-   * @notice Get the length of size.
-   */
-  function lengthSize(bytes32 id) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    uint256 _byteLength = StoreSwitch.getDynamicFieldLength(_tableId, _keyTuple, 2);
-    unchecked {
-      return _byteLength / 1;
-    }
-  }
-
-  /**
-   * @notice Get the length of size.
-   */
-  function _lengthSize(bytes32 id) internal view returns (uint256) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    uint256 _byteLength = StoreCore.getDynamicFieldLength(_tableId, _keyTuple, 2);
-    unchecked {
-      return _byteLength / 1;
-    }
-  }
-
-  /**
-   * @notice Get an item of size.
-   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
-   */
-  function getItemSize(bytes32 id, uint256 _index) internal view returns (bytes memory) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    unchecked {
-      bytes memory _blob = StoreSwitch.getDynamicFieldSlice(_tableId, _keyTuple, 2, _index * 1, (_index + 1) * 1);
-      return (bytes(_blob));
-    }
-  }
-
-  /**
-   * @notice Get an item of size.
-   * @dev Reverts with Store_IndexOutOfBounds if `_index` is out of bounds for the array.
-   */
-  function _getItemSize(bytes32 id, uint256 _index) internal view returns (bytes memory) {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    unchecked {
-      bytes memory _blob = StoreCore.getDynamicFieldSlice(_tableId, _keyTuple, 2, _index * 1, (_index + 1) * 1);
-      return (bytes(_blob));
-    }
-  }
-
-  /**
-   * @notice Push a slice to size.
-   */
-  function pushSize(bytes32 id, bytes memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreSwitch.pushToDynamicField(_tableId, _keyTuple, 2, bytes((_slice)));
-  }
-
-  /**
-   * @notice Push a slice to size.
-   */
-  function _pushSize(bytes32 id, bytes memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreCore.pushToDynamicField(_tableId, _keyTuple, 2, bytes((_slice)));
-  }
-
-  /**
-   * @notice Pop a slice from size.
-   */
-  function popSize(bytes32 id) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreSwitch.popFromDynamicField(_tableId, _keyTuple, 2, 1);
-  }
-
-  /**
-   * @notice Pop a slice from size.
-   */
-  function _popSize(bytes32 id) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    StoreCore.popFromDynamicField(_tableId, _keyTuple, 2, 1);
-  }
-
-  /**
-   * @notice Update a slice of size at `_index`.
-   */
-  function updateSize(bytes32 id, uint256 _index, bytes memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    unchecked {
-      bytes memory _encoded = bytes((_slice));
-      StoreSwitch.spliceDynamicData(_tableId, _keyTuple, 2, uint40(_index * 1), uint40(_encoded.length), _encoded);
-    }
-  }
-
-  /**
-   * @notice Update a slice of size at `_index`.
-   */
-  function _updateSize(bytes32 id, uint256 _index, bytes memory _slice) internal {
-    bytes32[] memory _keyTuple = new bytes32[](1);
-    _keyTuple[0] = id;
-
-    unchecked {
-      bytes memory _encoded = bytes((_slice));
-      StoreCore.spliceDynamicData(_tableId, _keyTuple, 2, uint40(_index * 1), uint40(_encoded.length), _encoded);
-    }
-  }
-
-  /**
    * @notice Get the full data.
    */
   function get(bytes32 id) internal view returns (AreasData memory _table) {
@@ -587,10 +523,27 @@ library Areas {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(bytes32 id, string memory name, bytes memory lowerSouthwestCorner, bytes memory size) internal {
-    bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(name, lowerSouthwestCorner, size);
-    bytes memory _dynamicData = encodeDynamic(name, lowerSouthwestCorner, size);
+  function set(
+    bytes32 id,
+    int16 lowerSouthwestCornerX,
+    int16 lowerSouthwestCornerY,
+    int16 lowerSouthwestCornerZ,
+    int16 sizeX,
+    int16 sizeY,
+    int16 sizeZ,
+    string memory name
+  ) internal {
+    bytes memory _staticData = encodeStatic(
+      lowerSouthwestCornerX,
+      lowerSouthwestCornerY,
+      lowerSouthwestCornerZ,
+      sizeX,
+      sizeY,
+      sizeZ
+    );
+
+    EncodedLengths _encodedLengths = encodeLengths(name);
+    bytes memory _dynamicData = encodeDynamic(name);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -601,10 +554,27 @@ library Areas {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(bytes32 id, string memory name, bytes memory lowerSouthwestCorner, bytes memory size) internal {
-    bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(name, lowerSouthwestCorner, size);
-    bytes memory _dynamicData = encodeDynamic(name, lowerSouthwestCorner, size);
+  function _set(
+    bytes32 id,
+    int16 lowerSouthwestCornerX,
+    int16 lowerSouthwestCornerY,
+    int16 lowerSouthwestCornerZ,
+    int16 sizeX,
+    int16 sizeY,
+    int16 sizeZ,
+    string memory name
+  ) internal {
+    bytes memory _staticData = encodeStatic(
+      lowerSouthwestCornerX,
+      lowerSouthwestCornerY,
+      lowerSouthwestCornerZ,
+      sizeX,
+      sizeY,
+      sizeZ
+    );
+
+    EncodedLengths _encodedLengths = encodeLengths(name);
+    bytes memory _dynamicData = encodeDynamic(name);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -616,9 +586,17 @@ library Areas {
    * @notice Set the full data using the data struct.
    */
   function set(bytes32 id, AreasData memory _table) internal {
-    bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(_table.name, _table.lowerSouthwestCorner, _table.size);
-    bytes memory _dynamicData = encodeDynamic(_table.name, _table.lowerSouthwestCorner, _table.size);
+    bytes memory _staticData = encodeStatic(
+      _table.lowerSouthwestCornerX,
+      _table.lowerSouthwestCornerY,
+      _table.lowerSouthwestCornerZ,
+      _table.sizeX,
+      _table.sizeY,
+      _table.sizeZ
+    );
+
+    EncodedLengths _encodedLengths = encodeLengths(_table.name);
+    bytes memory _dynamicData = encodeDynamic(_table.name);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -630,9 +608,17 @@ library Areas {
    * @notice Set the full data using the data struct.
    */
   function _set(bytes32 id, AreasData memory _table) internal {
-    bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(_table.name, _table.lowerSouthwestCorner, _table.size);
-    bytes memory _dynamicData = encodeDynamic(_table.name, _table.lowerSouthwestCorner, _table.size);
+    bytes memory _staticData = encodeStatic(
+      _table.lowerSouthwestCornerX,
+      _table.lowerSouthwestCornerY,
+      _table.lowerSouthwestCornerZ,
+      _table.sizeX,
+      _table.sizeY,
+      _table.sizeZ
+    );
+
+    EncodedLengths _encodedLengths = encodeLengths(_table.name);
+    bytes memory _dynamicData = encodeDynamic(_table.name);
 
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = id;
@@ -641,44 +627,71 @@ library Areas {
   }
 
   /**
+   * @notice Decode the tightly packed blob of static data using this table's field layout.
+   */
+  function decodeStatic(
+    bytes memory _blob
+  )
+    internal
+    pure
+    returns (
+      int16 lowerSouthwestCornerX,
+      int16 lowerSouthwestCornerY,
+      int16 lowerSouthwestCornerZ,
+      int16 sizeX,
+      int16 sizeY,
+      int16 sizeZ
+    )
+  {
+    lowerSouthwestCornerX = (int16(uint16(Bytes.getBytes2(_blob, 0))));
+
+    lowerSouthwestCornerY = (int16(uint16(Bytes.getBytes2(_blob, 2))));
+
+    lowerSouthwestCornerZ = (int16(uint16(Bytes.getBytes2(_blob, 4))));
+
+    sizeX = (int16(uint16(Bytes.getBytes2(_blob, 6))));
+
+    sizeY = (int16(uint16(Bytes.getBytes2(_blob, 8))));
+
+    sizeZ = (int16(uint16(Bytes.getBytes2(_blob, 10))));
+  }
+
+  /**
    * @notice Decode the tightly packed blob of dynamic data using the encoded lengths.
    */
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (string memory name, bytes memory lowerSouthwestCorner, bytes memory size) {
+  ) internal pure returns (string memory name) {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
     name = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
-
-    _start = _end;
-    unchecked {
-      _end += _encodedLengths.atIndex(1);
-    }
-    lowerSouthwestCorner = (bytes(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
-
-    _start = _end;
-    unchecked {
-      _end += _encodedLengths.atIndex(2);
-    }
-    size = (bytes(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
   }
 
   /**
    * @notice Decode the tightly packed blobs using this table's field layout.
-   *
+   * @param _staticData Tightly packed static fields.
    * @param _encodedLengths Encoded lengths of dynamic fields.
    * @param _dynamicData Tightly packed dynamic fields.
    */
   function decode(
-    bytes memory,
+    bytes memory _staticData,
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (AreasData memory _table) {
-    (_table.name, _table.lowerSouthwestCorner, _table.size) = decodeDynamic(_encodedLengths, _dynamicData);
+    (
+      _table.lowerSouthwestCornerX,
+      _table.lowerSouthwestCornerY,
+      _table.lowerSouthwestCornerZ,
+      _table.sizeX,
+      _table.sizeY,
+      _table.sizeZ
+    ) = decodeStatic(_staticData);
+
+    (_table.name) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -702,21 +715,28 @@ library Areas {
   }
 
   /**
+   * @notice Tightly pack static (fixed length) data using this table's schema.
+   * @return The static data, encoded into a sequence of bytes.
+   */
+  function encodeStatic(
+    int16 lowerSouthwestCornerX,
+    int16 lowerSouthwestCornerY,
+    int16 lowerSouthwestCornerZ,
+    int16 sizeX,
+    int16 sizeY,
+    int16 sizeZ
+  ) internal pure returns (bytes memory) {
+    return abi.encodePacked(lowerSouthwestCornerX, lowerSouthwestCornerY, lowerSouthwestCornerZ, sizeX, sizeY, sizeZ);
+  }
+
+  /**
    * @notice Tightly pack dynamic data lengths using this table's schema.
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
-  function encodeLengths(
-    string memory name,
-    bytes memory lowerSouthwestCorner,
-    bytes memory size
-  ) internal pure returns (EncodedLengths _encodedLengths) {
+  function encodeLengths(string memory name) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(
-        bytes(name).length,
-        bytes(lowerSouthwestCorner).length,
-        bytes(size).length
-      );
+      _encodedLengths = EncodedLengthsLib.pack(bytes(name).length);
     }
   }
 
@@ -724,12 +744,8 @@ library Areas {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(
-    string memory name,
-    bytes memory lowerSouthwestCorner,
-    bytes memory size
-  ) internal pure returns (bytes memory) {
-    return abi.encodePacked(bytes((name)), bytes((lowerSouthwestCorner)), bytes((size)));
+  function encodeDynamic(string memory name) internal pure returns (bytes memory) {
+    return abi.encodePacked(bytes((name)));
   }
 
   /**
@@ -739,13 +755,25 @@ library Areas {
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
   function encode(
-    string memory name,
-    bytes memory lowerSouthwestCorner,
-    bytes memory size
+    int16 lowerSouthwestCornerX,
+    int16 lowerSouthwestCornerY,
+    int16 lowerSouthwestCornerZ,
+    int16 sizeX,
+    int16 sizeY,
+    int16 sizeZ,
+    string memory name
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(name, lowerSouthwestCorner, size);
-    bytes memory _dynamicData = encodeDynamic(name, lowerSouthwestCorner, size);
+    bytes memory _staticData = encodeStatic(
+      lowerSouthwestCornerX,
+      lowerSouthwestCornerY,
+      lowerSouthwestCornerZ,
+      sizeX,
+      sizeY,
+      sizeZ
+    );
+
+    EncodedLengths _encodedLengths = encodeLengths(name);
+    bytes memory _dynamicData = encodeDynamic(name);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

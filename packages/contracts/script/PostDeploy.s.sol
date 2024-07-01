@@ -4,13 +4,14 @@ pragma solidity >=0.8.24;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
-import { Systems } from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import { ResourceId, WorldResourceIdLib, WorldResourceIdInstance } from "@latticexyz/world/src/WorldResourceId.sol";
 
 import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { ExperienceMetadata, ExperienceMetadataData } from "../src/codegen/tables/ExperienceMetadata.sol";
-import { DisplayMetadata, DisplayMetadataData } from "../src/codegen/tables/DisplayMetadata.sol";
+import { DisplayStatus } from "../src/codegen/tables/DisplayStatus.sol";
+import { DisplayRegisterMsg } from "../src/codegen/tables/DisplayRegisterMsg.sol";
+import { DisplayUnregisterMsg } from "../src/codegen/tables/DisplayUnregisterMsg.sol";
 import { Notifications } from "../src/codegen/tables/Notifications.sol";
 import { Players } from "../src/codegen/tables/Players.sol";
 import { Areas } from "../src/codegen/tables/Areas.sol";
@@ -20,9 +21,6 @@ import { Countdown } from "../src/codegen/tables/Countdown.sol";
 import { Tokens } from "../src/codegen/tables/Tokens.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
-
-import { getSystemId, getNamespaceSystemId } from "../src/utils/DelegationUtils.sol";
-import { EXPERIENCE_NAMESPACE } from "../src/Constants.sol";
 
 contract PostDeploy is Script {
   function run(address worldAddress) external {
@@ -35,30 +33,7 @@ contract PostDeploy is Script {
     // Start broadcasting transactions from the deployer account
     vm.startBroadcast(deployerPrivateKey);
 
-    DisplayMetadata.set(
-      DisplayMetadataData({
-        status: "Test Experience Status",
-        registerMessage: "Test Experience Register Message",
-        unregisterMessage: "Test Experience Unregister Message"
-      })
-    );
-
-    address worldSystemAddress = Systems.getSystem(getNamespaceSystemId(EXPERIENCE_NAMESPACE, "WorldSystem"));
-    require(worldSystemAddress != address(0), "WorldSystem not found");
-
-    bytes32[] memory hookSystemIds = new bytes32[](1);
-    hookSystemIds[0] = ResourceId.unwrap(getSystemId("MoveSystem"));
-
-    ExperienceMetadata.set(
-      ExperienceMetadataData({
-        contractAddress: worldSystemAddress,
-        shouldDelegate: false,
-        hookSystemIds: hookSystemIds,
-        joinFee: 0,
-        name: "Test Experience",
-        description: "Test Experience Description"
-      })
-    );
+    IWorld(worldAddress).experience__initExperience();
 
     vm.stopBroadcast();
   }

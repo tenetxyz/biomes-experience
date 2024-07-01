@@ -16,23 +16,17 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-struct DisplayMetadataData {
-  string status;
-  string registerMessage;
-  string unregisterMessage;
-}
-
-library DisplayMetadata {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "experience", name: "DisplayMetadata", typeId: RESOURCE_OFFCHAIN_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x6f74657870657269656e636500000000446973706c61794d6574616461746100);
+library DisplayRegisterMsg {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "experience", name: "DisplayRegisterM", typeId: RESOURCE_OFFCHAIN_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x6f74657870657269656e636500000000446973706c617952656769737465724d);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0000000300000000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0000000100000000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (string, string, string)
-  Schema constant _valueSchema = Schema.wrap(0x00000003c5c5c500000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (string)
+  Schema constant _valueSchema = Schema.wrap(0x00000001c5000000000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -47,10 +41,8 @@ library DisplayMetadata {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](3);
-    fieldNames[0] = "status";
-    fieldNames[1] = "registerMessage";
-    fieldNames[2] = "unregisterMessage";
+    fieldNames = new string[](1);
+    fieldNames[0] = "registerMessage";
   }
 
   /**
@@ -70,10 +62,10 @@ library DisplayMetadata {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(string memory status, string memory registerMessage, string memory unregisterMessage) internal {
+  function set(string memory registerMessage) internal {
     bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(status, registerMessage, unregisterMessage);
-    bytes memory _dynamicData = encodeDynamic(status, registerMessage, unregisterMessage);
+    EncodedLengths _encodedLengths = encodeLengths(registerMessage);
+    bytes memory _dynamicData = encodeDynamic(registerMessage);
 
     bytes32[] memory _keyTuple = new bytes32[](0);
 
@@ -83,36 +75,10 @@ library DisplayMetadata {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(string memory status, string memory registerMessage, string memory unregisterMessage) internal {
+  function _set(string memory registerMessage) internal {
     bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(status, registerMessage, unregisterMessage);
-    bytes memory _dynamicData = encodeDynamic(status, registerMessage, unregisterMessage);
-
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    StoreCore.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData, _fieldLayout);
-  }
-
-  /**
-   * @notice Set the full data using the data struct.
-   */
-  function set(DisplayMetadataData memory _table) internal {
-    bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(_table.status, _table.registerMessage, _table.unregisterMessage);
-    bytes memory _dynamicData = encodeDynamic(_table.status, _table.registerMessage, _table.unregisterMessage);
-
-    bytes32[] memory _keyTuple = new bytes32[](0);
-
-    StoreSwitch.setRecord(_tableId, _keyTuple, _staticData, _encodedLengths, _dynamicData);
-  }
-
-  /**
-   * @notice Set the full data using the data struct.
-   */
-  function _set(DisplayMetadataData memory _table) internal {
-    bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(_table.status, _table.registerMessage, _table.unregisterMessage);
-    bytes memory _dynamicData = encodeDynamic(_table.status, _table.registerMessage, _table.unregisterMessage);
+    EncodedLengths _encodedLengths = encodeLengths(registerMessage);
+    bytes memory _dynamicData = encodeDynamic(registerMessage);
 
     bytes32[] memory _keyTuple = new bytes32[](0);
 
@@ -125,25 +91,13 @@ library DisplayMetadata {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (string memory status, string memory registerMessage, string memory unregisterMessage) {
+  ) internal pure returns (string memory registerMessage) {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
-    status = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
-
-    _start = _end;
-    unchecked {
-      _end += _encodedLengths.atIndex(1);
-    }
     registerMessage = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
-
-    _start = _end;
-    unchecked {
-      _end += _encodedLengths.atIndex(2);
-    }
-    unregisterMessage = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
   }
 
   /**
@@ -156,8 +110,8 @@ library DisplayMetadata {
     bytes memory,
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
-  ) internal pure returns (DisplayMetadataData memory _table) {
-    (_table.status, _table.registerMessage, _table.unregisterMessage) = decodeDynamic(_encodedLengths, _dynamicData);
+  ) internal pure returns (string memory registerMessage) {
+    (registerMessage) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -182,18 +136,10 @@ library DisplayMetadata {
    * @notice Tightly pack dynamic data lengths using this table's schema.
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
-  function encodeLengths(
-    string memory status,
-    string memory registerMessage,
-    string memory unregisterMessage
-  ) internal pure returns (EncodedLengths _encodedLengths) {
+  function encodeLengths(string memory registerMessage) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(
-        bytes(status).length,
-        bytes(registerMessage).length,
-        bytes(unregisterMessage).length
-      );
+      _encodedLengths = EncodedLengthsLib.pack(bytes(registerMessage).length);
     }
   }
 
@@ -201,12 +147,8 @@ library DisplayMetadata {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(
-    string memory status,
-    string memory registerMessage,
-    string memory unregisterMessage
-  ) internal pure returns (bytes memory) {
-    return abi.encodePacked(bytes((status)), bytes((registerMessage)), bytes((unregisterMessage)));
+  function encodeDynamic(string memory registerMessage) internal pure returns (bytes memory) {
+    return abi.encodePacked(bytes((registerMessage)));
   }
 
   /**
@@ -215,14 +157,10 @@ library DisplayMetadata {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(
-    string memory status,
-    string memory registerMessage,
-    string memory unregisterMessage
-  ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+  function encode(string memory registerMessage) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(status, registerMessage, unregisterMessage);
-    bytes memory _dynamicData = encodeDynamic(status, registerMessage, unregisterMessage);
+    EncodedLengths _encodedLengths = encodeLengths(registerMessage);
+    bytes memory _dynamicData = encodeDynamic(registerMessage);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }
