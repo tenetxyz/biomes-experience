@@ -46,18 +46,19 @@ contract ExperienceSystem is IExperienceSystem {
     require(_msgValue() >= ExperienceMetadata.getJoinFee(), "The player hasn't paid the join fee");
 
     address experienceAddress = ExperienceMetadata.getContractAddress();
+    address player = _msgSender();
 
     bytes32[] memory hookSystemIds = ExperienceMetadata.getHookSystemIds();
     for (uint i = 0; i < hookSystemIds.length; i++) {
       ResourceId systemId = ResourceId.wrap(hookSystemIds[i]);
       require(
-        hasBeforeAndAfterSystemHook(experienceAddress, _msgSender(), systemId),
+        hasBeforeAndAfterSystemHook(experienceAddress, player, systemId),
         string.concat("The player hasn't allowed the hook for: ", WorldResourceIdInstance.toString(systemId))
       );
     }
 
     if (ExperienceMetadata.getShouldDelegate()) {
-      require(hasDelegated(_msgSender(), experienceAddress), "The player hasn't delegated to the experience contract");
+      require(hasDelegated(player, experienceAddress), "The player hasn't delegated to the experience contract");
     }
   }
 }
