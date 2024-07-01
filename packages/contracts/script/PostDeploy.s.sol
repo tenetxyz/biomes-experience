@@ -43,15 +43,15 @@ contract PostDeploy is Script {
       })
     );
 
-    address experienceSystemAddress = Systems.getSystem(getNamespaceSystemId(EXPERIENCE_NAMESPACE, "ExperienceSystem"));
-    require(experienceSystemAddress != address(0), "ExperienceSystem not found");
+    address worldSystemAddress = Systems.getSystem(getNamespaceSystemId(EXPERIENCE_NAMESPACE, "WorldSystem"));
+    require(worldSystemAddress != address(0), "WorldSystem not found");
 
     bytes32[] memory hookSystemIds = new bytes32[](1);
     hookSystemIds[0] = ResourceId.unwrap(getSystemId("MoveSystem"));
 
     ExperienceMetadata.set(
       ExperienceMetadataData({
-        contractAddress: experienceSystemAddress,
+        contractAddress: worldSystemAddress,
         shouldDelegate: false,
         hookSystemIds: hookSystemIds,
         joinFee: 0,
