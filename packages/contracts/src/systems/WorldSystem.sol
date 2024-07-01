@@ -38,11 +38,34 @@ import { Area, insideArea, insideAreaIgnoreY, getEntitiesInArea } from "../utils
 import { Build, BuildWithPos, buildExistsInWorld, buildWithPosExistsInWorld } from "../utils/BuildUtils.sol";
 import { NamedArea, NamedBuild, NamedBuildWithPos, weiToString, getEmptyBlockOnGround } from "../utils/GameUtils.sol";
 
-import { IExperienceSystem } from "../prototypes/IExperienceSystem.sol";
-
-// Functions that are called by EOAs
-contract ExperienceSystem is IExperienceSystem {
-  function onRegister() public payable override {
-    require(_msgValue() >= ExperienceMetadata.getJoinFee(), "ExperienceSystem: insufficient join fee");
+// Functions that are called by the Biomes World contract
+contract WorldSystem is System, ICustomUnregisterDelegation, IOptionalSystemHook {
+  function supportsInterface(bytes4 interfaceId) public pure override(IERC165, WorldContextConsumer) returns (bool) {
+    return
+      interfaceId == type(ICustomUnregisterDelegation).interfaceId ||
+      interfaceId == type(IOptionalSystemHook).interfaceId ||
+      super.supportsInterface(interfaceId);
   }
+
+  function canUnregister(address delegator) public override returns (bool) {
+    return true;
+  }
+
+  function onRegisterHook(
+    address msgSender,
+    ResourceId systemId,
+    uint8 enabledHooksBitmap,
+    bytes32 callDataHash
+  ) public override {}
+
+  function onUnregisterHook(
+    address msgSender,
+    ResourceId systemId,
+    uint8 enabledHooksBitmap,
+    bytes32 callDataHash
+  ) public override {}
+
+  function onBeforeCallSystem(address msgSender, ResourceId systemId, bytes memory callData) public override {}
+
+  function onAfterCallSystem(address msgSender, ResourceId systemId, bytes memory callData) public override {}
 }

@@ -19,6 +19,7 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 struct ExperienceMetadataData {
   address contractAddress;
   bool shouldDelegate;
+  uint256 joinFee;
   bytes32[] hookSystemIds;
   string name;
   string description;
@@ -29,12 +30,12 @@ library ExperienceMetadata {
   ResourceId constant _tableId = ResourceId.wrap(0x7462657870657269656e636500000000457870657269656e63654d6574616461);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0015020314010000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0035030314012000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (address, bool, bytes32[], string, string)
-  Schema constant _valueSchema = Schema.wrap(0x001502036160c1c5c50000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (address, bool, uint256, bytes32[], string, string)
+  Schema constant _valueSchema = Schema.wrap(0x0035030361601fc1c5c500000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -49,12 +50,13 @@ library ExperienceMetadata {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](5);
+    fieldNames = new string[](6);
     fieldNames[0] = "contractAddress";
     fieldNames[1] = "shouldDelegate";
-    fieldNames[2] = "hookSystemIds";
-    fieldNames[3] = "name";
-    fieldNames[4] = "description";
+    fieldNames[2] = "joinFee";
+    fieldNames[3] = "hookSystemIds";
+    fieldNames[4] = "name";
+    fieldNames[5] = "description";
   }
 
   /**
@@ -145,6 +147,44 @@ library ExperienceMetadata {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((shouldDelegate)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get joinFee.
+   */
+  function getJoinFee() internal view returns (uint256 joinFee) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get joinFee.
+   */
+  function _getJoinFee() internal view returns (uint256 joinFee) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set joinFee.
+   */
+  function setJoinFee(uint256 joinFee) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((joinFee)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set joinFee.
+   */
+  function _setJoinFee(uint256 joinFee) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((joinFee)), _fieldLayout);
   }
 
   /**
@@ -625,11 +665,12 @@ library ExperienceMetadata {
   function set(
     address contractAddress,
     bool shouldDelegate,
+    uint256 joinFee,
     bytes32[] memory hookSystemIds,
     string memory name,
     string memory description
   ) internal {
-    bytes memory _staticData = encodeStatic(contractAddress, shouldDelegate);
+    bytes memory _staticData = encodeStatic(contractAddress, shouldDelegate, joinFee);
 
     EncodedLengths _encodedLengths = encodeLengths(hookSystemIds, name, description);
     bytes memory _dynamicData = encodeDynamic(hookSystemIds, name, description);
@@ -645,11 +686,12 @@ library ExperienceMetadata {
   function _set(
     address contractAddress,
     bool shouldDelegate,
+    uint256 joinFee,
     bytes32[] memory hookSystemIds,
     string memory name,
     string memory description
   ) internal {
-    bytes memory _staticData = encodeStatic(contractAddress, shouldDelegate);
+    bytes memory _staticData = encodeStatic(contractAddress, shouldDelegate, joinFee);
 
     EncodedLengths _encodedLengths = encodeLengths(hookSystemIds, name, description);
     bytes memory _dynamicData = encodeDynamic(hookSystemIds, name, description);
@@ -663,7 +705,7 @@ library ExperienceMetadata {
    * @notice Set the full data using the data struct.
    */
   function set(ExperienceMetadataData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.contractAddress, _table.shouldDelegate);
+    bytes memory _staticData = encodeStatic(_table.contractAddress, _table.shouldDelegate, _table.joinFee);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.hookSystemIds, _table.name, _table.description);
     bytes memory _dynamicData = encodeDynamic(_table.hookSystemIds, _table.name, _table.description);
@@ -677,7 +719,7 @@ library ExperienceMetadata {
    * @notice Set the full data using the data struct.
    */
   function _set(ExperienceMetadataData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.contractAddress, _table.shouldDelegate);
+    bytes memory _staticData = encodeStatic(_table.contractAddress, _table.shouldDelegate, _table.joinFee);
 
     EncodedLengths _encodedLengths = encodeLengths(_table.hookSystemIds, _table.name, _table.description);
     bytes memory _dynamicData = encodeDynamic(_table.hookSystemIds, _table.name, _table.description);
@@ -690,10 +732,14 @@ library ExperienceMetadata {
   /**
    * @notice Decode the tightly packed blob of static data using this table's field layout.
    */
-  function decodeStatic(bytes memory _blob) internal pure returns (address contractAddress, bool shouldDelegate) {
+  function decodeStatic(
+    bytes memory _blob
+  ) internal pure returns (address contractAddress, bool shouldDelegate, uint256 joinFee) {
     contractAddress = (address(Bytes.getBytes20(_blob, 0)));
 
     shouldDelegate = (_toBool(uint8(Bytes.getBytes1(_blob, 20))));
+
+    joinFee = (uint256(Bytes.getBytes32(_blob, 21)));
   }
 
   /**
@@ -734,7 +780,7 @@ library ExperienceMetadata {
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
   ) internal pure returns (ExperienceMetadataData memory _table) {
-    (_table.contractAddress, _table.shouldDelegate) = decodeStatic(_staticData);
+    (_table.contractAddress, _table.shouldDelegate, _table.joinFee) = decodeStatic(_staticData);
 
     (_table.hookSystemIds, _table.name, _table.description) = decodeDynamic(_encodedLengths, _dynamicData);
   }
@@ -761,8 +807,12 @@ library ExperienceMetadata {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(address contractAddress, bool shouldDelegate) internal pure returns (bytes memory) {
-    return abi.encodePacked(contractAddress, shouldDelegate);
+  function encodeStatic(
+    address contractAddress,
+    bool shouldDelegate,
+    uint256 joinFee
+  ) internal pure returns (bytes memory) {
+    return abi.encodePacked(contractAddress, shouldDelegate, joinFee);
   }
 
   /**
@@ -805,11 +855,12 @@ library ExperienceMetadata {
   function encode(
     address contractAddress,
     bool shouldDelegate,
+    uint256 joinFee,
     bytes32[] memory hookSystemIds,
     string memory name,
     string memory description
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(contractAddress, shouldDelegate);
+    bytes memory _staticData = encodeStatic(contractAddress, shouldDelegate, joinFee);
 
     EncodedLengths _encodedLengths = encodeLengths(hookSystemIds, name, description);
     bytes memory _dynamicData = encodeDynamic(hookSystemIds, name, description);

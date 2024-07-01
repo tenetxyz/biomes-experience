@@ -217,6 +217,13 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "experience__onRegister",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
     "name": "experience__onRegisterHook",
     "inputs": [
       {

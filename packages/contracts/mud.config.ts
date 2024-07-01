@@ -7,6 +7,7 @@ export default defineWorld({
       schema: {
         contractAddress: "address",
         shouldDelegate: "bool",
+        joinFee: "uint256",
         hookSystemIds: "bytes32[]",
         name: "string",
         description: "string",

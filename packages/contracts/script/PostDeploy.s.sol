@@ -54,6 +54,7 @@ contract PostDeploy is Script {
         contractAddress: experienceSystemAddress,
         shouldDelegate: false,
         hookSystemIds: hookSystemIds,
+        joinFee: 0,
         name: "Test Experience",
         description: "Test Experience Description"
       })
