@@ -13,9 +13,9 @@ import { DisplayRegisterMsg } from "../src/codegen/tables/DisplayRegisterMsg.sol
 import { DisplayUnregisterMsg } from "../src/codegen/tables/DisplayUnregisterMsg.sol";
 import { Notifications } from "../src/codegen/tables/Notifications.sol";
 import { Players } from "../src/codegen/tables/Players.sol";
-import { Areas } from "../src/codegen/tables/Areas.sol";
-import { Builds } from "../src/codegen/tables/Builds.sol";
-import { BuildsWithPos } from "../src/codegen/tables/BuildsWithPos.sol";
+import { Areas, AreasData } from "../src/codegen/tables/Areas.sol";
+import { Builds, BuildsData } from "../src/codegen/tables/Builds.sol";
+import { BuildsWithPos, BuildsWithPosData } from "../src/codegen/tables/BuildsWithPos.sol";
 import { Countdown } from "../src/codegen/tables/Countdown.sol";
 import { Tokens } from "../src/codegen/tables/Tokens.sol";
 

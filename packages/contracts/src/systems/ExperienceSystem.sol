@@ -22,9 +22,9 @@ import { DisplayRegisterMsg } from "../codegen/tables/DisplayRegisterMsg.sol";
 import { DisplayUnregisterMsg } from "../codegen/tables/DisplayUnregisterMsg.sol";
 import { Notifications } from "../codegen/tables/Notifications.sol";
 import { Players } from "../codegen/tables/Players.sol";
-import { Areas } from "../codegen/tables/Areas.sol";
-import { Builds } from "../codegen/tables/Builds.sol";
-import { BuildsWithPos } from "../codegen/tables/BuildsWithPos.sol";
+import { Areas, AreasData } from "../codegen/tables/Areas.sol";
+import { Builds, BuildsData } from "../codegen/tables/Builds.sol";
+import { BuildsWithPos, BuildsWithPosData } from "../codegen/tables/BuildsWithPos.sol";
 import { Countdown } from "../codegen/tables/Countdown.sol";
 import { Tokens } from "../codegen/tables/Tokens.sol";
 
