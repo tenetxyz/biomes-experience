@@ -43,20 +43,21 @@ import { IExperienceSystem } from "../prototypes/IExperienceSystem.sol";
 // Functions that are called by EOAs
 contract ExperienceSystem is IExperienceSystem {
   function onRegister() public payable override {
-    require(_msgValue() >= ExperienceMetadata.getJoinFee(), "ExperienceSystem: insufficient join fee");
+    require(_msgValue() >= ExperienceMetadata.getJoinFee(), "The player hasn't paid the join fee");
 
     address experienceAddress = ExperienceMetadata.getContractAddress();
 
     bytes32[] memory hookSystemIds = ExperienceMetadata.getHookSystemIds();
     for (uint i = 0; i < hookSystemIds.length; i++) {
+      ResourceId systemId = ResourceId.wrap(hookSystemIds[i]);
       require(
-        hasBeforeAndAfterSystemHook(experienceAddress, _msgSender(), ResourceId.wrap(hookSystemIds[i])),
-        "The player hasn't allowed the hook"
+        hasBeforeAndAfterSystemHook(experienceAddress, _msgSender(), systemId),
+        string.concat("The player hasn't allowed the hook for: ", WorldResourceIdInstance.toString(systemId))
       );
     }
 
     if (ExperienceMetadata.getShouldDelegate()) {
-      require(hasDelegated(_msgSender(), experienceAddress), "The player hasn't delegated the system");
+      require(hasDelegated(_msgSender(), experienceAddress), "The player hasn't delegated to the experience contract");
     }
   }
 }
