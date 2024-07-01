@@ -42,7 +42,7 @@ library DisplayUnregisterMsg {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](1);
-    fieldNames[0] = "unRegisterMessage";
+    fieldNames[0] = "unregisterMessage";
   }
 
   /**
@@ -62,10 +62,10 @@ library DisplayUnregisterMsg {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(string memory unRegisterMessage) internal {
+  function set(string memory unregisterMessage) internal {
     bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(unRegisterMessage);
-    bytes memory _dynamicData = encodeDynamic(unRegisterMessage);
+    EncodedLengths _encodedLengths = encodeLengths(unregisterMessage);
+    bytes memory _dynamicData = encodeDynamic(unregisterMessage);
 
     bytes32[] memory _keyTuple = new bytes32[](0);
 
@@ -75,10 +75,10 @@ library DisplayUnregisterMsg {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(string memory unRegisterMessage) internal {
+  function _set(string memory unregisterMessage) internal {
     bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(unRegisterMessage);
-    bytes memory _dynamicData = encodeDynamic(unRegisterMessage);
+    EncodedLengths _encodedLengths = encodeLengths(unregisterMessage);
+    bytes memory _dynamicData = encodeDynamic(unregisterMessage);
 
     bytes32[] memory _keyTuple = new bytes32[](0);
 
@@ -91,13 +91,13 @@ library DisplayUnregisterMsg {
   function decodeDynamic(
     EncodedLengths _encodedLengths,
     bytes memory _blob
-  ) internal pure returns (string memory unRegisterMessage) {
+  ) internal pure returns (string memory unregisterMessage) {
     uint256 _start;
     uint256 _end;
     unchecked {
       _end = _encodedLengths.atIndex(0);
     }
-    unRegisterMessage = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
+    unregisterMessage = (string(SliceLib.getSubslice(_blob, _start, _end).toBytes()));
   }
 
   /**
@@ -110,8 +110,8 @@ library DisplayUnregisterMsg {
     bytes memory,
     EncodedLengths _encodedLengths,
     bytes memory _dynamicData
-  ) internal pure returns (string memory unRegisterMessage) {
-    (unRegisterMessage) = decodeDynamic(_encodedLengths, _dynamicData);
+  ) internal pure returns (string memory unregisterMessage) {
+    (unregisterMessage) = decodeDynamic(_encodedLengths, _dynamicData);
   }
 
   /**
@@ -136,10 +136,10 @@ library DisplayUnregisterMsg {
    * @notice Tightly pack dynamic data lengths using this table's schema.
    * @return _encodedLengths The lengths of the dynamic fields (packed into a single bytes32 value).
    */
-  function encodeLengths(string memory unRegisterMessage) internal pure returns (EncodedLengths _encodedLengths) {
+  function encodeLengths(string memory unregisterMessage) internal pure returns (EncodedLengths _encodedLengths) {
     // Lengths are effectively checked during copy by 2**40 bytes exceeding gas limits
     unchecked {
-      _encodedLengths = EncodedLengthsLib.pack(bytes(unRegisterMessage).length);
+      _encodedLengths = EncodedLengthsLib.pack(bytes(unregisterMessage).length);
     }
   }
 
@@ -147,8 +147,8 @@ library DisplayUnregisterMsg {
    * @notice Tightly pack dynamic (variable length) data using this table's schema.
    * @return The dynamic data, encoded into a sequence of bytes.
    */
-  function encodeDynamic(string memory unRegisterMessage) internal pure returns (bytes memory) {
-    return abi.encodePacked(bytes((unRegisterMessage)));
+  function encodeDynamic(string memory unregisterMessage) internal pure returns (bytes memory) {
+    return abi.encodePacked(bytes((unregisterMessage)));
   }
 
   /**
@@ -157,10 +157,10 @@ library DisplayUnregisterMsg {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(string memory unRegisterMessage) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+  function encode(string memory unregisterMessage) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
     bytes memory _staticData;
-    EncodedLengths _encodedLengths = encodeLengths(unRegisterMessage);
-    bytes memory _dynamicData = encodeDynamic(unRegisterMessage);
+    EncodedLengths _encodedLengths = encodeLengths(unregisterMessage);
+    bytes memory _dynamicData = encodeDynamic(unregisterMessage);
 
     return (_staticData, _encodedLengths, _dynamicData);
   }

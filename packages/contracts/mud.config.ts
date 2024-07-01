@@ -34,7 +34,7 @@ export default defineWorld({
     },
     DisplayUnregisterMsg: {
       schema: {
-        unRegisterMessage: "string",
+        unregisterMessage: "string",
       },
       key: [],
       type: "offchainTable"
