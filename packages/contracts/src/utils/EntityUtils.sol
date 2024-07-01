@@ -2,9 +2,11 @@
 pragma solidity >=0.8.24;
 
 import { OptionalSystemHooks } from "@latticexyz/world/src/codegen/tables/OptionalSystemHooks.sol";
+import { UserDelegationControl } from "@latticexyz/world/src/codegen/tables/UserDelegationControl.sol";
 import { ResourceId } from "@latticexyz/world/src/WorldResourceId.sol";
 import { BEFORE_CALL_SYSTEM, AFTER_CALL_SYSTEM, ALL } from "@latticexyz/world/src/systemHookTypes.sol";
 import { Hook } from "@latticexyz/store/src/Hook.sol";
+import { Delegation } from "@latticexyz/world/src/Delegation.sol";
 
 import { IWorld } from "@biomesaw/world/src/codegen/world/IWorld.sol";
 import { ObjectTypeMetadata } from "@biomesaw/world/src/codegen/tables/ObjectTypeMetadata.sol";
@@ -38,6 +40,10 @@ function hasBeforeAndAfterSystemHook(address hookAddress, address player, Resour
     }
   }
   return false;
+}
+
+function hasDelegated(address delegator, address delegatee) view returns (bool) {
+  return Delegation.isUnlimited(UserDelegationControl.getDelegationControlId(delegator, delegatee));
 }
 
 function getObjectTypeAtCoord(address biomeWorldAddress, VoxelCoord memory coord) view returns (uint8) {
