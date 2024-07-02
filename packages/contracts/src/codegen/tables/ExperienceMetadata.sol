@@ -18,7 +18,7 @@ import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 struct ExperienceMetadataData {
   address contractAddress;
-  bool shouldDelegate;
+  address shouldDelegate;
   uint256 joinFee;
   bytes32[] hookSystemIds;
   string name;
@@ -30,12 +30,12 @@ library ExperienceMetadata {
   ResourceId constant _tableId = ResourceId.wrap(0x7462657870657269656e636500000000457870657269656e63654d6574616461);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0035030314012000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0048030314142000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (address, bool, uint256, bytes32[], string, string)
-  Schema constant _valueSchema = Schema.wrap(0x0035030361601fc1c5c500000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (address, address, uint256, bytes32[], string, string)
+  Schema constant _valueSchema = Schema.wrap(0x0048030361611fc1c5c500000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -114,27 +114,27 @@ library ExperienceMetadata {
   /**
    * @notice Get shouldDelegate.
    */
-  function getShouldDelegate() internal view returns (bool shouldDelegate) {
+  function getShouldDelegate() internal view returns (address shouldDelegate) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (_toBool(uint8(bytes1(_blob))));
+    return (address(bytes20(_blob)));
   }
 
   /**
    * @notice Get shouldDelegate.
    */
-  function _getShouldDelegate() internal view returns (bool shouldDelegate) {
+  function _getShouldDelegate() internal view returns (address shouldDelegate) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (_toBool(uint8(bytes1(_blob))));
+    return (address(bytes20(_blob)));
   }
 
   /**
    * @notice Set shouldDelegate.
    */
-  function setShouldDelegate(bool shouldDelegate) internal {
+  function setShouldDelegate(address shouldDelegate) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((shouldDelegate)), _fieldLayout);
@@ -143,7 +143,7 @@ library ExperienceMetadata {
   /**
    * @notice Set shouldDelegate.
    */
-  function _setShouldDelegate(bool shouldDelegate) internal {
+  function _setShouldDelegate(address shouldDelegate) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((shouldDelegate)), _fieldLayout);
@@ -664,7 +664,7 @@ library ExperienceMetadata {
    */
   function set(
     address contractAddress,
-    bool shouldDelegate,
+    address shouldDelegate,
     uint256 joinFee,
     bytes32[] memory hookSystemIds,
     string memory name,
@@ -685,7 +685,7 @@ library ExperienceMetadata {
    */
   function _set(
     address contractAddress,
-    bool shouldDelegate,
+    address shouldDelegate,
     uint256 joinFee,
     bytes32[] memory hookSystemIds,
     string memory name,
@@ -734,12 +734,12 @@ library ExperienceMetadata {
    */
   function decodeStatic(
     bytes memory _blob
-  ) internal pure returns (address contractAddress, bool shouldDelegate, uint256 joinFee) {
+  ) internal pure returns (address contractAddress, address shouldDelegate, uint256 joinFee) {
     contractAddress = (address(Bytes.getBytes20(_blob, 0)));
 
-    shouldDelegate = (_toBool(uint8(Bytes.getBytes1(_blob, 20))));
+    shouldDelegate = (address(Bytes.getBytes20(_blob, 20)));
 
-    joinFee = (uint256(Bytes.getBytes32(_blob, 21)));
+    joinFee = (uint256(Bytes.getBytes32(_blob, 40)));
   }
 
   /**
@@ -809,7 +809,7 @@ library ExperienceMetadata {
    */
   function encodeStatic(
     address contractAddress,
-    bool shouldDelegate,
+    address shouldDelegate,
     uint256 joinFee
   ) internal pure returns (bytes memory) {
     return abi.encodePacked(contractAddress, shouldDelegate, joinFee);
@@ -854,7 +854,7 @@ library ExperienceMetadata {
    */
   function encode(
     address contractAddress,
-    bool shouldDelegate,
+    address shouldDelegate,
     uint256 joinFee,
     bytes32[] memory hookSystemIds,
     string memory name,
@@ -875,17 +875,5 @@ library ExperienceMetadata {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     return _keyTuple;
-  }
-}
-
-/**
- * @notice Cast a value to a bool.
- * @dev Boolean values are encoded as uint8 (1 = true, 0 = false), but Solidity doesn't allow casting between uint8 and bool.
- * @param value The uint8 value to convert.
- * @return result The boolean value.
- */
-function _toBool(uint8 value) pure returns (bool result) {
-  assembly {
-    result := value
   }
 }

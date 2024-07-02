@@ -66,7 +66,7 @@ contract ExperienceSystem is IExperienceSystem {
     ExperienceMetadata.set(
       ExperienceMetadataData({
         contractAddress: worldSystemAddress,
-        shouldDelegate: false,
+        shouldDelegate: address(0),
         hookSystemIds: hookSystemIds,
         joinFee: 0,
         name: "Test Experience",

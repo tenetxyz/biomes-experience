@@ -23,7 +23,7 @@ abstract contract IExperienceSystem is System {
       );
     }
 
-    if (ExperienceMetadata.getShouldDelegate()) {
+    if (player == ExperienceMetadata.getShouldDelegate()) {
       require(hasDelegated(player, experienceAddress), "The player hasn't delegated to the experience contract");
     }
   }

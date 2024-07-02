@@ -10,7 +10,7 @@ export default defineWorld({
     ExperienceMetadata: {
       schema: {
         contractAddress: "address",
-        shouldDelegate: "bool",
+        shouldDelegate: "address",
         joinFee: "uint256",
         hookSystemIds: "bytes32[]",
         name: "string",
