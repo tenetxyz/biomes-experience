@@ -30,6 +30,7 @@ import { hasBeforeAndAfterSystemHook, hasDelegated, getObjectTypeAtCoord, getEnt
 import { Area, insideArea, insideAreaIgnoreY, getEntitiesInArea, getArea } from "@biomesaw/experience/src/utils/AreaUtils.sol";
 import { Build, BuildWithPos, buildExistsInWorld, buildWithPosExistsInWorld, getBuild, getBuildWithPos } from "@biomesaw/experience/src/utils/BuildUtils.sol";
 import { weiToString, getEmptyBlockOnGround } from "@biomesaw/experience/src/utils/GameUtils.sol";
+import { EXPERIENCE_NAMESPACE } from "../Constants.sol";
 
 // Functions that are called by the Biomes World contract
 contract ExperienceSystem is System, ICustomUnregisterDelegation, IOptionalSystemHook {
