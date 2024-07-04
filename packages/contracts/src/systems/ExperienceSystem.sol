@@ -30,6 +30,10 @@ import { hasBeforeAndAfterSystemHook, hasDelegated, getObjectTypeAtCoord, getEnt
 import { Area, insideArea, insideAreaIgnoreY, getEntitiesInArea, getArea } from "@biomesaw/experience/src/utils/AreaUtils.sol";
 import { Build, BuildWithPos, buildExistsInWorld, buildWithPosExistsInWorld, getBuild, getBuildWithPos } from "@biomesaw/experience/src/utils/BuildUtils.sol";
 import { weiToString, getEmptyBlockOnGround } from "@biomesaw/experience/src/utils/GameUtils.sol";
+import { setExperienceMetadata, deleteExperienceMetadata, setNotification, deleteNotifications, setStatus, deleteStatus, setRegisterMsg, deleteRegisterMsg, setUnregisterMsg, deleteUnregisterMsg } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
+import { setPlayers, pushPlayers, popPlayers, updatePlayers, deletePlayers, setArea, deleteArea, setBuild, deleteBuild, setBuildWithPos, deleteBuildWithPos, setCountdown, setCountdownEndTimestamp, setCountdownEndBlock } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
+import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttacher } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
+
 import { EXPERIENCE_NAMESPACE } from "../Constants.sol";
 
 // Functions that are called by the Biomes World contract
@@ -37,14 +41,14 @@ contract ExperienceSystem is System, ICustomUnregisterDelegation, IOptionalSyste
   function initExperience() public {
     AccessControlLib.requireOwner(SystemRegistry.get(address(this)), _msgSender());
 
-    IExperienceWorld(_world()).experience__setStatus("Test Experience Status");
-    IExperienceWorld(_world()).experience__setRegisterMsg("Test Experience Register Message");
-    IExperienceWorld(_world()).experience__setUnregisterMsg("Test Experience Unregister Message");
+    setStatus("Test Experience Status");
+    setRegisterMsg("Test Experience Register Message");
+    setUnregisterMsg("Test Experience Unregister Message");
 
     bytes32[] memory hookSystemIds = new bytes32[](1);
     hookSystemIds[0] = ResourceId.unwrap(getSystemId("MoveSystem"));
 
-    IExperienceWorld(_world()).experience__setExperienceMetadata(
+    setExperienceMetadata(
       ExperienceMetadataData({
         shouldDelegate: address(0),
         hookSystemIds: hookSystemIds,
