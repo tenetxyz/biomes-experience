@@ -2,7 +2,6 @@
 pragma solidity >=0.8.24;
 
 import { IWorld } from "../codegen/world/IWorld.sol";
-import { IExperienceSystem } from "../codegen/world/IExperienceSystem.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { System } from "@latticexyz/world/src/System.sol";
 import { Systems } from "@latticexyz/world/src/codegen/tables/Systems.sol";
@@ -12,7 +11,6 @@ import { ResourceId, WorldResourceIdLib, WorldResourceIdInstance } from "@lattic
 import { Hook } from "@latticexyz/store/src/Hook.sol";
 import { ICustomUnregisterDelegation } from "@latticexyz/world/src/ICustomUnregisterDelegation.sol";
 import { IOptionalSystemHook } from "@latticexyz/world/src/IOptionalSystemHook.sol";
-import { ISystemHook } from "@latticexyz/world/src/ISystemHook.sol";
 import { Utils } from "@latticexyz/world/src/Utils.sol";
 import { AccessControlLib } from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import { IERC165 } from "@latticexyz/world/src/IERC165.sol";
@@ -42,33 +40,8 @@ import { IExternalSystem } from "../prototypes/IExternalSystem.sol";
 
 // Functions that are called by EOAs
 contract ExternalSystem is IExternalSystem {
-  function initExperience() public {
-    AccessControlLib.requireOwner(SystemRegistry.get(address(this)), _msgSender());
-
-    address experienceAddress = Systems.getSystem(getNamespaceSystemId(EXPERIENCE_NAMESPACE, "WorldSystem"));
-    require(experienceAddress != address(0), "WorldSystem not found");
-
-    setNamespaceExperience(experienceAddress);
-    CallMetadata.set(
-      ICustomUnregisterDelegation.canUnregister.selector,
-      IExperienceSystem.testexperience___canUnregister.selector
-    );
-    CallMetadata.set(
-      IOptionalSystemHook.onRegisterHook.selector,
-      IExperienceSystem.testexperience___onRegisterHook.selector
-    );
-    CallMetadata.set(
-      IOptionalSystemHook.onUnregisterHook.selector,
-      IExperienceSystem.testexperience___onUnregisterHook.selector
-    );
-    CallMetadata.set(
-      ISystemHook.onBeforeCallSystem.selector,
-      IExperienceSystem.testexperience___onBeforeCallSystem.selector
-    );
-    CallMetadata.set(
-      ISystemHook.onAfterCallSystem.selector,
-      IExperienceSystem.testexperience___onAfterCallSystem.selector
-    );
+  function initExperience() public override {
+    super.initExperience();
 
     setStatus("Test Experience Status");
     setRegisterMsg("Test Experience Register Message");
