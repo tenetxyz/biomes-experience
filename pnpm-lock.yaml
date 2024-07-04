@@ -99,6 +99,9 @@ importers:
 
   packages/contracts:
     dependencies:
+      '@biomesaw/experience':
+        specifier: link:../../../biomes-contracts/packages/experience
+        version: link:../../../biomes-contracts/packages/experience
       '@biomesaw/utils':
         specifier: link:../../../biomes-contracts/packages/utils
         version: link:../../../biomes-contracts/packages/utils

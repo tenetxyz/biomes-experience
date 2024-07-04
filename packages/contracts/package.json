@@ -24,6 +24,7 @@
     "test": "tsc --noEmit && mud test"
   },
   "dependencies": {
+    "@biomesaw/experience": "link:../../../biomes-contracts/packages/experience",
     "@biomesaw/world": "link:../../../biomes-contracts/packages/world",
     "@biomesaw/utils": "link:../../../biomes-contracts/packages/utils",
     "@latticexyz/cli": "link:../../../mud/packages/cli",
