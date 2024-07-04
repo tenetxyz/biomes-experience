@@ -20,8 +20,6 @@ contract TestScript is Script {
     // Start broadcasting transactions from the deployer account
     vm.startBroadcast(deployerPrivateKey);
 
-    // Notifications.set(address(0), "Test Notification");
-
     vm.stopBroadcast();
   }
 }
