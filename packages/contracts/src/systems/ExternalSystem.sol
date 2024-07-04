@@ -5,6 +5,7 @@ import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/wor
 import { IWorld } from "../codegen/world/IWorld.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { System } from "@latticexyz/world/src/System.sol";
+import { Systems } from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import { SystemRegistry } from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
 import { Balances } from "@latticexyz/world/src/codegen/tables/Balances.sol";
 import { ResourceId, WorldResourceIdLib, WorldResourceIdInstance } from "@latticexyz/world/src/WorldResourceId.sol";
@@ -18,6 +19,7 @@ import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { voxelCoordsAreEqual, inSurroundingCube } from "@biomesaw/utils/src/VoxelCoordUtils.sol";
+import { ExperienceMetadataData } from "@biomesaw/experience/src/codegen/tables/ExperienceMetadata.sol";
 
 // Available utils, remove the ones you don't need
 // See ObjectTypeIds.sol for all available object types
@@ -31,12 +33,39 @@ import { weiToString, getEmptyBlockOnGround } from "@biomesaw/experience/src/uti
 import { setExperienceMetadata, deleteExperienceMetadata, setNotification, deleteNotifications, setStatus, deleteStatus, setRegisterMsg, deleteRegisterMsg, setUnregisterMsg, deleteUnregisterMsg } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 import { setPlayers, pushPlayers, popPlayers, updatePlayers, deletePlayers, setArea, deleteArea, setBuild, deleteBuild, setBuildWithPos, deleteBuildWithPos, setCountdown, setCountdownEndTimestamp, setCountdownEndBlock } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttacher } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
+import { setNamespaceExperience, deleteNamespaceExperience } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
 import { EXPERIENCE_NAMESPACE } from "../Constants.sol";
 import { IExternalSystem } from "../prototypes/IExternalSystem.sol";
 
 // Functions that are called by EOAs
 contract ExternalSystem is IExternalSystem {
+  function initExperience() public {
+    AccessControlLib.requireOwner(SystemRegistry.get(address(this)), _msgSender());
+
+    address experienceAddress = Systems.getSystem(getNamespaceSystemId(EXPERIENCE_NAMESPACE, "ExperienceSystem"));
+    require(experienceAddress != address(0), "ExperienceSystem not found");
+
+    setNamespaceExperience(experienceAddress);
+
+    setStatus("Test Experience Status");
+    setRegisterMsg("Test Experience Register Message");
+    setUnregisterMsg("Test Experience Unregister Message");
+
+    bytes32[] memory hookSystemIds = new bytes32[](1);
+    hookSystemIds[0] = ResourceId.unwrap(getSystemId("MoveSystem"));
+
+    setExperienceMetadata(
+      ExperienceMetadataData({
+        shouldDelegate: address(0),
+        hookSystemIds: hookSystemIds,
+        joinFee: 0,
+        name: "Test Experience",
+        description: "Test Experience Description"
+      })
+    );
+  }
+
   function joinExperience() public payable override {
     super.joinExperience();
   }

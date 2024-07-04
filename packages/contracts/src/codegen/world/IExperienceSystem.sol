@@ -11,8 +11,6 @@ import { ResourceId } from "@latticexyz/world/src/WorldResourceId.sol";
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IExperienceSystem {
-  function testexperience__initExperience() external;
-
   function testexperience__supportsInterface(bytes4 interfaceId) external pure returns (bool);
 
   function testexperience__canUnregister(address delegator) external returns (bool);

@@ -19,8 +19,6 @@ import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { voxelCoordsAreEqual, inSurroundingCube } from "@biomesaw/utils/src/VoxelCoordUtils.sol";
 
-import { ExperienceMetadataData } from "@biomesaw/experience/src/codegen/tables/ExperienceMetadata.sol";
-
 // Available utils, remove the ones you don't need
 // See ObjectTypeIds.sol for all available object types
 import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
@@ -38,27 +36,6 @@ import { EXPERIENCE_NAMESPACE } from "../Constants.sol";
 
 // Functions that are called by the Biomes World contract
 contract ExperienceSystem is System, ICustomUnregisterDelegation, IOptionalSystemHook {
-  function initExperience() public {
-    AccessControlLib.requireOwner(SystemRegistry.get(address(this)), _msgSender());
-
-    setStatus("Test Experience Status");
-    setRegisterMsg("Test Experience Register Message");
-    setUnregisterMsg("Test Experience Unregister Message");
-
-    bytes32[] memory hookSystemIds = new bytes32[](1);
-    hookSystemIds[0] = ResourceId.unwrap(getSystemId("MoveSystem"));
-
-    setExperienceMetadata(
-      ExperienceMetadataData({
-        shouldDelegate: address(0),
-        hookSystemIds: hookSystemIds,
-        joinFee: 0,
-        name: "Test Experience",
-        description: "Test Experience Description"
-      })
-    );
-  }
-
   function supportsInterface(bytes4 interfaceId) public pure override(IERC165, WorldContextConsumer) returns (bool) {
     return
       interfaceId == type(ICustomUnregisterDelegation).interfaceId ||
@@ -75,7 +52,10 @@ contract ExperienceSystem is System, ICustomUnregisterDelegation, IOptionalSyste
     ResourceId systemId,
     uint8 enabledHooksBitmap,
     bytes32 callDataHash
-  ) public override {}
+  ) public override {
+    setNotification(address(0), "Test Experience Notification onRegisterHook");
+    setNotification(msgSender, "Test Player Notification onRegisterHook");
+  }
 
   function onUnregisterHook(
     address msgSender,
