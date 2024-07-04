@@ -6,5 +6,13 @@ export default defineWorld({
     upgradeableWorldImplementation: true,
   },
   namespace: "testexperience",
-  tables: {},
+  tables: {
+    CallMetadata: {
+      schema: {
+        experienceFunctionSelector: "bytes4",
+        worldFunctionSelector: "bytes4",
+      },
+      key: ["experienceFunctionSelector"],
+    }
+  },
 });

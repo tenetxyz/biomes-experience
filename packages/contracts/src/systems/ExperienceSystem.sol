@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
-import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 import { IWorld } from "../codegen/world/IWorld.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { System } from "@latticexyz/world/src/System.sol";
@@ -34,37 +33,29 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 
 import { EXPERIENCE_NAMESPACE } from "../Constants.sol";
 
-// Functions that are called by the Biomes World contract
-contract ExperienceSystem is System, ICustomUnregisterDelegation, IOptionalSystemHook {
-  function supportsInterface(bytes4 interfaceId) public pure override(IERC165, WorldContextConsumer) returns (bool) {
-    return
-      interfaceId == type(ICustomUnregisterDelegation).interfaceId ||
-      interfaceId == type(IOptionalSystemHook).interfaceId ||
-      super.supportsInterface(interfaceId);
-  }
-
-  function canUnregister(address delegator) public override returns (bool) {
+contract ExperienceSystem is System {
+  function _canUnregister(address delegator) public returns (bool) {
     return true;
   }
 
-  function onRegisterHook(
+  function _onRegisterHook(
     address msgSender,
     ResourceId systemId,
     uint8 enabledHooksBitmap,
     bytes32 callDataHash
-  ) public override {
+  ) public {
     setNotification(address(0), "Test Experience Notification onRegisterHook");
     setNotification(msgSender, "Test Player Notification onRegisterHook");
   }
 
-  function onUnregisterHook(
+  function _onUnregisterHook(
     address msgSender,
     ResourceId systemId,
     uint8 enabledHooksBitmap,
     bytes32 callDataHash
-  ) public override {}
+  ) public {}
 
-  function onBeforeCallSystem(address msgSender, ResourceId systemId, bytes memory callData) public override {}
+  function _onBeforeCallSystem(address msgSender, ResourceId systemId, bytes memory callData) public {}
 
-  function onAfterCallSystem(address msgSender, ResourceId systemId, bytes memory callData) public override {}
+  function _onAfterCallSystem(address msgSender, ResourceId systemId, bytes memory callData) public {}
 }

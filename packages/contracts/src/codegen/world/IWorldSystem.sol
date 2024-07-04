@@ -6,28 +6,30 @@ pragma solidity >=0.8.24;
 import { ResourceId } from "@latticexyz/world/src/WorldResourceId.sol";
 
 /**
- * @title IExperienceSystem
+ * @title IWorldSystem
  * @author MUD (https://mud.dev) by Lattice (https://lattice.xyz)
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
-interface IExperienceSystem {
-  function testexperience___canUnregister(address delegator) external returns (bool);
+interface IWorldSystem {
+  function testexperience__supportsInterface(bytes4 interfaceId) external pure returns (bool);
 
-  function testexperience___onRegisterHook(
+  function testexperience__canUnregister(address delegator) external returns (bool);
+
+  function testexperience__onRegisterHook(
     address msgSender,
     ResourceId systemId,
     uint8 enabledHooksBitmap,
     bytes32 callDataHash
   ) external;
 
-  function testexperience___onUnregisterHook(
+  function testexperience__onUnregisterHook(
     address msgSender,
     ResourceId systemId,
     uint8 enabledHooksBitmap,
     bytes32 callDataHash
   ) external;
 
-  function testexperience___onBeforeCallSystem(address msgSender, ResourceId systemId, bytes memory callData) external;
+  function testexperience__onBeforeCallSystem(address msgSender, ResourceId systemId, bytes memory callData) external;
 
-  function testexperience___onAfterCallSystem(address msgSender, ResourceId systemId, bytes memory callData) external;
+  function testexperience__onAfterCallSystem(address msgSender, ResourceId systemId, bytes memory callData) external;
 }

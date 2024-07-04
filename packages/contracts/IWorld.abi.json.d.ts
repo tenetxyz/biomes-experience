@@ -1174,6 +1174,127 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "testexperience___canUnregister",
+    "inputs": [
+      {
+        "name": "delegator",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testexperience___onAfterCallSystem",
+    "inputs": [
+      {
+        "name": "msgSender",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "callData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testexperience___onBeforeCallSystem",
+    "inputs": [
+      {
+        "name": "msgSender",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "callData",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testexperience___onRegisterHook",
+    "inputs": [
+      {
+        "name": "msgSender",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "enabledHooksBitmap",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "callDataHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testexperience___onUnregisterHook",
+    "inputs": [
+      {
+        "name": "msgSender",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "systemId",
+        "type": "bytes32",
+        "internalType": "ResourceId"
+      },
+      {
+        "name": "enabledHooksBitmap",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "callDataHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "testexperience__canUnregister",
     "inputs": [
       {
