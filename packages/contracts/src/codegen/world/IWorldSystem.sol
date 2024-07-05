@@ -32,4 +32,6 @@ interface IWorldSystem {
   function testexperience__onBeforeCallSystem(address msgSender, ResourceId systemId, bytes memory callData) external;
 
   function testexperience__onAfterCallSystem(address msgSender, ResourceId systemId, bytes memory callData) external;
+
+  function testexperience__callWorld(address delegator, ResourceId systemId, bytes memory callData) external;
 }
