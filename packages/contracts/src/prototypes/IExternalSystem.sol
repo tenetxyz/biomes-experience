@@ -14,7 +14,7 @@ import { AccessControlLib } from "@latticexyz/world-modules/src/utils/AccessCont
 import { getSystemId, getNamespaceSystemId } from "@biomesaw/experience/src/utils/DelegationUtils.sol";
 import { ExperienceMetadata, ExperienceMetadataData } from "@biomesaw/experience/src/codegen/tables/ExperienceMetadata.sol";
 import { hasBeforeAndAfterSystemHook, hasDelegated } from "@biomesaw/experience/src/utils/EntityUtils.sol";
-import { setNamespaceExperience, deleteNamespaceExperience } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
+import { getNamespaceExperience, setNamespaceExperience, deleteNamespaceExperience } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
 import { CallMetadata } from "../codegen/tables/CallMetadata.sol";
 import { EXPERIENCE_NAMESPACE } from "../Constants.sol";
@@ -51,8 +51,8 @@ abstract contract IExternalSystem is System {
   }
 
   function joinExperience() public payable virtual {
-    address experienceAddress = Systems.getSystem(getNamespaceSystemId(EXPERIENCE_NAMESPACE, "ExperienceSystem"));
-    require(experienceAddress != address(0), "ExperienceSystem not found");
+    address experienceAddress = getNamespaceExperience();
+    require(experienceAddress != address(0), "Experience address not found");
 
     require(_msgValue() >= ExperienceMetadata.getJoinFee(experienceAddress), "The player hasn't paid the join fee");
 
