@@ -18,7 +18,7 @@ import { WorldContextConsumer } from "@latticexyz/world/src/WorldContext.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { voxelCoordsAreEqual, inSurroundingCube } from "@biomesaw/utils/src/VoxelCoordUtils.sol";
-import { ExperienceMetadataData } from "@biomesaw/experience/src/codegen/tables/ExperienceMetadata.sol";
+import { ExperienceMetadata, ExperienceMetadataData } from "@biomesaw/experience/src/codegen/tables/ExperienceMetadata.sol";
 
 // Available utils, remove the ones you don't need
 // See ObjectTypeIds.sol for all available object types
