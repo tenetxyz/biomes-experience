@@ -30,6 +30,7 @@ import { weiToString, getEmptyBlockOnGround } from "@biomesaw/experience/src/uti
 import { setExperienceMetadata, deleteExperienceMetadata, setNotification, deleteNotifications, setStatus, deleteStatus, setRegisterMsg, deleteRegisterMsg, setUnregisterMsg, deleteUnregisterMsg } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 import { setPlayers, pushPlayers, popPlayers, updatePlayers, deletePlayers, setArea, deleteArea, setBuild, deleteBuild, setBuildWithPos, deleteBuildWithPos, setCountdown, setCountdownEndTimestamp, setCountdownEndBlock } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttacher } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
+import { getNamespaceExperience, setNamespaceExperience, deleteNamespaceExperience } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
 import { EXPERIENCE_NAMESPACE } from "../Constants.sol";
 
