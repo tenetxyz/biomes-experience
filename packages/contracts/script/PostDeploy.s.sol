@@ -11,9 +11,8 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
-import { Experience } from "../src/Experience.sol";
-import { EXPERIENCE_NAMESPACE } from "../src/Constants.sol";
-import { IExperience } from "../src/IExperience.sol";
+import { Chip } from "../src/Chip.sol";
+import { CHIP_NAMESPACE } from "../src/Constants.sol";
 
 contract PostDeploy is Script {
   function run(address worldAddress) external {
@@ -28,23 +27,23 @@ contract PostDeploy is Script {
 
     ResourceId namespaceId = WorldResourceIdLib.encode({
       typeId: RESOURCE_NAMESPACE,
-      namespace: EXPERIENCE_NAMESPACE,
+      namespace: CHIP_NAMESPACE,
       name: ""
     });
 
-    address currentExperienceAddress = Metadata.getExperienceAddress();
-    if (currentExperienceAddress != address(0)) {
-      console.log("Revoking access to current Experience contract...");
-      IWorld(worldAddress).revokeAccess(namespaceId, currentExperienceAddress);
+    address currentChipAddress = Metadata.getChipAddress();
+    if (currentChipAddress != address(0)) {
+      console.log("Revoking access to current Chip contract...");
+      IWorld(worldAddress).revokeAccess(namespaceId, currentChipAddress);
     }
 
-    console.log("Deploying Experience contract...");
-    Experience experience = new Experience(worldAddress);
-    console.log("Deployed Experience contract at address: ");
-    address experienceAddress = address(experience);
-    console.logAddress(experienceAddress);
-    IWorld(worldAddress).grantAccess(namespaceId, experienceAddress);
-    Metadata.setExperienceAddress(experienceAddress);
+    console.log("Deploying Chip contract...");
+    Chip chip = new Chip(worldAddress);
+    console.log("Deployed Chip contract at address: ");
+    address chipAddress = address(chip);
+    console.logAddress(chipAddress);
+    IWorld(worldAddress).grantAccess(namespaceId, chipAddress);
+    Metadata.setChipAddress(chipAddress);
 
     vm.stopBroadcast();
   }
