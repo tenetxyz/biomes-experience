@@ -36,10 +36,10 @@ contract PostDeploy is Script {
     console.log("Deploying Experience contract...");
     Experience experience = new Experience(worldAddress);
     console.log("Deployed Experience contract at address: ");
-    console.logAddress(address(experience));
-    IWorld(worldAddress).grantAccess(namespaceId, address(experience));
-
-    Metadata.setExperienceAddress(address(experience));
+    address experienceAddress = Metadata.getExperienceAddress();
+    console.logAddress(experienceAddress);
+    IWorld(worldAddress).grantAccess(namespaceId, experienceAddress);
+    Metadata.setExperienceAddress(experienceAddress);
 
     vm.stopBroadcast();
   }
