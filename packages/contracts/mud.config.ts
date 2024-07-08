@@ -7,12 +7,11 @@ export default defineWorld({
   },
   namespace: "testexperience",
   tables: {
-    CallMetadata: {
+    Config: {
       schema: {
-        experienceFunctionSelector: "bytes4",
-        worldFunctionSelector: "bytes4",
+        conractAddress: "address",
       },
-      key: ["experienceFunctionSelector"],
+      key: [],
     }
   },
 });

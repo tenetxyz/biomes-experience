@@ -2,7 +2,6 @@
 pragma solidity >=0.8.24;
 
 import { System } from "@latticexyz/world/src/System.sol";
-import { IExperienceSystem } from "../codegen/world/IExperienceSystem.sol";
 import { ResourceId, WorldResourceIdLib, WorldResourceIdInstance } from "@latticexyz/world/src/WorldResourceId.sol";
 import { Systems } from "@latticexyz/world/src/codegen/tables/Systems.sol";
 import { SystemRegistry } from "@latticexyz/world/src/codegen/tables/SystemRegistry.sol";
@@ -16,38 +15,17 @@ import { ExperienceMetadata, ExperienceMetadataData } from "@biomesaw/experience
 import { hasBeforeAndAfterSystemHook, hasDelegated } from "@biomesaw/experience/src/utils/EntityUtils.sol";
 import { getNamespaceExperience, setNamespaceExperience, deleteNamespaceExperience } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
-import { CallMetadata } from "../codegen/tables/CallMetadata.sol";
+import { Config } from "../codegen/tables/Config.sol";
 import { EXPERIENCE_NAMESPACE } from "../Constants.sol";
 
 abstract contract IExternalSystem is System {
   function initExperience() public virtual {
     AccessControlLib.requireOwner(SystemRegistry.get(address(this)), _msgSender());
 
-    address experienceAddress = Systems.getSystem(getNamespaceSystemId(EXPERIENCE_NAMESPACE, "WorldSystem"));
+    address experienceAddress = Config.getConractAddress();
     require(experienceAddress != address(0), "WorldSystem not found");
 
     setNamespaceExperience(experienceAddress);
-
-    CallMetadata.set(
-      ICustomUnregisterDelegation.canUnregister.selector,
-      IExperienceSystem.testexperience___canUnregister.selector
-    );
-    CallMetadata.set(
-      IOptionalSystemHook.onRegisterHook.selector,
-      IExperienceSystem.testexperience___onRegisterHook.selector
-    );
-    CallMetadata.set(
-      IOptionalSystemHook.onUnregisterHook.selector,
-      IExperienceSystem.testexperience___onUnregisterHook.selector
-    );
-    CallMetadata.set(
-      ISystemHook.onBeforeCallSystem.selector,
-      IExperienceSystem.testexperience___onBeforeCallSystem.selector
-    );
-    CallMetadata.set(
-      ISystemHook.onAfterCallSystem.selector,
-      IExperienceSystem.testexperience___onAfterCallSystem.selector
-    );
   }
 
   function joinExperience() public payable virtual {

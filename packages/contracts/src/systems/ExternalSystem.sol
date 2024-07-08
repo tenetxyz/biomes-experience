@@ -35,7 +35,6 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 import { getNamespaceExperience, setNamespaceExperience, deleteNamespaceExperience } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
 import { EXPERIENCE_NAMESPACE } from "../Constants.sol";
-import { CallMetadata } from "../codegen/tables/CallMetadata.sol";
 import { IExternalSystem } from "../prototypes/IExternalSystem.sol";
 
 // Functions that are called by EOAs
