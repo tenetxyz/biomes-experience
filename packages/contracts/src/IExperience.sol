@@ -8,4 +8,6 @@ interface IExperience is ICustomUnregisterDelegation, IOptionalSystemHook {
   function joinExperience() external payable;
 
   function getBiomeWorldAddress() external view returns (address);
+
+  function withdraw() external;
 }

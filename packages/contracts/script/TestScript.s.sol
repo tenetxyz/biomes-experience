@@ -11,6 +11,9 @@ import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { IExperience } from "../src/IExperience.sol";
 
+import { Players } from "@biomesaw/experience/src/codegen/tables/Players.sol";
+import { PlayerMetadata, PlayerMetadataData } from "../src/codegen/tables/PlayerMetadata.sol";
+
 contract TestScript is Script {
   function run(address worldAddress) external {
     // Specify a store so that you can use tables directly in PostDeploy
@@ -26,7 +29,17 @@ contract TestScript is Script {
     address experienceAddress = Metadata.getExperienceAddress();
     console.logAddress(experienceAddress);
 
-    IExperience(experienceAddress).joinExperience{ value: 0 }();
+    IExperience(experienceAddress).joinExperience{ value: 350000000000000 }();
+
+    // IExperience(experienceAddress).withdraw();
+
+    address[] memory players = Players.get(experienceAddress);
+    for (uint i = 0; i < players.length; i++) {
+      console.log("Player");
+      console.logAddress(players[i]);
+      console.logUint(PlayerMetadata.getBalance(players[i]));
+      console.logAddress(PlayerMetadata.getLastHitter(players[i]));
+    }
 
     vm.stopBroadcast();
   }
