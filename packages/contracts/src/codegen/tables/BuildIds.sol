@@ -16,17 +16,17 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-library Metadata {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "buildanomics", name: "Metadata", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x74626275696c64616e6f6d69637300004d657461646174610000000000000000);
+library BuildIds {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "buildanomics", name: "BuildIds", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x74626275696c64616e6f6d69637300004275696c644964730000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0014010014000000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0020010020000000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (address)
-  Schema constant _valueSchema = Schema.wrap(0x0014010061000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256)
+  Schema constant _valueSchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -42,7 +42,7 @@ library Metadata {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](1);
-    fieldNames[0] = "experienceAddress";
+    fieldNames[0] = "value";
   }
 
   /**
@@ -60,79 +60,124 @@ library Metadata {
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Register the table with its config (using the specified store).
    */
-  function getExperienceAddress() internal view returns (address experienceAddress) {
+  function register(IStore _store) internal {
+    _store.registerTable(_tableId, _fieldLayout, _keySchema, _valueSchema, getKeyNames(), getFieldNames());
+  }
+
+  /**
+   * @notice Get value.
+   */
+  function getValue() internal view returns (uint256 value) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get value.
    */
-  function _getExperienceAddress() internal view returns (address experienceAddress) {
+  function _getValue() internal view returns (uint256 value) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get value (using the specified store).
    */
-  function get() internal view returns (address experienceAddress) {
+  function getValue(IStore _store) internal view returns (uint256 value) {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    bytes32 _blob = _store.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get value.
+   */
+  function get() internal view returns (uint256 value) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get value.
    */
-  function _get() internal view returns (address experienceAddress) {
+  function _get() internal view returns (uint256 value) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Get value (using the specified store).
    */
-  function setExperienceAddress(address experienceAddress) internal {
+  function get(IStore _store) internal view returns (uint256 value) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    bytes32 _blob = _store.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set value.
    */
-  function _setExperienceAddress(address experienceAddress) internal {
+  function setValue(uint256 value) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set value.
    */
-  function set(address experienceAddress) internal {
+  function _setValue(uint256 value) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set value (using the specified store).
    */
-  function _set(address experienceAddress) internal {
+  function setValue(IStore _store, uint256 value) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    _store.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set value.
+   */
+  function set(uint256 value) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set value.
+   */
+  function _set(uint256 value) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set value (using the specified store).
+   */
+  function set(IStore _store, uint256 value) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    _store.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((value)), _fieldLayout);
   }
 
   /**
@@ -154,11 +199,20 @@ library Metadata {
   }
 
   /**
+   * @notice Delete all data for given keys (using the specified store).
+   */
+  function deleteRecord(IStore _store) internal {
+    bytes32[] memory _keyTuple = new bytes32[](0);
+
+    _store.deleteRecord(_tableId, _keyTuple);
+  }
+
+  /**
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(address experienceAddress) internal pure returns (bytes memory) {
-    return abi.encodePacked(experienceAddress);
+  function encodeStatic(uint256 value) internal pure returns (bytes memory) {
+    return abi.encodePacked(value);
   }
 
   /**
@@ -167,8 +221,8 @@ library Metadata {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(address experienceAddress) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(experienceAddress);
+  function encode(uint256 value) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+    bytes memory _staticData = encodeStatic(value);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
