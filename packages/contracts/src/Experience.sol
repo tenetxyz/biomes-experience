@@ -31,9 +31,11 @@ import { weiToString, getEmptyBlockOnGround } from "@biomesaw/experience/src/uti
 import { setExperienceMetadata, setJoinFee, deleteExperienceMetadata, setNotification, deleteNotifications, setStatus, deleteStatus, setRegisterMsg, deleteRegisterMsg, setUnregisterMsg, deleteUnregisterMsg } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 import { setPlayers, pushPlayers, popPlayers, updatePlayers, deletePlayers, setArea, deleteArea, setBuild, deleteBuild, setBuildWithPos, deleteBuildWithPos, setCountdown, setCountdownEndTimestamp, setCountdownEndBlock, setTokenMetadata, deleteTokenMetadata, setNFTMetadata, deleteNFTMetadata, setTokens, pushTokens, popTokens, updateTokens, deleteTokens, setNfts, pushNfts, popNfts, updateNfts, deleteNfts } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
+import { Players } from "@biomesaw/experience/src/codegen/tables/Players.sol";
 import { ExperienceLib } from "./lib/ExperienceLib.sol";
+import { PlayerMetadata, PlayerMetadataData } from "./codegen/tables/PlayerMetadata.sol";
 
-contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
+contract Experience is IOptionalSystemHook {
   constructor(address _biomeWorldAddress) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
 
@@ -41,26 +43,64 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
   }
 
   function initExperience() internal {
-    setStatus("Test Experience Status");
-    setRegisterMsg("Test Experience Register Message");
-    setUnregisterMsg("Test Experience Unregister Message");
+    setStatus(
+      "If anyone kills your player, they will get this eth. If you kill other players, you will get their eth."
+    );
+    setRegisterMsg(
+      "You can't logoff until you withdraw your ether or die. Whenever you hit another player, check if they died in order to earn their ether."
+    );
+    setUnregisterMsg("You will be unregistered and any remaining balance will be sent to you/your last hitter.");
 
-    bytes32[] memory hookSystemIds = new bytes32[](1);
-    hookSystemIds[0] = ResourceId.unwrap(getSystemId("MoveSystem"));
+    bytes32[] memory hookSystemIds = new bytes32[](3);
+    hookSystemIds[0] = ResourceId.unwrap(getSystemId("LogoffSystem"));
+    hookSystemIds[1] = ResourceId.unwrap(getSystemId("SpawnSystem"));
+    hookSystemIds[2] = ResourceId.unwrap(getSystemId("HitSystem"));
 
     setExperienceMetadata(
       ExperienceMetadataData({
         shouldDelegate: address(0),
         hookSystemIds: hookSystemIds,
-        joinFee: 0,
-        name: "Test Experience",
-        description: "Test Experience Description"
+        joinFee: 350000000000000,
+        name: "Bounty Hunter",
+        description: "Kill players to get their ether. Stay alive to keep it."
       })
     );
   }
 
   function joinExperience() public payable {
     ExperienceLib.ensureJoinRequirements();
+
+    address player = msg.sender;
+    require(getEntityFromPlayer(player) != bytes32(0), "You Must First Spawn An Avatar In Biome-1 To Play The Game.");
+    require(!PlayerMetadata.getIsRegistered(player), "Player is already registered");
+    pushPlayers(player);
+    PlayerMetadata.set(
+      player,
+      PlayerMetadataData({
+        balance: msg.value,
+        lastWithdrawalTime: block.timestamp,
+        lastHitter: address(0),
+        isRegistered: true
+      })
+    );
+
+    setNotification(address(0), string.concat("Player ", Strings.toHexString(player), " has joined the game"));
+  }
+
+  function withdraw() public {
+    address player = msg.sender;
+    require(PlayerMetadata.getIsRegistered(player), "You are not a registered player.");
+    require(PlayerMetadata.getLastWithdrawalTime(player) + 2 hours < block.timestamp, "Can't withdraw yet.");
+
+    uint256 balance = PlayerMetadata.getBalance(player);
+    require(balance > 0, "Your balance is zero.");
+
+    PlayerMetadata.setLastWithdrawalTime(player, block.timestamp);
+    PlayerMetadata.setBalance(player, 0);
+    PlayerMetadata.setLastHitter(player, address(0));
+
+    (bool sent, ) = player.call{ value: balance }("");
+    require(sent, "Failed to send Ether");
   }
 
   modifier onlyBiomeWorld() {
@@ -69,14 +109,18 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
   }
 
   function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
-    return
-      interfaceId == type(ICustomUnregisterDelegation).interfaceId ||
-      interfaceId == type(IOptionalSystemHook).interfaceId ||
-      interfaceId == type(IERC165).interfaceId;
+    return interfaceId == type(IOptionalSystemHook).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
-  function canUnregister(address delegator) public override onlyBiomeWorld returns (bool) {
-    return true;
+  function transferRemainingBalance(address player, uint256 balance, address recipient) internal {
+    if (balance > 0) {
+      if (recipient == address(0) || !PlayerMetadata.getIsRegistered(recipient)) {
+        (bool sent, ) = player.call{ value: balance }("");
+        require(sent, "Failed to send Ether");
+      } else {
+        PlayerMetadata.setBalance(recipient, PlayerMetadata.getBalance(recipient) + balance);
+      }
+    }
   }
 
   function onRegisterHook(
@@ -84,9 +128,21 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
     ResourceId systemId,
     uint8 enabledHooksBitmap,
     bytes32 callDataHash
-  ) public override onlyBiomeWorld {
-    setNotification(address(0), "Test Experience Notification onRegisterHook");
-    setNotification(msgSender, "Test Player Notification onRegisterHook");
+  ) public override onlyBiomeWorld {}
+
+  function removePlayer(address player) internal {
+    PlayerMetadata.deleteRecord(player);
+
+    address[] memory players = Players.get(address(this));
+    address[] memory newPlayers = new address[](players.length - 1);
+    uint256 newPlayersCount = 0;
+    for (uint256 i = 0; i < players.length; i++) {
+      if (players[i] != player) {
+        newPlayers[newPlayersCount] = players[i];
+        newPlayersCount++;
+      }
+    }
+    setPlayers(newPlayers);
   }
 
   function onUnregisterHook(
@@ -94,7 +150,23 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
     ResourceId systemId,
     uint8 enabledHooksBitmap,
     bytes32 callDataHash
-  ) public override onlyBiomeWorld {}
+  ) public override onlyBiomeWorld {
+    if (!PlayerMetadata.getIsRegistered(msgSender)) {
+      return;
+    }
+
+    uint256 balance = PlayerMetadata.getBalance(msgSender);
+    address recipient = PlayerMetadata.getLastHitter(msgSender);
+    uint256 lastWithdrawalTime = PlayerMetadata.getLastWithdrawalTime(msgSender);
+    removePlayer(msgSender);
+
+    if (lastWithdrawalTime + 2 hours < block.timestamp) {
+      (bool sent, ) = msgSender.call{ value: balance }("");
+      require(sent, "Failed to send Ether");
+    } else {
+      transferRemainingBalance(msgSender, balance, recipient);
+    }
+  }
 
   function onBeforeCallSystem(
     address msgSender,
@@ -106,7 +178,49 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
     address msgSender,
     ResourceId systemId,
     bytes memory callData
-  ) public override onlyBiomeWorld {}
+  ) public override onlyBiomeWorld {
+    if (!PlayerMetadata.getIsRegistered(msgSender)) {
+      return;
+    }
+
+    if (isSystemId(systemId, "LogoffSystem")) {
+      require(false, "Cannot logoff when registered.");
+      return;
+    } else if (isSystemId(systemId, "SpawnSystem")) {
+      uint256 playerBalance = PlayerMetadata.getBalance(msgSender);
+      if (playerBalance == 0) {
+        return;
+      }
+      address recipient = PlayerMetadata.getLastHitter(msgSender);
+
+      removePlayer(msgSender);
+      transferRemainingBalance(msgSender, playerBalance, recipient);
+    } else if (isSystemId(systemId, "HitSystem")) {
+      address hitPlayer = getHitArgs(callData);
+
+      if (PlayerMetadata.getIsRegistered(hitPlayer)) {
+        PlayerMetadata.setLastHitter(hitPlayer, msgSender);
+
+        if (getEntityFromPlayer(hitPlayer) == bytes32(0)) {
+          PlayerMetadata.setBalance(
+            msgSender,
+            PlayerMetadata.getBalance(msgSender) + PlayerMetadata.getBalance(hitPlayer)
+          );
+          removePlayer(hitPlayer);
+
+          setNotification(
+            address(0),
+            string.concat(
+              "Player ",
+              Strings.toHexString(hitPlayer),
+              " has been killed by ",
+              Strings.toHexString(msgSender)
+            )
+          );
+        }
+      }
+    }
+  }
 
   function getBiomeWorldAddress() public view returns (address) {
     return WorldContextConsumerLib._world();
