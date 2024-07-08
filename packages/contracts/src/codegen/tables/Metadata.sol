@@ -17,8 +17,8 @@ import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/Encoded
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
 library Metadata {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "testexperience", name: "Metadata", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746274657374657870657269656e63654d657461646174610000000000000000);
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "testchip", name: "Metadata", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746274657374636869700000000000004d657461646174610000000000000000);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0014010014000000000000000000000000000000000000000000000000000000);
@@ -42,7 +42,7 @@ library Metadata {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](1);
-    fieldNames[0] = "experienceAddress";
+    fieldNames[0] = "chipAddress";
   }
 
   /**
@@ -60,9 +60,9 @@ library Metadata {
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get chipAddress.
    */
-  function getExperienceAddress() internal view returns (address experienceAddress) {
+  function getChipAddress() internal view returns (address chipAddress) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
@@ -70,9 +70,9 @@ library Metadata {
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get chipAddress.
    */
-  function _getExperienceAddress() internal view returns (address experienceAddress) {
+  function _getChipAddress() internal view returns (address chipAddress) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
@@ -80,9 +80,9 @@ library Metadata {
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get chipAddress.
    */
-  function get() internal view returns (address experienceAddress) {
+  function get() internal view returns (address chipAddress) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
@@ -90,9 +90,9 @@ library Metadata {
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get chipAddress.
    */
-  function _get() internal view returns (address experienceAddress) {
+  function _get() internal view returns (address chipAddress) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
@@ -100,39 +100,39 @@ library Metadata {
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set chipAddress.
    */
-  function setExperienceAddress(address experienceAddress) internal {
+  function setChipAddress(address chipAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set chipAddress.
    */
-  function _setExperienceAddress(address experienceAddress) internal {
+  function _setChipAddress(address chipAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set chipAddress.
    */
-  function set(address experienceAddress) internal {
+  function set(address chipAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set chipAddress.
    */
-  function _set(address experienceAddress) internal {
+  function _set(address chipAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
   }
 
   /**
@@ -157,8 +157,8 @@ library Metadata {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(address experienceAddress) internal pure returns (bytes memory) {
-    return abi.encodePacked(experienceAddress);
+  function encodeStatic(address chipAddress) internal pure returns (bytes memory) {
+    return abi.encodePacked(chipAddress);
   }
 
   /**
@@ -167,8 +167,8 @@ library Metadata {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(address experienceAddress) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(experienceAddress);
+  function encode(address chipAddress) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+    bytes memory _staticData = encodeStatic(chipAddress);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
