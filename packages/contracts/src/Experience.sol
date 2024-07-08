@@ -109,7 +109,7 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
     bytes memory callData
   ) public override onlyBiomeWorld {}
 
-  function getBiomeWorldAddress() external view returns (address) {
+  function getBiomeWorldAddress() public view returns (address) {
     return WorldContextConsumerLib._world();
   }
 }
