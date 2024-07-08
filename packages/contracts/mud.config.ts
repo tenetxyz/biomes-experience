@@ -5,8 +5,20 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testexperience",
+  namespace: "locationguard",
   tables: {
+    GameMetadata: {
+      schema: {
+        guardPositionX: "int16",
+        guardPositionY: "int16",
+        guardPositionZ: "int16",
+        unguardPositionsX: "int16[]",
+        unguardPositionsY: "int16[]",
+        unguardPositionsZ: "int16[]",
+        allowedPlayers: "address[]",
+      },
+      key: [],
+    },
     Metadata: {
       schema: {
         experienceAddress: "address",
