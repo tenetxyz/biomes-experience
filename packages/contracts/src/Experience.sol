@@ -32,6 +32,10 @@ import { setExperienceMetadata, setJoinFee, deleteExperienceMetadata, setNotific
 import { setPlayers, pushPlayers, popPlayers, updatePlayers, deletePlayers, setArea, deleteArea, setBuild, deleteBuild, setBuildWithPos, deleteBuildWithPos, setCountdown, setCountdownEndTimestamp, setCountdownEndBlock, setTokenMetadata, deleteTokenMetadata, setNFTMetadata, deleteNFTMetadata, setTokens, pushTokens, popTokens, updateTokens, deleteTokens, setNfts, pushNfts, popNfts, updateNfts, deleteNfts } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
 import { ExperienceLib } from "./lib/ExperienceLib.sol";
+import { Builds } from "@biomesaw/experience/src/codegen/tables/Builds.sol";
+import { LOGO_BUILD_ID } from "./Constants.sol";
+import { GameMetadata } from "./codegen/tables/GameMetadata.sol";
+import { Builder } from "./codegen/tables/Builder.sol";
 
 contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
   constructor(address _biomeWorldAddress) {
@@ -41,26 +45,116 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
   }
 
   function initExperience() internal {
-    setStatus("Test Experience Status");
-    setRegisterMsg("Test Experience Register Message");
-    setUnregisterMsg("Test Experience Unregister Message");
+    setStatus("Build and submit to be allowed drops");
+    setRegisterMsg("Build hook tracks who placed down a block");
 
     bytes32[] memory hookSystemIds = new bytes32[](1);
-    hookSystemIds[0] = ResourceId.unwrap(getSystemId("MoveSystem"));
+    hookSystemIds[0] = ResourceId.unwrap(getSystemId("BuildSystem"));
 
     setExperienceMetadata(
       ExperienceMetadataData({
-        shouldDelegate: address(0),
+        shouldDelegate: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
         hookSystemIds: hookSystemIds,
         joinFee: 0,
-        name: "Test Experience",
-        description: "Test Experience Description"
+        name: "Build For Drops",
+        description: "Submit builds and drop items!"
       })
     );
   }
 
   function joinExperience() public payable {
     ExperienceLib.ensureJoinRequirements();
+  }
+
+  function setBuildForDrops(string memory name, Build memory build) public {
+    require(msg.sender == ExperienceMetadata.getShouldDelegate(address(this)), "Only delegator can add build");
+    require(build.objectTypeIds.length > 0, "Must specify at least one object type ID");
+    require(
+      build.objectTypeIds.length == build.relativePositions.length,
+      "Number of object type IDs must match number of relative positions"
+    );
+    require(
+      voxelCoordsAreEqual(build.relativePositions[0], VoxelCoord({ x: 0, y: 0, z: 0 })),
+      "First relative position must be (0, 0, 0)"
+    );
+    require(Builds.lengthObjectTypeIds(address(this), LOGO_BUILD_ID) == 0, "Logo build already exists");
+
+    setBuild(LOGO_BUILD_ID, name, build);
+  }
+
+  function matchBuild(VoxelCoord memory baseWorldCoord) public {
+    Build memory build = getBuild(address(this), LOGO_BUILD_ID);
+    require(build.objectTypeIds.length > 0, "Logo build not set");
+
+    address msgSender = msg.sender;
+
+    // Go through each relative position, aplpy it to the base world coord, and check if the object type id matches
+    for (uint256 i = 0; i < build.objectTypeIds.length; i++) {
+      VoxelCoord memory absolutePosition = VoxelCoord({
+        x: baseWorldCoord.x + build.relativePositions[i].x,
+        y: baseWorldCoord.y + build.relativePositions[i].y,
+        z: baseWorldCoord.z + build.relativePositions[i].z
+      });
+      bytes32 entityId = getEntityAtCoord(absolutePosition);
+
+      uint8 objectTypeId;
+      if (entityId == bytes32(0)) {
+        // then it's the terrain
+        objectTypeId = getTerrainBlock(absolutePosition);
+      } else {
+        objectTypeId = getObjectType(entityId);
+
+        address builder = Builder.get(absolutePosition.x, absolutePosition.y, absolutePosition.z);
+        require(builder == msgSender, "Builder does not match");
+      }
+      if (objectTypeId != build.objectTypeIds[i]) {
+        revert("Build does not match");
+      }
+    }
+
+    // Add user to allowed item drops, if not already added
+    bool isAllowed = false;
+    address[] memory allowedItemDrops = GameMetadata.getAllowedDrops();
+    for (uint i = 0; i < allowedItemDrops.length; i++) {
+      if (allowedItemDrops[i] == msgSender) {
+        isAllowed = true;
+        break;
+      }
+    }
+    require(!isAllowed, "Already allowed to drop items");
+    GameMetadata.pushAllowedDrops(msgSender);
+
+    setNotification(
+      ExperienceMetadata.getShouldDelegate(address(this)),
+      "A new player has been added to allowed item drops"
+    );
+  }
+
+  function dropItem(bytes32 toolEntityId) public {
+    bool isAllowed = false;
+    address delegatorAddress = ExperienceMetadata.getShouldDelegate(address(this));
+    address[] memory allowedItemDrops = GameMetadata.getAllowedDrops();
+    require(allowedItemDrops.length > 0, "No allowed item drops");
+    address[] memory newAllowedItemDrops = new address[](allowedItemDrops.length - 1);
+    uint256 newAllowedItemDropsIndex = 0;
+    for (uint i = 0; i < allowedItemDrops.length; i++) {
+      if (allowedItemDrops[i] == msg.sender) {
+        isAllowed = true;
+      } else {
+        newAllowedItemDrops[newAllowedItemDropsIndex] = allowedItemDrops[i];
+        newAllowedItemDropsIndex++;
+      }
+    }
+    require(isAllowed, "Not allowed to drop items");
+    GameMetadata.setAllowedDrops(newAllowedItemDrops);
+
+    bytes32 playerEntityId = getEntityFromPlayer(delegatorAddress);
+    require(playerEntityId != bytes32(0), "Player entity not found");
+    VoxelCoord memory dropCoord = getEmptyBlockOnGround(getPosition(playerEntityId));
+
+    callDrop(delegatorAddress, getObjectType(toolEntityId), 1, dropCoord, toolEntityId);
+
+    setNotification(delegatorAddress, "Item dropped");
   }
 
   modifier onlyBiomeWorld() {
@@ -76,6 +170,10 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
   }
 
   function canUnregister(address delegator) public override onlyBiomeWorld returns (bool) {
+    if (delegator == ExperienceMetadata.getShouldDelegate(address(this))) {
+      return GameMetadata.lengthAllowedDrops() == 0;
+    }
+
     return true;
   }
 
@@ -84,10 +182,7 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
     ResourceId systemId,
     uint8 enabledHooksBitmap,
     bytes32 callDataHash
-  ) public override onlyBiomeWorld {
-    setNotification(address(0), "Test Experience Notification onRegisterHook");
-    setNotification(msgSender, "Test Player Notification onRegisterHook");
-  }
+  ) public override onlyBiomeWorld {}
 
   function onUnregisterHook(
     address msgSender,
@@ -106,7 +201,12 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
     address msgSender,
     ResourceId systemId,
     bytes memory callData
-  ) public override onlyBiomeWorld {}
+  ) public override onlyBiomeWorld {
+    if (isSystemId(systemId, "BuildSystem")) {
+      (, VoxelCoord memory coord) = getBuildArgs(callData);
+      Builder.set(coord.x, coord.y, coord.z, msgSender);
+    }
+  }
 
   function getBiomeWorldAddress() public view returns (address) {
     return WorldContextConsumerLib._world();
