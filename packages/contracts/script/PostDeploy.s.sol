@@ -13,6 +13,7 @@ import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { Experience } from "../src/Experience.sol";
 import { EXPERIENCE_NAMESPACE } from "../src/Constants.sol";
+import { IExperience } from "../src/IExperience.sol";
 
 contract PostDeploy is Script {
   function run(address worldAddress) external {
