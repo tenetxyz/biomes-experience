@@ -10,6 +10,7 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { IExperience } from "../src/IExperience.sol";
+import { GrassObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
 
 contract TestScript is Script {
   function run(address worldAddress) external {
@@ -26,7 +27,17 @@ contract TestScript is Script {
     address experienceAddress = Metadata.getExperienceAddress();
     console.logAddress(experienceAddress);
 
-    IExperience(experienceAddress).joinExperience{ value: 0 }();
+    IExperience(experienceAddress).setVaultChestCoord(VoxelCoord(375, 17, -194));
+
+    // IExperience(experienceAddress).withdraw(
+    //   GrassObjectID,
+    //   2,
+    //   0x0000000000000000000000000000000000000000000000000000000000001415
+    // );
+    // IExperience(experienceAddress).withdrawTool(
+    //   0x0000000000000000000000000000000000000000000000000000000000001439,
+    //   0x0000000000000000000000000000000000000000000000000000000000001415
+    // );
 
     vm.stopBroadcast();
   }
