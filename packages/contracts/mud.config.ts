@@ -5,8 +5,26 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testexperience",
+  namespace: "deathmatch",
   tables: {
+    GameMetadata: {
+      schema: {
+        isGameStarted: "bool",
+        gameStarter: "address",
+        players: "address[]",
+      },
+      key: [],
+    },
+    PlayerMetadata: {
+      schema: {
+        player: "address",
+        numKills: "uint256",
+        isAlive: "bool",
+        isDisqualified: "bool",
+        isRegistered: "bool",
+      },
+      key: ["player"],
+    },
     Metadata: {
       schema: {
         experienceAddress: "address",
