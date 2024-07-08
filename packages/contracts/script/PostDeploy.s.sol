@@ -15,6 +15,8 @@ import { Experience } from "../src/Experience.sol";
 import { EXPERIENCE_NAMESPACE } from "../src/Constants.sol";
 import { IExperience } from "../src/IExperience.sol";
 
+import { GameMetadata } from "../src/codegen/tables/GameMetadata.sol";
+
 contract PostDeploy is Script {
   function run(address worldAddress) external {
     // Specify a store so that you can use tables directly in PostDeploy
@@ -45,6 +47,8 @@ contract PostDeploy is Script {
     console.logAddress(experienceAddress);
     IWorld(worldAddress).grantAccess(namespaceId, experienceAddress);
     Metadata.setExperienceAddress(experienceAddress);
+
+    GameMetadata.setGameStarter(0x70997970C51812dc3A010C7d01b50e0d17dc79C8);
 
     vm.stopBroadcast();
   }
