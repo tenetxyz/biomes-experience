@@ -7,11 +7,11 @@ export default defineWorld({
   },
   namespace: "testexperience",
   tables: {
-    Config: {
+    TestTable: {
       schema: {
-        conractAddress: "address",
+        counter: "uint256",
       },
       key: [],
-    }
+    },
   },
 });

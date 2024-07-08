@@ -1174,20 +1174,6 @@ declare const abi: [
   },
   {
     "type": "function",
-    "name": "testexperience__initExperience",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "testexperience__joinExperience",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "payable"
-  },
-  {
-    "type": "function",
     "name": "transferBalanceToAddress",
     "inputs": [
       {

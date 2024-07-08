@@ -16,17 +16,17 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-library Config {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "testexperience", name: "Config", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746274657374657870657269656e6365436f6e66696700000000000000000000);
+library TestTable {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "testexperience", name: "TestTable", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746274657374657870657269656e6365546573745461626c6500000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0014010014000000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0020010020000000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (address)
-  Schema constant _valueSchema = Schema.wrap(0x0014010061000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256)
+  Schema constant _valueSchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -42,7 +42,7 @@ library Config {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](1);
-    fieldNames[0] = "conractAddress";
+    fieldNames[0] = "counter";
   }
 
   /**
@@ -60,79 +60,79 @@ library Config {
   }
 
   /**
-   * @notice Get conractAddress.
+   * @notice Get counter.
    */
-  function getConractAddress() internal view returns (address conractAddress) {
+  function getCounter() internal view returns (uint256 counter) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get conractAddress.
+   * @notice Get counter.
    */
-  function _getConractAddress() internal view returns (address conractAddress) {
+  function _getCounter() internal view returns (uint256 counter) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get conractAddress.
+   * @notice Get counter.
    */
-  function get() internal view returns (address conractAddress) {
+  function get() internal view returns (uint256 counter) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get conractAddress.
+   * @notice Get counter.
    */
-  function _get() internal view returns (address conractAddress) {
+  function _get() internal view returns (uint256 counter) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Set conractAddress.
+   * @notice Set counter.
    */
-  function setConractAddress(address conractAddress) internal {
+  function setCounter(uint256 counter) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((conractAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
   }
 
   /**
-   * @notice Set conractAddress.
+   * @notice Set counter.
    */
-  function _setConractAddress(address conractAddress) internal {
+  function _setCounter(uint256 counter) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((conractAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
   }
 
   /**
-   * @notice Set conractAddress.
+   * @notice Set counter.
    */
-  function set(address conractAddress) internal {
+  function set(uint256 counter) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((conractAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
   }
 
   /**
-   * @notice Set conractAddress.
+   * @notice Set counter.
    */
-  function _set(address conractAddress) internal {
+  function _set(uint256 counter) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((conractAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
   }
 
   /**
@@ -157,8 +157,8 @@ library Config {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(address conractAddress) internal pure returns (bytes memory) {
-    return abi.encodePacked(conractAddress);
+  function encodeStatic(uint256 counter) internal pure returns (bytes memory) {
+    return abi.encodePacked(counter);
   }
 
   /**
@@ -167,8 +167,8 @@ library Config {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(address conractAddress) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(conractAddress);
+  function encode(uint256 counter) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+    bytes memory _staticData = encodeStatic(counter);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

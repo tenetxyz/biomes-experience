@@ -11,7 +11,6 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Experience } from "../src/Experience.sol";
-import { Config } from "../src/codegen/tables/Config.sol";
 import { EXPERIENCE_NAMESPACE } from "../src/Constants.sol";
 
 contract PostDeploy is Script {
@@ -35,9 +34,6 @@ contract PostDeploy is Script {
     console.log("Deployed Experience contract at address: ");
     console.logAddress(address(experience));
     IWorld(worldAddress).grantAccess(namespaceId, address(experience));
-
-    Config.setConractAddress(address(experience));
-    IWorld(worldAddress).testexperience__initExperience();
 
     vm.stopBroadcast();
   }
