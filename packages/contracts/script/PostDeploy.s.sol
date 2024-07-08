@@ -10,6 +10,7 @@ import { RESOURCE_NAMESPACE } from "@latticexyz/world/src/worldResourceTypes.sol
 import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
+import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { Experience } from "../src/Experience.sol";
 import { EXPERIENCE_NAMESPACE } from "../src/Constants.sol";
 
@@ -24,6 +25,8 @@ contract PostDeploy is Script {
     // Start broadcasting transactions from the deployer account
     vm.startBroadcast(deployerPrivateKey);
 
+    require(Metadata.getExperienceAddress() == address(0), "Experience contract already deployed");
+
     ResourceId namespaceId = WorldResourceIdLib.encode({
       typeId: RESOURCE_NAMESPACE,
       namespace: EXPERIENCE_NAMESPACE,
@@ -34,6 +37,8 @@ contract PostDeploy is Script {
     console.log("Deployed Experience contract at address: ");
     console.logAddress(address(experience));
     IWorld(worldAddress).grantAccess(namespaceId, address(experience));
+
+    Metadata.setExperienceAddress(address(experience));
 
     vm.stopBroadcast();
   }

@@ -16,17 +16,17 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-library TestTable {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "testexperience", name: "TestTable", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746274657374657870657269656e6365546573745461626c6500000000000000);
+library Metadata {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "testexperience", name: "Metadata", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746274657374657870657269656e63654d657461646174610000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0020010020000000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0014010014000000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of ()
   Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (uint256)
-  Schema constant _valueSchema = Schema.wrap(0x002001001f000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (address)
+  Schema constant _valueSchema = Schema.wrap(0x0014010061000000000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -42,7 +42,7 @@ library TestTable {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](1);
-    fieldNames[0] = "counter";
+    fieldNames[0] = "experienceAddress";
   }
 
   /**
@@ -60,79 +60,79 @@ library TestTable {
   }
 
   /**
-   * @notice Get counter.
+   * @notice Get experienceAddress.
    */
-  function getCounter() internal view returns (uint256 counter) {
+  function getExperienceAddress() internal view returns (address experienceAddress) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Get counter.
+   * @notice Get experienceAddress.
    */
-  function _getCounter() internal view returns (uint256 counter) {
+  function _getExperienceAddress() internal view returns (address experienceAddress) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Get counter.
+   * @notice Get experienceAddress.
    */
-  function get() internal view returns (uint256 counter) {
+  function get() internal view returns (address experienceAddress) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Get counter.
+   * @notice Get experienceAddress.
    */
-  function _get() internal view returns (uint256 counter) {
+  function _get() internal view returns (address experienceAddress) {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (uint256(bytes32(_blob)));
+    return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Set counter.
+   * @notice Set experienceAddress.
    */
-  function setCounter(uint256 counter) internal {
+  function setExperienceAddress(address experienceAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set counter.
+   * @notice Set experienceAddress.
    */
-  function _setCounter(uint256 counter) internal {
+  function _setExperienceAddress(address experienceAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set counter.
+   * @notice Set experienceAddress.
    */
-  function set(uint256 counter) internal {
+  function set(address experienceAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set counter.
+   * @notice Set experienceAddress.
    */
-  function _set(uint256 counter) internal {
+  function _set(address experienceAddress) internal {
     bytes32[] memory _keyTuple = new bytes32[](0);
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((counter)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
   }
 
   /**
@@ -157,8 +157,8 @@ library TestTable {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(uint256 counter) internal pure returns (bytes memory) {
-    return abi.encodePacked(counter);
+  function encodeStatic(address experienceAddress) internal pure returns (bytes memory) {
+    return abi.encodePacked(experienceAddress);
   }
 
   /**
@@ -167,8 +167,8 @@ library TestTable {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(uint256 counter) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(counter);
+  function encode(address experienceAddress) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+    bytes memory _staticData = encodeStatic(experienceAddress);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

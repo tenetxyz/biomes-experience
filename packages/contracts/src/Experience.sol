@@ -33,7 +33,6 @@ import { setPlayers, pushPlayers, popPlayers, updatePlayers, deletePlayers, setA
 import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttacher } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
 import { ExperienceLib } from "./lib/ExperienceLib.sol";
-import { TestTable } from "./codegen/tables/TestTable.sol";
 
 contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
   constructor(address _biomeWorldAddress) {
@@ -108,9 +107,7 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
     address msgSender,
     ResourceId systemId,
     bytes memory callData
-  ) public override onlyBiomeWorld {
-    TestTable.setCounter(TestTable.getCounter() + 1);
-  }
+  ) public override onlyBiomeWorld {}
 
   function getBiomeWorldAddress() external view returns (address) {
     return WorldContextConsumerLib._world();

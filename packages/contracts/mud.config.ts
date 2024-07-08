@@ -7,9 +7,9 @@ export default defineWorld({
   },
   namespace: "testexperience",
   tables: {
-    TestTable: {
+    Metadata: {
       schema: {
-        counter: "uint256",
+        experienceAddress: "address",
       },
       key: [],
     },
