@@ -5,8 +5,31 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testexperience",
+  namespace: "vaultguard",
   tables: {
+    GameMetadata: {
+      schema: {
+        vaultChestCoordX: "int16",
+        vaultChestCoordY: "int16",
+        vaultChestCoordZ: "int16",
+      },
+      key: [],
+    },
+    VaultTools: {
+      schema: {
+        toolEntityId: "bytes32",
+        owner: "address",
+      },
+      key: ["toolEntityId"]
+    },
+    VaultObjects: {
+      schema: {
+        owner: "address",
+        objectTypeId: "uint8",
+        count: "uint16",
+      },
+      key: ["owner", "objectTypeId"]
+    },
     Metadata: {
       schema: {
         experienceAddress: "address",

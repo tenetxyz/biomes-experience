@@ -16,15 +16,15 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-library Metadata {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "vaultguard", name: "Metadata", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x74627661756c746775617264000000004d657461646174610000000000000000);
+library VaultTools {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "vaultguard", name: "VaultTools", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x74627661756c746775617264000000005661756c74546f6f6c73000000000000);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0014010014000000000000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of ()
-  Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (bytes32)
+  Schema constant _keySchema = Schema.wrap(0x002001005f000000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (address)
   Schema constant _valueSchema = Schema.wrap(0x0014010061000000000000000000000000000000000000000000000000000000);
 
@@ -33,7 +33,8 @@ library Metadata {
    * @return keyNames An array of strings with the names of key fields.
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
-    keyNames = new string[](0);
+    keyNames = new string[](1);
+    keyNames[0] = "toolEntityId";
   }
 
   /**
@@ -42,7 +43,7 @@ library Metadata {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](1);
-    fieldNames[0] = "experienceAddress";
+    fieldNames[0] = "owner";
   }
 
   /**
@@ -60,86 +61,95 @@ library Metadata {
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get owner.
    */
-  function getExperienceAddress() internal view returns (address experienceAddress) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function getOwner(bytes32 toolEntityId) internal view returns (address owner) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get owner.
    */
-  function _getExperienceAddress() internal view returns (address experienceAddress) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _getOwner(bytes32 toolEntityId) internal view returns (address owner) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get owner.
    */
-  function get() internal view returns (address experienceAddress) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function get(bytes32 toolEntityId) internal view returns (address owner) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Get experienceAddress.
+   * @notice Get owner.
    */
-  function _get() internal view returns (address experienceAddress) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _get(bytes32 toolEntityId) internal view returns (address owner) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set owner.
    */
-  function setExperienceAddress(address experienceAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function setOwner(bytes32 toolEntityId, address owner) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((owner)), _fieldLayout);
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set owner.
    */
-  function _setExperienceAddress(address experienceAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _setOwner(bytes32 toolEntityId, address owner) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((owner)), _fieldLayout);
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set owner.
    */
-  function set(address experienceAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function set(bytes32 toolEntityId, address owner) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((owner)), _fieldLayout);
   }
 
   /**
-   * @notice Set experienceAddress.
+   * @notice Set owner.
    */
-  function _set(address experienceAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _set(bytes32 toolEntityId, address owner) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((experienceAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((owner)), _fieldLayout);
   }
 
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord() internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function deleteRecord(bytes32 toolEntityId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -147,8 +157,9 @@ library Metadata {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord() internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _deleteRecord(bytes32 toolEntityId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -157,8 +168,8 @@ library Metadata {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(address experienceAddress) internal pure returns (bytes memory) {
-    return abi.encodePacked(experienceAddress);
+  function encodeStatic(address owner) internal pure returns (bytes memory) {
+    return abi.encodePacked(owner);
   }
 
   /**
@@ -167,8 +178,8 @@ library Metadata {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(address experienceAddress) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(experienceAddress);
+  function encode(address owner) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+    bytes memory _staticData = encodeStatic(owner);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -179,8 +190,9 @@ library Metadata {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple() internal pure returns (bytes32[] memory) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function encodeKeyTuple(bytes32 toolEntityId) internal pure returns (bytes32[] memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = toolEntityId;
 
     return _keyTuple;
   }
