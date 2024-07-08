@@ -5,8 +5,15 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testexperience",
+  namespace: "racetothesky",
   tables: {
+    GameMetadata: {
+      schema: {
+        gameOver: "bool",
+        winner: "address",
+      },
+      key: [],
+    },
     Metadata: {
       schema: {
         experienceAddress: "address",
