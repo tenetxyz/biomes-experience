@@ -9,7 +9,6 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
-import { IExperience } from "../src/IExperience.sol";
 
 contract TestScript is Script {
   function run(address worldAddress) external {
@@ -22,11 +21,9 @@ contract TestScript is Script {
     // Start broadcasting transactions from the deployer account
     vm.startBroadcast(deployerPrivateKey);
 
-    console.log("Using Experience contract at address: ");
-    address experienceAddress = Metadata.getExperienceAddress();
-    console.logAddress(experienceAddress);
-
-    IExperience(experienceAddress).joinExperience{ value: 0 }();
+    console.log("Using Chip contract at address: ");
+    address chipAddress = Metadata.getChipAddress();
+    console.logAddress(chipAddress);
 
     vm.stopBroadcast();
   }

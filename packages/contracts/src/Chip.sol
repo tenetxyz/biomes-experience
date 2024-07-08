@@ -12,12 +12,15 @@ import { IOptionalSystemHook } from "@latticexyz/world/src/IOptionalSystemHook.s
 import { BEFORE_CALL_SYSTEM, AFTER_CALL_SYSTEM, ALL } from "@latticexyz/world/src/systemHookTypes.sol";
 import { RESOURCE_SYSTEM } from "@latticexyz/world/src/worldResourceTypes.sol";
 import { OptionalSystemHooks } from "@latticexyz/world/src/codegen/tables/OptionalSystemHooks.sol";
+import { IChip } from "@biomesaw/world/src/prototypes/IChip.sol";
 
 import { IWorld } from "@biomesaw/world/src/codegen/world/IWorld.sol";
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { voxelCoordsAreEqual, inSurroundingCube } from "@biomesaw/utils/src/VoxelCoordUtils.sol";
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 import { ExperienceMetadata, ExperienceMetadataData } from "@biomesaw/experience/src/codegen/tables/ExperienceMetadata.sol";
+import { ChipMetadata, ChipMetadataData } from "@biomesaw/experience/src/codegen/tables/ChipMetadata.sol";
+import { ChipType } from "@biomesaw/experience/src/codegen/common.sol";
 
 // Available utils, remove the ones you don't need
 // See ObjectTypeIds.sol for all available object types
@@ -31,36 +34,17 @@ import { weiToString, getEmptyBlockOnGround } from "@biomesaw/experience/src/uti
 import { setExperienceMetadata, setJoinFee, deleteExperienceMetadata, setNotification, deleteNotifications, setStatus, deleteStatus, setRegisterMsg, deleteRegisterMsg, setUnregisterMsg, deleteUnregisterMsg } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 import { setPlayers, pushPlayers, popPlayers, updatePlayers, deletePlayers, setArea, deleteArea, setBuild, deleteBuild, setBuildWithPos, deleteBuildWithPos, setCountdown, setCountdownEndTimestamp, setCountdownEndBlock, setTokenMetadata, deleteTokenMetadata, setNFTMetadata, deleteNFTMetadata, setTokens, pushTokens, popTokens, updateTokens, deleteTokens, setNfts, pushNfts, popNfts, updateNfts, deleteNfts } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
-import { ExperienceLib } from "./lib/ExperienceLib.sol";
-
-contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
+contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
 
-    initExperience();
+    initChip();
   }
 
-  function initExperience() internal {
-    setStatus("Test Experience Status");
-    setRegisterMsg("Test Experience Register Message");
-    setUnregisterMsg("Test Experience Unregister Message");
-
-    bytes32[] memory hookSystemIds = new bytes32[](1);
-    hookSystemIds[0] = ResourceId.unwrap(getSystemId("MoveSystem"));
-
-    setExperienceMetadata(
-      ExperienceMetadataData({
-        shouldDelegate: address(0),
-        hookSystemIds: hookSystemIds,
-        joinFee: 0,
-        name: "Test Experience",
-        description: "Test Experience Description"
-      })
+  function initChip() internal {
+    setChipMetadata(
+      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
     );
-  }
-
-  function joinExperience() public payable {
-    ExperienceLib.ensureJoinRequirements();
   }
 
   modifier onlyBiomeWorld() {
@@ -69,46 +53,29 @@ contract Experience is ICustomUnregisterDelegation, IOptionalSystemHook {
   }
 
   function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
-    return
-      interfaceId == type(ICustomUnregisterDelegation).interfaceId ||
-      interfaceId == type(IOptionalSystemHook).interfaceId ||
-      interfaceId == type(IERC165).interfaceId;
+    return interfaceId == type(IChip).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
-  function canUnregister(address delegator) public override onlyBiomeWorld returns (bool) {
+  function onAttached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
+    setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
+  }
+
+  function onDetached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
+    deleteChipAttacher(entityId);
+  }
+
+  function onPowered(bytes32 playerEntityId, bytes32 entityId, uint16 numBattery) public override onlyBiomeWorld {}
+
+  function onChipHit(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {}
+
+  function onTransfer(
+    bytes32 srcEntityId,
+    bytes32 dstEntityId,
+    uint8 transferObjectTypeId,
+    uint16 numToTransfer,
+    bytes32 toolEntityId,
+    bytes memory extraData
+  ) public payable override onlyBiomeWorld returns (bool) {
     return true;
-  }
-
-  function onRegisterHook(
-    address msgSender,
-    ResourceId systemId,
-    uint8 enabledHooksBitmap,
-    bytes32 callDataHash
-  ) public override onlyBiomeWorld {
-    setNotification(address(0), "Test Experience Notification onRegisterHook");
-    setNotification(msgSender, "Test Player Notification onRegisterHook");
-  }
-
-  function onUnregisterHook(
-    address msgSender,
-    ResourceId systemId,
-    uint8 enabledHooksBitmap,
-    bytes32 callDataHash
-  ) public override onlyBiomeWorld {}
-
-  function onBeforeCallSystem(
-    address msgSender,
-    ResourceId systemId,
-    bytes memory callData
-  ) public override onlyBiomeWorld {}
-
-  function onAfterCallSystem(
-    address msgSender,
-    ResourceId systemId,
-    bytes memory callData
-  ) public override onlyBiomeWorld {}
-
-  function getBiomeWorldAddress() public view returns (address) {
-    return WorldContextConsumerLib._world();
   }
 }
