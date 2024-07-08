@@ -11,9 +11,8 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
-import { Experience } from "../src/Experience.sol";
-import { EXPERIENCE_NAMESPACE } from "../src/Constants.sol";
-import { IExperience } from "../src/IExperience.sol";
+import { Chip } from "../src/Chip.sol";
+import { CHIP_NAMESPACE } from "../src/Constants.sol";
 
 contract PostDeploy is Script {
   function run(address worldAddress) external {
@@ -26,20 +25,20 @@ contract PostDeploy is Script {
     // Start broadcasting transactions from the deployer account
     vm.startBroadcast(deployerPrivateKey);
 
-    require(Metadata.getExperienceAddress() == address(0), "Experience contract already deployed");
+    require(Metadata.getChipAddress() == address(0), "Chip contract already deployed");
 
     ResourceId namespaceId = WorldResourceIdLib.encode({
       typeId: RESOURCE_NAMESPACE,
-      namespace: EXPERIENCE_NAMESPACE,
+      namespace: CHIP_NAMESPACE,
       name: ""
     });
-    console.log("Deploying Experience contract...");
-    Experience experience = new Experience(worldAddress);
-    console.log("Deployed Experience contract at address: ");
-    address experienceAddress = address(experience);
-    console.logAddress(experienceAddress);
-    IWorld(worldAddress).grantAccess(namespaceId, experienceAddress);
-    Metadata.setExperienceAddress(experienceAddress);
+    console.log("Deploying Chip contract...");
+    Chip chip = new Chip(worldAddress);
+    console.log("Deployed Chip contract at address: ");
+    address chipAddress = address(chip);
+    console.logAddress(chipAddress);
+    IWorld(worldAddress).grantAccess(namespaceId, chipAddress);
+    Metadata.setChipAddress(chipAddress);
 
     vm.stopBroadcast();
   }
