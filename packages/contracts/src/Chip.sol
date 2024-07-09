@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { WorldContextConsumerLib } from "@latticexyz/world/src/WorldContext.sol";
@@ -37,8 +38,13 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setForceFieldName, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 
-contract Chip is IChip {
-  constructor(address _biomeWorldAddress) {
+import { Metadata } from "./codegen/tables/Metadata.sol";
+import { Shop, ShopData } from "@biomesaw/experience/src/codegen/tables/Shop.sol";
+import { ChipAttachment } from "@biomesaw/experience/src/codegen/tables/ChipAttachment.sol";
+import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
+
+contract Chip is IChip, Ownable {
+  constructor(address _biomeWorldAddress) Ownable(msg.sender) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
 
     initChip();
@@ -46,8 +52,64 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.Chest,
+        name: "Buy Blocks",
+        description: "Send Ether to players for placing blocks in your chest."
+      })
     );
+  }
+
+  function doWithdraw(address player, bytes32 chestEntityId, uint256 amount) internal {
+    require(amount > 0, "Amount must be greater than 0");
+    uint256 currentBalance = Shop.getBalance(chestEntityId);
+    require(currentBalance >= amount, "Insufficient balance");
+    uint256 newBalance = currentBalance - amount;
+    setShopBalance(chestEntityId, newBalance);
+
+    (bool sent, ) = player.call{ value: amount }("");
+    require(sent, "Failed to send Ether");
+  }
+
+  function setupBuyShop(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 buyPrice) public payable {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can set up the shop");
+    require(Shop.getBuyObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
+
+    setBuyShop(chestEntityId, buyObjectTypeId, buyPrice);
+    uint256 newBalance = Shop.getBalance(chestEntityId) + msg.value;
+    setShopBalance(chestEntityId, newBalance);
+  }
+
+  function changeBuyPrice(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 newPrice) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can change the price");
+    require(Shop.getBuyObjectTypeId(chestEntityId) == buyObjectTypeId, "Chest is not set up");
+
+    setBuyShop(chestEntityId, buyObjectTypeId, newPrice);
+  }
+
+  function refillBuyShopBalance(bytes32 chestEntityId, uint8 buyObjectTypeId) public payable {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can refill the chest");
+    require(Shop.getBuyObjectTypeId(chestEntityId) == buyObjectTypeId, "Chest is not set up");
+
+    uint256 newBalance = Shop.getBalance(chestEntityId) + msg.value;
+    setShopBalance(chestEntityId, newBalance);
+  }
+
+  function withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can withdraw the balance");
+    doWithdraw(msg.sender, chestEntityId, amount);
+  }
+
+  function destroyBuyShop(bytes32 chestEntityId, uint8 buyObjectTypeId) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can destroy the chest");
+    require(Shop.getBuyObjectTypeId(chestEntityId) == buyObjectTypeId, "Chest is not set up");
+
+    uint256 currentBalance = Shop.getBalance(chestEntityId);
+    if (currentBalance > 0) {
+      doWithdraw(msg.sender, chestEntityId, currentBalance);
+    }
+
+    deleteShop(chestEntityId);
   }
 
   modifier onlyBiomeWorld() {
@@ -60,11 +122,31 @@ contract Chip is IChip {
   }
 
   function onAttached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
-    setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
+    address owner = getPlayerFromEntity(playerEntityId);
+    setChipAttacher(entityId, owner);
   }
 
   function onDetached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
+    address previousOwner = ChipAttachment.getAttacher(entityId);
+    uint256 currentBalance = Shop.getBalance(entityId);
+    if (currentBalance > 0) {
+      doWithdraw(previousOwner, entityId, currentBalance);
+    }
+
     deleteChipAttacher(entityId);
+    if (
+      Shop.getBuyObjectTypeId(entityId) != NullObjectTypeId || Shop.getSellObjectTypeId(entityId) != NullObjectTypeId
+    ) {
+      // Clear existing shop data
+      deleteShop(entityId);
+    }
+  }
+
+  function withdrawFees() public onlyOwner {
+    uint256 withdrawAmount = Metadata.getTotalFees();
+    Metadata.setTotalFees(0);
+    (bool sent, ) = owner().call{ value: withdrawAmount }("");
+    require(sent, "Failed to send Ether");
   }
 
   function onPowered(bytes32 playerEntityId, bytes32 entityId, uint16 numBattery) public override onlyBiomeWorld {}
@@ -78,7 +160,51 @@ contract Chip is IChip {
     uint16 numToTransfer,
     bytes32 toolEntityId,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool) {
+    bool isDeposit = getObjectType(srcEntityId) == PlayerObjectID;
+    bytes32 chestEntityId = isDeposit ? dstEntityId : srcEntityId;
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(owner != address(0), "Chest does not exist");
+    address player = getPlayerFromEntity(isDeposit ? srcEntityId : dstEntityId);
+    if (player == owner) {
+      return true;
+    }
+    if (!isDeposit) {
+      return false;
+    }
+
+    ShopData memory chestShopData = Shop.get(chestEntityId);
+    if (chestShopData.buyObjectTypeId != transferObjectTypeId) {
+      return false;
+    }
+    if (toolEntityId != bytes32(0)) {
+      require(
+        getNumUsesLeft(toolEntityId) == getDurability(chestShopData.buyObjectTypeId),
+        "Tool must have full durability"
+      );
+    }
+
+    uint256 buyPrice = chestShopData.buyPrice;
+    if (buyPrice == 0) {
+      return true;
+    }
+
+    uint256 amountToPay = numToTransfer * buyPrice;
+    uint256 fee = (amountToPay * 1) / 100; // 1% fee
+
+    // Check if there is enough balance in the chest
+    uint256 balance = chestShopData.balance;
+    require(balance >= amountToPay + fee, "Insufficient balance in chest");
+
+    uint256 newBalance = balance - (amountToPay + fee);
+    setShopBalance(chestEntityId, newBalance);
+    Metadata.setTotalFees(Metadata.getTotalFees() + fee);
+
+    (bool sent, ) = player.call{ value: amountToPay }("");
+    require(sent, "Failed to send Ether");
+
+    return true;
+  }
 
   function onBuild(
     bytes32 forceFieldEntityId,

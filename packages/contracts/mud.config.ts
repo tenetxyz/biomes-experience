@@ -5,10 +5,11 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "buychest",
   tables: {
     Metadata: {
       schema: {
+        totalFees: "uint256",
         chipAddress: "address",
       },
       key: [],
