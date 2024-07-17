@@ -77,7 +77,19 @@ contract Chip is IChip {
     uint16 numToTransfer,
     bytes32 toolEntityId,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool) {
-    return true;
-  }
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+
+  function onBuild(
+    bytes32 playerEntityId,
+    uint8 objectTypeId,
+    VoxelCoord memory coord,
+    bytes memory extraData
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+
+  function onMine(
+    bytes32 playerEntityId,
+    uint8 objectTypeId,
+    VoxelCoord memory coord,
+    bytes memory extraData
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
 }
