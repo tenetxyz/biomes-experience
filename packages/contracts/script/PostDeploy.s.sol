@@ -14,6 +14,8 @@ import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { Chip } from "../src/Chip.sol";
 import { CHIP_NAMESPACE } from "../src/Constants.sol";
 
+import { AreaNFT } from "../src/AreaNFT.sol";
+
 contract PostDeploy is Script {
   function run(address worldAddress) external {
     // Specify a store so that you can use tables directly in PostDeploy
@@ -44,6 +46,14 @@ contract PostDeploy is Script {
     console.logAddress(chipAddress);
     IWorld(worldAddress).grantAccess(namespaceId, chipAddress);
     Metadata.setChipAddress(chipAddress);
+
+    console.log("Deploying Area NFT contract...");
+    AreaNFT areaNft = new AreaNFT("Builder", "BUD", chipAddress);
+    console.log("Deployed Area NFT contract at address: ");
+    address areaNftAddress = address(areaNft);
+    console.logAddress(areaNftAddress);
+
+    chipAddress.call(abi.encodeWithSignature("setAreaNFT(address)", areaNftAddress));
 
     vm.stopBroadcast();
   }

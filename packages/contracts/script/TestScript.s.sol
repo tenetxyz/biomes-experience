@@ -25,6 +25,8 @@ contract TestScript is Script {
     address chipAddress = Metadata.getChipAddress();
     console.logAddress(chipAddress);
 
+    chipAddress.call(abi.encodeWithSignature("mint(address)", 0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a));
+
     vm.stopBroadcast();
   }
 }

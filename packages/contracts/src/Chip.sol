@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { WorldContextConsumerLib } from "@latticexyz/world/src/WorldContext.sol";
@@ -38,8 +39,13 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance, setBuyPrice, setSellPrice, setShopObjectTypeId } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 
-contract Chip is IChestChip {
-  constructor(address _biomeWorldAddress) {
+import { ForceFieldApprovals } from "@biomesaw/experience/src/codegen/tables/ForceFieldApprovals.sol";
+import { ChipAttachment } from "@biomesaw/experience/src/codegen/tables/ChipAttachment.sol";
+import { Metadata } from "./codegen/tables/Metadata.sol";
+import { IAreaNFT } from "./IAreaNFT.sol";
+
+contract Chip is IForceFieldChip, Ownable {
+  constructor(address _biomeWorldAddress) Ownable(msg.sender) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
 
     initChip();
@@ -47,8 +53,30 @@ contract Chip is IChestChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.ForceField,
+        name: "NFT Area",
+        description: "Holders of the NFT can build/mine in the area"
+      })
     );
+  }
+
+  function setAreaNFT(address nft) public onlyOwner {
+    Metadata.setNftAddress(nft);
+
+    address[] memory nfts = new address[](1);
+    nfts[0] = nft;
+    setNfts(nfts);
+  }
+
+  function mint(address to) public onlyOwner {
+    address nftAddress = Metadata.getNftAddress();
+    require(nftAddress != address(0), "NFT address not set");
+    IAreaNFT(nftAddress).mint(to);
+  }
+
+  function getAreaNFT() public view returns (address) {
+    return Metadata.getNftAddress();
   }
 
   modifier onlyBiomeWorld() {
@@ -57,14 +85,24 @@ contract Chip is IChestChip {
   }
 
   function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
-    return interfaceId == type(IChestChip).interfaceId || interfaceId == type(IERC165).interfaceId;
+    return interfaceId == type(IForceFieldChip).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
   function onAttached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
     setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
+    address nftAddress = getAreaNFT();
+    if (nftAddress == address(0)) {
+      return;
+    }
+    address[] memory approvedNfts = new address[](1);
+    approvedNfts[0] = nftAddress;
+    setFFApprovedNFT(entityId, approvedNfts);
+    setForceFieldName(entityId, "Builders NFT Land");
   }
 
   function onDetached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
+    deleteForceFieldMetadata(entityId);
+    deleteForceFieldApprovals(entityId);
     deleteChipAttacher(entityId);
   }
 
@@ -72,12 +110,35 @@ contract Chip is IChestChip {
 
   function onChipHit(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    bytes32 srcEntityId,
-    bytes32 dstEntityId,
-    uint8 transferObjectTypeId,
-    uint16 numToTransfer,
-    bytes32 toolEntityId,
+  function hasAreaNft(bytes32 playerEntityId) internal returns (bool) {
+    address player = getPlayerFromEntity(playerEntityId);
+    address areaNFT = getAreaNFT();
+    if (areaNFT == address(0)) {
+      return false;
+    }
+
+    return IAreaNFT(areaNFT).balanceOf(player) > 0;
+  }
+
+  function onBuild(
+    bytes32 forceFieldEntityId,
+    bytes32 playerEntityId,
+    uint8 objectTypeId,
+    VoxelCoord memory coord,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool) {
+    bool allowBuild = hasAreaNft(playerEntityId);
+    require(allowBuild, "Player does not have the Builders NFT");
+    return allowBuild;
+  }
+
+  function onMine(
+    bytes32 forceFieldEntityId,
+    bytes32 playerEntityId,
+    uint8 objectTypeId,
+    VoxelCoord memory coord,
+    bytes memory extraData
+  ) public payable override onlyBiomeWorld returns (bool) {
+    return hasAreaNft(playerEntityId);
+  }
 }
