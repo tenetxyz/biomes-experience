@@ -5,8 +5,22 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "dynamicchest",
   tables: {
+    TotalSupply: {
+      schema: {
+        objectTypeId: "uint8",
+        supply: "uint256",
+      },
+      key: ["objectTypeId"],
+    },
+    ObjectToken: {
+      schema: {
+        objectTypeId: "uint8",
+        tokenAddress: "address",
+      },
+      key: ["objectTypeId"],
+    },
     Metadata: {
       schema: {
         chipAddress: "address",
