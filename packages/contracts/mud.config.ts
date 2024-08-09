@@ -5,11 +5,12 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "nftarea",
   tables: {
     Metadata: {
       schema: {
         chipAddress: "address",
+        nftAddress: "address",
       },
       key: [],
     },
