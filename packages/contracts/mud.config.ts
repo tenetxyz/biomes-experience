@@ -5,8 +5,18 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testexperience",
+  namespace: "bountyhunter",
   tables: {
+    PlayerMetadata: {
+      schema: {
+        player: "address",
+        balance: "uint256",
+        lastWithdrawalTime: "uint256",
+        lastHitter: "address",
+        isRegistered: "bool"
+      },
+      key: ["player"],
+    },
     Metadata: {
       schema: {
         experienceAddress: "address",
