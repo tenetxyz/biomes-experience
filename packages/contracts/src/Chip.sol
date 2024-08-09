@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { WorldContextConsumerLib } from "@latticexyz/world/src/WorldContext.sol";
@@ -37,8 +38,19 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance, setBuyPrice, setSellPrice, setShopObjectTypeId } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 
-contract Chip is IChip {
-  constructor(address _biomeWorldAddress) {
+import { IShopToken } from "./IShopToken.sol";
+import { ChestToken } from "./codegen/tables/ChestToken.sol";
+import { TotalSupply } from "./codegen/tables/TotalSupply.sol";
+import { AllowedSetup } from "./codegen/tables/AllowedSetup.sol";
+import { Tokens } from "@biomesaw/experience/src/codegen/tables/Tokens.sol";
+import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+import { ItemShop, ItemShopData } from "@biomesaw/experience/src/codegen/tables/ItemShop.sol";
+import { ShopType } from "@biomesaw/experience/src/codegen/common.sol";
+import { ChipAttachment } from "@biomesaw/experience/src/codegen/tables/ChipAttachment.sol";
+import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
+
+contract Chip is IChip, Ownable {
+  constructor(address _biomeWorldAddress) Ownable(msg.sender) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
 
     initChip();
@@ -46,8 +58,84 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.Chest,
+        name: "Buy & Sell Blocks via Stablecoin",
+        description: "Token supply controlled by the chip. Players receive a single token for each block placed in the chest, and can take a block for each token deposited."
+      })
     );
+  }
+
+  function setDisplayData(bytes32 chestEntityId, string memory name, string memory description) public {
+    require(
+      ChipAttachment.getAttacher(chestEntityId) == msg.sender,
+      "Only the attacher can set the chest display data"
+    );
+    setChestMetadata(chestEntityId, ChestMetadataData({ name: name, description: description }));
+  }
+
+  function addAllowedSetup(address attacher) public {
+    AllowedSetup.set(msg.sender, attacher, true);
+  }
+
+  function setupShop(bytes32 chestEntityId, uint8 objectTypeId, address tokenAddress) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can set up the shop");
+    require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
+    require(tokenAddress != address(0), "Token address cannot be 0");
+    require(AllowedSetup.get(tokenAddress, msg.sender), "Not allowed to set up shop for this token");
+
+    ChestToken.setToken(chestEntityId, tokenAddress);
+
+    setShop(
+      chestEntityId,
+      ItemShopData({
+        shopType: ShopType.BuySell,
+        objectTypeId: objectTypeId,
+        buyPrice: 0,
+        sellPrice: 0,
+        balance: 0,
+        paymentToken: tokenAddress
+      })
+    );
+  }
+
+  function destroyShop(bytes32 chestEntityId, uint8 objectTypeId) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can destroy the chest");
+    require(ItemShop.getObjectTypeId(chestEntityId) == objectTypeId, "Chest is not set up");
+    address tokenAddress = ChestToken.getToken(chestEntityId);
+    require(tokenAddress != address(0), "Token address cannot be 0");
+
+    uint16 currentSupplyInChest = getCount(chestEntityId, objectTypeId);
+    if (currentSupplyInChest > 0) {
+      uint256 currentTotalSupply = TotalSupply.get(tokenAddress);
+      uint256 newTotalSupply = currentTotalSupply > currentSupplyInChest
+        ? currentTotalSupply - currentSupplyInChest
+        : 0;
+      TotalSupply.set(tokenAddress, newTotalSupply);
+    }
+
+    ChestToken.deleteRecord(chestEntityId);
+
+    deleteChestMetadata(chestEntityId);
+
+    deleteShop(chestEntityId);
+  }
+
+  function getChestToken(bytes32 chestEntityId) public view returns (address) {
+    return ChestToken.getToken(chestEntityId);
+  }
+
+  function getObjectSupply(address token) public view returns (uint256) {
+    return TotalSupply.get(token);
+  }
+
+  function getChestTokenSupply(bytes32 chestEntityId) public view returns (uint256) {
+    return IShopToken(getChestToken(chestEntityId)).totalSupply();
+  }
+
+  function getObjectAndTokenSupply(bytes32 chestEntityId) external view returns (uint256, uint256) {
+    address chestToken = getChestToken(chestEntityId);
+    return (getObjectSupply(chestToken), IShopToken(chestToken).totalSupply());
   }
 
   modifier onlyBiomeWorld() {
@@ -60,16 +148,74 @@ contract Chip is IChip {
   }
 
   function onAttached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
+    require(getNumInventoryObjects(entityId) == 0, "Chest must be empty");
     setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
   }
 
   function onDetached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
+    deleteChestMetadata(entityId);
+
+    uint8 shopObjectTypeId = ItemShop.getObjectTypeId(entityId);
+
+    if (shopObjectTypeId != NullObjectTypeId) {
+      uint16 currentSupplyInChest = getCount(entityId, shopObjectTypeId);
+      if (currentSupplyInChest > 0) {
+        address tokenAddress = ChestToken.getToken(entityId);
+        uint256 currentTotalSupply = TotalSupply.get(tokenAddress);
+        uint256 newTotalSupply = currentTotalSupply > currentSupplyInChest
+          ? currentTotalSupply - currentSupplyInChest
+          : 0;
+        TotalSupply.set(tokenAddress, newTotalSupply);
+      }
+
+      ChestToken.deleteRecord(entityId);
+
+      // Clear existing shop data
+      deleteShop(entityId);
+    }
+
     deleteChipAttacher(entityId);
   }
 
   function onPowered(bytes32 playerEntityId, bytes32 entityId, uint16 numBattery) public override onlyBiomeWorld {}
 
   function onChipHit(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {}
+
+  function blocksToTokens(
+    uint256 totalTokenSupply,
+    uint256 supply,
+    uint8 transferObjectTypeId,
+    uint16 transferAmount,
+    bool isDeposit
+  ) internal view returns (uint256) {
+    // Cumulatively sum the supply as it increases
+    uint256 tokens = 0;
+    for (uint16 i = 0; i < transferAmount; i++) {
+      uint256 tokenIncrease = 0;
+      if (supply == 0) {
+        tokenIncrease = 1 * 10 ** 18;
+      } else {
+        tokenIncrease = totalTokenSupply / supply;
+      }
+      tokens += tokenIncrease;
+
+      if (isDeposit) {
+        supply++;
+        totalTokenSupply += tokenIncrease;
+      } else {
+        if (supply > 0) {
+          supply--;
+        }
+        if (totalTokenSupply > tokenIncrease) {
+          totalTokenSupply -= tokenIncrease;
+        } else {
+          totalTokenSupply = 0;
+        }
+      }
+    }
+
+    return tokens;
+  }
 
   function onTransfer(
     bytes32 srcEntityId,
@@ -78,7 +224,54 @@ contract Chip is IChip {
     uint16 numToTransfer,
     bytes32 toolEntityId,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool) {
+    bool isDeposit = getObjectType(srcEntityId) == PlayerObjectID;
+    bytes32 chestEntityId = isDeposit ? dstEntityId : srcEntityId;
+    {
+      ItemShopData memory chestShopData = ItemShop.get(chestEntityId);
+      if (chestShopData.objectTypeId != transferObjectTypeId) {
+        return false;
+      }
+      if (toolEntityId != bytes32(0)) {
+        require(
+          getNumUsesLeft(toolEntityId) == getDurability(chestShopData.objectTypeId),
+          "Tool must have full durability"
+        );
+      }
+    }
+
+    address tokenAddress = ChestToken.getToken(chestEntityId);
+    require(tokenAddress != address(0), "Token not set up");
+    uint256 tokenSupply = IShopToken(tokenAddress).totalSupply();
+    address player = getPlayerFromEntity(isDeposit ? srcEntityId : dstEntityId);
+    require(player != address(0), "Player does not exist");
+
+    uint256 curentTotalSupply = TotalSupply.get(tokenAddress);
+
+    uint256 blockTokens = blocksToTokens(
+      tokenSupply,
+      curentTotalSupply,
+      transferObjectTypeId,
+      numToTransfer,
+      isDeposit
+    );
+
+    uint256 newTotalSupply = isDeposit
+      ? curentTotalSupply + numToTransfer
+      : curentTotalSupply > numToTransfer
+        ? curentTotalSupply - numToTransfer
+        : 0;
+    TotalSupply.set(tokenAddress, newTotalSupply);
+
+    if (isDeposit) {
+      IShopToken(tokenAddress).mint(player, blockTokens);
+    } else {
+      // Note: ERC20 will check if the player has enough tokens
+      IShopToken(tokenAddress).burn(player, blockTokens);
+    }
+
+    return true;
+  }
 
   function onBuild(
     bytes32 forceFieldEntityId,
