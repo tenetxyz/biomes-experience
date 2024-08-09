@@ -26,13 +26,18 @@ contract PostDeploy is Script {
     // Start broadcasting transactions from the deployer account
     vm.startBroadcast(deployerPrivateKey);
 
-    require(Metadata.getExperienceAddress() == address(0), "Experience contract already deployed");
-
     ResourceId namespaceId = WorldResourceIdLib.encode({
       typeId: RESOURCE_NAMESPACE,
       namespace: EXPERIENCE_NAMESPACE,
       name: ""
     });
+
+    address currentExperienceAddress = Metadata.getExperienceAddress();
+    if (currentExperienceAddress != address(0)) {
+      console.log("Revoking access to current Experience contract...");
+      IWorld(worldAddress).revokeAccess(namespaceId, currentExperienceAddress);
+    }
+
     console.log("Deploying Experience contract...");
     Experience experience = new Experience(worldAddress);
     console.log("Deployed Experience contract at address: ");
