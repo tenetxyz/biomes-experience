@@ -11,6 +11,10 @@ import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { IExperience } from "../src/IExperience.sol";
 
+import { Area } from "@biomesaw/experience/src/utils/AreaUtils.sol";
+import { GameMetadata } from "../src/codegen/tables/GameMetadata.sol";
+import { PlayerMetadata } from "../src/codegen/tables/PlayerMetadata.sol";
+
 contract TestScript is Script {
   function run(address worldAddress) external {
     // Specify a store so that you can use tables directly in PostDeploy
@@ -26,7 +30,23 @@ contract TestScript is Script {
     address experienceAddress = Metadata.getExperienceAddress();
     console.logAddress(experienceAddress);
 
-    IExperience(experienceAddress).joinExperience{ value: 0 }();
+    IExperience(experienceAddress).setMatchArea(
+      "Match Area",
+      Area({
+        lowerSouthwestCorner: VoxelCoord({ x: 271, y: -150, z: -235 }),
+        size: VoxelCoord({ x: 60, y: 250, z: 60 })
+      })
+    );
+
+    // IExperience(experienceAddress).joinExperience{ value: 1400000000000000 }();
+
+    // IExperience(experienceAddress).startGame(30);
+    // IExperience(experienceAddress).claimRewardPool();
+    address[] memory registeredPlayers = GameMetadata.getPlayers();
+    for (uint i = 0; i < registeredPlayers.length; i++) {
+      console.logAddress(registeredPlayers[i]);
+      console.logUint(PlayerMetadata.getNumKills(registeredPlayers[i]));
+    }
 
     vm.stopBroadcast();
   }
