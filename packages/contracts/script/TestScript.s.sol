@@ -10,6 +10,9 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
 
+import { ShopToken } from "../src/ShopToken.sol";
+import { AllowedSetup } from "../src/codegen/tables/AllowedSetup.sol";
+
 contract TestScript is Script {
   function run(address worldAddress) external {
     // Specify a store so that you can use tables directly in PostDeploy
@@ -24,6 +27,19 @@ contract TestScript is Script {
     console.log("Using Chip contract at address: ");
     address chipAddress = Metadata.getChipAddress();
     console.logAddress(chipAddress);
+
+    console.log("Deploying Bank ShopToken contract...");
+    ShopToken bankToken = new ShopToken("Settlers Union Bank Note", "SUB", chipAddress);
+    console.log("Deployed Bank ShopToken contract at address: ");
+    address bankTokenAddress = address(bankToken);
+    console.logAddress(bankTokenAddress);
+
+    chipAddress.call(abi.encodeWithSignature("setBankToken(address)", bankTokenAddress));
+    chipAddress.call(abi.encodeWithSignature("addAllowedSetup(address)", 0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a));
+
+    // console.logBool(
+    //   AllowedSetup.get(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a)
+    // );
 
     vm.stopBroadcast();
   }
