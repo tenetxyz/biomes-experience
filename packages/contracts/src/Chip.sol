@@ -12,7 +12,7 @@ import { IOptionalSystemHook } from "@latticexyz/world/src/IOptionalSystemHook.s
 import { BEFORE_CALL_SYSTEM, AFTER_CALL_SYSTEM, ALL } from "@latticexyz/world/src/systemHookTypes.sol";
 import { RESOURCE_SYSTEM } from "@latticexyz/world/src/worldResourceTypes.sol";
 import { OptionalSystemHooks } from "@latticexyz/world/src/codegen/tables/OptionalSystemHooks.sol";
-import { IChip } from "@biomesaw/world/src/prototypes/IChip.sol";
+import { IChestChip } from "@biomesaw/world/src/prototypes/IChestChip.sol";
 
 import { IWorld } from "@biomesaw/world/src/codegen/world/IWorld.sol";
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
@@ -37,7 +37,7 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance, setBuyPrice, setSellPrice, setShopObjectTypeId } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 
-contract Chip is IChip {
+contract Chip is IChestChip {
   constructor(address _biomeWorldAddress) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
 
@@ -56,7 +56,7 @@ contract Chip is IChip {
   }
 
   function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
-    return interfaceId == type(IChip).interfaceId || interfaceId == type(IERC165).interfaceId;
+    return interfaceId == type(IChestChip).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
   function onAttached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
@@ -77,22 +77,6 @@ contract Chip is IChip {
     uint8 transferObjectTypeId,
     uint16 numToTransfer,
     bytes32 toolEntityId,
-    bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
-
-  function onBuild(
-    bytes32 forceFieldEntityId,
-    bytes32 playerEntityId,
-    uint8 objectTypeId,
-    VoxelCoord memory coord,
-    bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
-
-  function onMine(
-    bytes32 forceFieldEntityId,
-    bytes32 playerEntityId,
-    uint8 objectTypeId,
-    VoxelCoord memory coord,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
 }
