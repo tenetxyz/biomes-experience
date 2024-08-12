@@ -39,6 +39,9 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance, setBuyPrice, setSellPrice, setShopObjectTypeId, emitShopNotif, deleteShopNotif } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 
+import { ChipAttachment } from "@biomesaw/experience/src/codegen/tables/ChipAttachment.sol";
+import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+
 contract Chip is IChestChip {
   constructor(address _biomeWorldAddress) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
@@ -48,8 +51,20 @@ contract Chip is IChestChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.Chest,
+        name: "Private Chest",
+        description: "Only you can transfer items in and out"
+      })
     );
+  }
+
+  function setDisplayData(bytes32 chestEntityId, string memory name, string memory description) public {
+    require(
+      ChipAttachment.getAttacher(chestEntityId) == msg.sender,
+      "Only the attacher can set the chest display data"
+    );
+    setChestMetadata(chestEntityId, ChestMetadataData({ name: name, description: description }));
   }
 
   modifier onlyBiomeWorld() {
@@ -80,5 +95,15 @@ contract Chip is IChestChip {
     uint16 numToTransfer,
     bytes32 toolEntityId,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool) {
+    bytes32 playerEntityId = getObjectType(srcEntityId) == PlayerObjectID ? srcEntityId : dstEntityId;
+    bytes32 chestEntityId = playerEntityId == srcEntityId ? dstEntityId : srcEntityId;
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    address player = getPlayerFromEntity(playerEntityId);
+    if (player == owner) {
+      return true;
+    }
+
+    return false;
+  }
 }
