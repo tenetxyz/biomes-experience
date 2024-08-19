@@ -14,6 +14,7 @@ import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { Experience } from "../src/Experience.sol";
 import { EXPERIENCE_NAMESPACE } from "../src/Constants.sol";
 import { IExperience } from "../src/IExperience.sol";
+import { Area } from "@biomesaw/experience/src/utils/AreaUtils.sol";
 
 contract PostDeploy is Script {
   function run(address worldAddress) external {
@@ -45,6 +46,11 @@ contract PostDeploy is Script {
     console.logAddress(experienceAddress);
     IWorld(worldAddress).grantAccess(namespaceId, experienceAddress);
     Metadata.setExperienceAddress(experienceAddress);
+
+    experience.setupGame{ value: 33000000000000000 }(
+      "SkyBox",
+      Area({ lowerSouthwestCorner: VoxelCoord({ x: 221, y: 50, z: -93 }), size: VoxelCoord({ x: 3, y: 3, z: 3 }) })
+    );
 
     vm.stopBroadcast();
   }
