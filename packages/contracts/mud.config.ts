@@ -5,8 +5,23 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testexperience",
+  namespace: "buildfordrops",
   tables: {
+    GameMetadata: {
+      schema: {
+        allowedDrops: "address[]",
+      },
+      key: [],
+    },
+    Builder: {
+      schema: {
+        x: "int16",
+        y: "int16",
+        z: "int16",
+        builder: "address",
+      },
+      key: ["x", "y", "z"]
+    },
     Metadata: {
       schema: {
         experienceAddress: "address",
