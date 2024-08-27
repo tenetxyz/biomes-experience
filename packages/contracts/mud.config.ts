@@ -5,13 +5,49 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "subpasschest",
   tables: {
     Metadata: {
       schema: {
         chipAddress: "address",
       },
       key: [],
+    },
+    ShopMetadata: {
+      schema: {
+        shopNFT: "address",
+        shopNFTNextTokenId: "uint256",
+      },
+      key: [],
+    },
+    AllowedSetup: {
+      schema: {
+        player: "address",
+        allowed: "bool",
+      },
+      key: ["player"],
+    },
+    MintedNFT: {
+      schema: {
+        player: "address",
+        minted: "bool",
+      },
+      key: ["player"],
+    },
+    BoughtObject: {
+      schema: {
+        player: "address",
+        objectTypeId: "uint8",
+        bought: "bool",
+      },
+      key: ["player", "objectTypeId"],
+    },
+    Fees: {
+      schema: {
+        token: "address",
+        fee: "uint256",
+      },
+      key: ["token"],
     },
   },
 });
