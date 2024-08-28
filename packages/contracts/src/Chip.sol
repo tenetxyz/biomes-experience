@@ -42,7 +42,6 @@ import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadat
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Metadata } from "./codegen/tables/Metadata.sol";
-import { Fees } from "./codegen/tables/Fees.sol";
 import { ItemShop, ItemShopData } from "@biomesaw/experience/src/codegen/tables/ItemShop.sol";
 import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
 import { ShopType } from "@biomesaw/experience/src/codegen/common.sol";
@@ -123,8 +122,6 @@ contract Chip is IChestChip, Ownable {
     setBuyShop(chestEntityId, buyObjectTypeId, buyPrice, paymentToken);
 
     uint256 addingBalance = buyPrice * buyAmount;
-    uint256 fee = (addingBalance * 1) / 100; // 1% fee
-    addingBalance += fee;
     uint256 newBalance = ItemShop.getBalance(chestEntityId) + addingBalance;
     setShopBalance(chestEntityId, newBalance);
 
@@ -160,8 +157,6 @@ contract Chip is IChestChip, Ownable {
     require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
 
     uint256 addingBalance = buyPrice * buyAmount;
-    uint256 fee = (addingBalance * 1) / 100; // 1% fee
-    addingBalance += fee;
     uint256 newBalance = ItemShop.getBalance(chestEntityId) + addingBalance;
 
     setShop(
@@ -270,18 +265,6 @@ contract Chip is IChestChip, Ownable {
     deleteChipAttacher(entityId);
   }
 
-  function withdrawFees(address paymentToken) public onlyOwner {
-    uint256 withdrawAmount = Fees.get(paymentToken);
-    Fees.set(paymentToken, 0);
-    if (paymentToken == address(0)) {
-      (bool sent, ) = owner().call{ value: withdrawAmount }("");
-      require(sent, "Failed to send Ether");
-    } else {
-      IERC20 token = IERC20(paymentToken);
-      require(token.transfer(owner(), withdrawAmount), "Failed to transfer tokens");
-    }
-  }
-
   function onPowered(bytes32 playerEntityId, bytes32 entityId, uint16 numBattery) public override onlyBiomeWorld {}
 
   function onChipHit(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {}
@@ -318,7 +301,6 @@ contract Chip is IChestChip, Ownable {
     if (shopTotalPrice == 0) {
       return true;
     }
-    uint256 fee = (shopTotalPrice * 1) / 100; // 1% fee
 
     address nftAddress = ShopMetadata.getShopNFT();
     require(nftAddress != address(0), "NFT not set up");
@@ -326,18 +308,14 @@ contract Chip is IChestChip, Ownable {
     if (isDeposit) {
       // Check if there is enough balance in the chest
       uint256 balance = chestShopData.balance;
-      require(balance >= shopTotalPrice + fee, "Insufficient balance in chest");
-      uint256 newBalance = balance - (shopTotalPrice + fee);
+      require(balance >= shopTotalPrice, "Insufficient balance in chest");
+      uint256 newBalance = balance - shopTotalPrice;
       setShopBalance(chestEntityId, newBalance);
 
       if (chestShopData.paymentToken == address(0)) {
-        Fees.set(address(this), Fees.get(address(this)) + fee);
-
         (bool sent, ) = player.call{ value: shopTotalPrice }("");
         require(sent, "Failed to send Ether");
       } else {
-        Fees.set(chestShopData.paymentToken, Fees.get(chestShopData.paymentToken) + fee);
-
         IERC20 token = IERC20(chestShopData.paymentToken);
         require(token.transfer(player, shopTotalPrice), "Failed to transfer tokens");
       }
@@ -352,17 +330,13 @@ contract Chip is IChestChip, Ownable {
       }
     } else {
       if (chestShopData.paymentToken == address(0)) {
-        require(msg.value >= shopTotalPrice + fee, "Insufficient Ether sent");
-        Fees.set(address(this), Fees.get(address(this)) + fee);
+        require(msg.value >= shopTotalPrice, "Insufficient Ether sent");
 
         (bool sent, ) = owner.call{ value: shopTotalPrice }("");
         require(sent, "Failed to send Ether");
       } else {
-        Fees.set(chestShopData.paymentToken, Fees.get(chestShopData.paymentToken) + fee);
-
         IERC20 token = IERC20(chestShopData.paymentToken);
         require(token.transferFrom(player, owner, shopTotalPrice), "Failed to transfer tokens");
-        require(token.transferFrom(player, address(this), fee), "Failed to transfer tokens");
       }
 
       if (
@@ -383,7 +357,7 @@ contract Chip is IChestChip, Ownable {
         player: player,
         shopTxType: isDeposit ? ShopTxType.Sell : ShopTxType.Buy,
         objectTypeId: chestShopData.objectTypeId,
-        price: shopTotalPrice + fee,
+        price: shopTotalPrice,
         amount: numToTransfer,
         paymentToken: chestShopData.paymentToken
       })

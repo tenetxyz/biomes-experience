@@ -15,12 +15,11 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
-import { Fees } from "../src/codegen/tables/Fees.sol";
 
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 import { ERC721MetadataData } from "@biomesaw/experience/src/codegen/tables/ERC721Metadata.sol";
 
-bytes14 constant SHOP_NFT_NAMESPACE = "PSUB";
+bytes14 constant SHOP_NFT_NAMESPACE = "psub_official";
 
 contract TestScript is Script {
   function run(address worldAddress) external {
@@ -46,7 +45,7 @@ contract TestScript is Script {
       MUDERC721MetadataData({
         symbol: "PSUB",
         name: "Settlers Union Bank Pass",
-        baseURI: "https://static.biomes.aw/sub-logo.png"
+        baseURI: "https://static.biomes.aw/sub-nft.png"
       })
     );
     console.log("Deployed Shop NFT contract at address: ");
@@ -62,7 +61,7 @@ contract TestScript is Script {
         symbol: "PSUB",
         name: "Settlers Union Bank Pass",
         description: "The Settlement Union's Bank pass allows you to access the bank's services.",
-        baseURI: "https://static.biomes.aw/sub-logo.png",
+        baseURI: "https://static.biomes.aw/sub-nft.png",
         systemId: _erc721SystemId(SHOP_NFT_NAMESPACE)
       })
     );

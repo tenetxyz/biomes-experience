@@ -41,13 +41,6 @@ export default defineWorld({
         bought: "bool",
       },
       key: ["player", "objectTypeId"],
-    },
-    Fees: {
-      schema: {
-        token: "address",
-        fee: "uint256",
-      },
-      key: ["token"],
-    },
+    }
   },
 });
