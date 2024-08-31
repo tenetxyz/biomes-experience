@@ -5,13 +5,27 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "settlersunion",
   tables: {
     Metadata: {
       schema: {
         chipAddress: "address",
       },
       key: [],
+    },
+    BankMetadata: {
+      schema: {
+        bankToken: "address",
+        objectSupply: "uint256",
+      },
+      key: [],
+    },
+    AllowedSetup: {
+      schema: {
+        player: "address",
+        allowed: "bool",
+      },
+      key: ["player"],
     },
   },
 });
