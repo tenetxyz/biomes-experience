@@ -5,13 +5,32 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "grandexchange",
   tables: {
     Metadata: {
       schema: {
+        objectTypeId: "uint8",
         chipAddress: "address",
+        exchangeToken: "address",
       },
-      key: [],
+      key: ["objectTypeId"],
+    },
+    Exchange: {
+      schema: {
+        objectTypeId: "uint8",
+        price: "uint256",
+        lastPurchaseTime: "uint256",
+        sold: "uint256",
+        rarity: "uint256",
+      },
+      key: ["objectTypeId"],
+    },
+    AllowedSetup: {
+      schema: {
+        player: "address",
+        allowed: "bool",
+      },
+      key: ["player"],
     },
   },
 });
