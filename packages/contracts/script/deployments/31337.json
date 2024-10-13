@@ -1,0 +1,184 @@
+{
+  "chips": [
+    {
+      "objectTypeId": "91",
+      "address": "0xb8348e945900083a270d9244614d09f9c4937d75"
+    },
+    {
+      "objectTypeId": "88",
+      "address": "0x5c15f56ee55531f011c6025b205c1750ea469f75"
+    },
+    {
+      "objectTypeId": "89",
+      "address": "0x8e1f69cffd8dad657bf18b91d75bcd26cd6f43ac"
+    },
+    {
+      "objectTypeId": "93",
+      "address": "0x4060ef0d5a7f0633c5927f7e05041dd7fcd95f42"
+    },
+    {
+      "objectTypeId": "95",
+      "address": "0x43dfd957bb91b568176e976a8d4e8ab4e94aebfd"
+    },
+    {
+      "objectTypeId": "102",
+      "address": "0xfab9d4fa5c03aa5eacce715d02e6db648cee91a3"
+    },
+    {
+      "objectTypeId": "100",
+      "address": "0xf342d22125eddc24c6c3d716e048388d1415c20d"
+    },
+    {
+      "objectTypeId": "105",
+      "address": "0x086bcd73d03a5e1163a9224fa09dc5cf70d73094"
+    },
+    {
+      "objectTypeId": "97",
+      "address": "0x8896dce0e60a706244553ada1aac5cdcc40a0428"
+    },
+    {
+      "objectTypeId": "99",
+      "address": "0x02d6db176f10c4fdcebdd1b44c1037c1b568bc2e"
+    },
+    {
+      "objectTypeId": "107",
+      "address": "0x07f1599d3fcec400eff2528f29fd4f00e9a61062"
+    },
+    {
+      "objectTypeId": "104",
+      "address": "0x87fb4a0e7139c8227e3a49d7da60e7f7b04b0d7b"
+    },
+    {
+      "objectTypeId": "115",
+      "address": "0x6d1366b16eaafbb328432894981f71ce55b0fdf8"
+    },
+    {
+      "objectTypeId": "123",
+      "address": "0xf9ffccdb71d68eeba284e6b8cbf35146f018c9b9"
+    },
+    {
+      "objectTypeId": "122",
+      "address": "0x47ba5f8e0e55b694c1f98e28a6889cb5aa985a08"
+    },
+    {
+      "objectTypeId": "111",
+      "address": "0x181522bb19ae83e9984c469f67dae5602f0bc3de"
+    },
+    {
+      "objectTypeId": "112",
+      "address": "0x9afb25949cd6684e0fc7084681cdab1a87d23af0"
+    },
+    {
+      "objectTypeId": "113",
+      "address": "0x18aa490eeb39233ce791ceb7fc94b54f729a9241"
+    },
+    {
+      "objectTypeId": "114",
+      "address": "0x304e345608bbbe5036529c00dba9a1b4685ac79e"
+    },
+    {
+      "objectTypeId": "117",
+      "address": "0x98f7339c7ca4fd7d8c97c6eae585aaf408eb4631"
+    },
+    {
+      "objectTypeId": "118",
+      "address": "0xdc4df7ea48d6c4b7839ff55c8d0e91f2b885326d"
+    },
+    {
+      "objectTypeId": "120",
+      "address": "0x68b96373abf22ffea0d53e716a5db6fdf081f576"
+    },
+    {
+      "objectTypeId": "119",
+      "address": "0xf3d2a93eb650c3e55638ba31da3cc249ef1a6956"
+    },
+    {
+      "objectTypeId": "121",
+      "address": "0x77467c858dd37aec07b9320553f562899dde6505"
+    },
+    {
+      "objectTypeId": "110",
+      "address": "0x3b2afba0f1f7be555944fd14abd83746f7e172ee"
+    },
+    {
+      "objectTypeId": "30",
+      "address": "0xe9e8acbbfbd8b268c88fe5709e93887606af501a"
+    },
+    {
+      "objectTypeId": "28",
+      "address": "0x0c97c5366ed8a79f72174861f31fd3729858e0e5"
+    },
+    {
+      "objectTypeId": "33",
+      "address": "0xea2fc63eac9b21a83996186e3b36b141e0172a3e"
+    },
+    {
+      "objectTypeId": "31",
+      "address": "0xc95e07ac97cb6af09ac0e5a982d42021cefcf622"
+    },
+    {
+      "objectTypeId": "27",
+      "address": "0x053ee368b6369ea294f126e56c67ec969e52ba3f"
+    },
+    {
+      "objectTypeId": "29",
+      "address": "0xabb8e5765267f0d9ef2527fefc883d5354310b10"
+    },
+    {
+      "objectTypeId": "22",
+      "address": "0xc2a1a334f7140ae222daf81226196c3d8f207454"
+    },
+    {
+      "objectTypeId": "32",
+      "address": "0xb043a12ab263c50ebb0ad8e3a026eb1006e77254"
+    },
+    {
+      "objectTypeId": "23",
+      "address": "0x01fd90faf0f22a6bbeb1da25768e398de7b45fdb"
+    },
+    {
+      "objectTypeId": "21",
+      "address": "0xa3190031e7ab35db5cc23f2e46b1a877eff96c36"
+    },
+    {
+      "objectTypeId": "24",
+      "address": "0xe203d9d0d97c2e7206286ac9bfe9314f3edd0aac"
+    },
+    {
+      "objectTypeId": "25",
+      "address": "0x174113e4e81827b00be4f484a955ecf1b3baf563"
+    },
+    {
+      "objectTypeId": "26",
+      "address": "0x8c187b812ec2edfea308b0aec5406aab041619a5"
+    },
+    {
+      "objectTypeId": "44",
+      "address": "0x5bd774039675883c6072e109e462328111b29600"
+    },
+    {
+      "objectTypeId": "109",
+      "address": "0x821a00d8ead7bebba411e4154d754142c6b0c9db"
+    },
+    {
+      "objectTypeId": "108",
+      "address": "0x9b1603743415caaf0b95453f5bfad2849fd7682f"
+    },
+    {
+      "objectTypeId": "80",
+      "address": "0x1afee20355942e81b126650d22e496db01c4cb0d"
+    },
+    {
+      "objectTypeId": "81",
+      "address": "0xa4b5470fbbfac3946a2f9f1090d38b14d9d9a243"
+    },
+    {
+      "objectTypeId": "82",
+      "address": "0xea79e7b411042dec0c4d1f0f16821a15012ff1bb"
+    },
+    {
+      "objectTypeId": "43",
+      "address": "0xce17442a9e26bcfdfab2e9028e3a655d046f1654"
+    }
+  ]
+}

@@ -14,6 +14,8 @@ import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { Chip } from "../src/Chip.sol";
 import { CHIP_NAMESPACE } from "../src/Constants.sol";
 
+import { AllowedSetup } from "../src/codegen/tables/AllowedSetup.sol";
+
 contract PostDeploy is Script {
   function run(address worldAddress) external {
     // Specify a store so that you can use tables directly in PostDeploy
@@ -25,25 +27,7 @@ contract PostDeploy is Script {
     // Start broadcasting transactions from the deployer account
     vm.startBroadcast(deployerPrivateKey);
 
-    ResourceId namespaceId = WorldResourceIdLib.encode({
-      typeId: RESOURCE_NAMESPACE,
-      namespace: CHIP_NAMESPACE,
-      name: ""
-    });
-
-    address currentChipAddress = Metadata.getChipAddress();
-    if (currentChipAddress != address(0)) {
-      console.log("Revoking access to current Chip contract...");
-      IWorld(worldAddress).revokeAccess(namespaceId, currentChipAddress);
-    }
-
-    console.log("Deploying Chip contract...");
-    Chip chip = new Chip(worldAddress);
-    console.log("Deployed Chip contract at address: ");
-    address chipAddress = address(chip);
-    console.logAddress(chipAddress);
-    IWorld(worldAddress).grantAccess(namespaceId, chipAddress);
-    Metadata.setChipAddress(chipAddress);
+    AllowedSetup.set(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a, true);
 
     vm.stopBroadcast();
   }

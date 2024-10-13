@@ -16,22 +16,23 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-struct MetadataData {
-  address chipAddress;
-  address exchangeToken;
+struct ExchangeData {
+  uint256 price;
+  uint256 lastPurchaseTime;
+  uint256 sold;
 }
 
-library Metadata {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "bazaar", name: "Metadata", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746262617a61617200000000000000004d657461646174610000000000000000);
+library Exchange {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "bazaar", name: "Exchange", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746262617a616172000000000000000045786368616e67650000000000000000);
 
   FieldLayout constant _fieldLayout =
-    FieldLayout.wrap(0x0028020014140000000000000000000000000000000000000000000000000000);
+    FieldLayout.wrap(0x0060030020202000000000000000000000000000000000000000000000000000);
 
   // Hex-encoded key schema of (uint8)
   Schema constant _keySchema = Schema.wrap(0x0001010000000000000000000000000000000000000000000000000000000000);
-  // Hex-encoded value schema of (address, address)
-  Schema constant _valueSchema = Schema.wrap(0x0028020061610000000000000000000000000000000000000000000000000000);
+  // Hex-encoded value schema of (uint256, uint256, uint256)
+  Schema constant _valueSchema = Schema.wrap(0x006003001f1f1f00000000000000000000000000000000000000000000000000);
 
   /**
    * @notice Get the table's key field names.
@@ -47,9 +48,10 @@ library Metadata {
    * @return fieldNames An array of strings with the names of value fields.
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
-    fieldNames = new string[](2);
-    fieldNames[0] = "chipAddress";
-    fieldNames[1] = "exchangeToken";
+    fieldNames = new string[](3);
+    fieldNames[0] = "price";
+    fieldNames[1] = "lastPurchaseTime";
+    fieldNames[2] = "sold";
   }
 
   /**
@@ -67,93 +69,135 @@ library Metadata {
   }
 
   /**
-   * @notice Get chipAddress.
+   * @notice Get price.
    */
-  function getChipAddress(uint8 objectTypeId) internal view returns (address chipAddress) {
+  function getPrice(uint8 objectTypeId) internal view returns (uint256 price) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get chipAddress.
+   * @notice Get price.
    */
-  function _getChipAddress(uint8 objectTypeId) internal view returns (address chipAddress) {
+  function _getPrice(uint8 objectTypeId) internal view returns (uint256 price) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Set chipAddress.
+   * @notice Set price.
    */
-  function setChipAddress(uint8 objectTypeId, address chipAddress) internal {
+  function setPrice(uint8 objectTypeId, uint256 price) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((price)), _fieldLayout);
   }
 
   /**
-   * @notice Set chipAddress.
+   * @notice Set price.
    */
-  function _setChipAddress(uint8 objectTypeId, address chipAddress) internal {
+  function _setPrice(uint8 objectTypeId, uint256 price) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((price)), _fieldLayout);
   }
 
   /**
-   * @notice Get exchangeToken.
+   * @notice Get lastPurchaseTime.
    */
-  function getExchangeToken(uint8 objectTypeId) internal view returns (address exchangeToken) {
+  function getLastPurchaseTime(uint8 objectTypeId) internal view returns (uint256 lastPurchaseTime) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Get exchangeToken.
+   * @notice Get lastPurchaseTime.
    */
-  function _getExchangeToken(uint8 objectTypeId) internal view returns (address exchangeToken) {
+  function _getLastPurchaseTime(uint8 objectTypeId) internal view returns (uint256 lastPurchaseTime) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 1, _fieldLayout);
-    return (address(bytes20(_blob)));
+    return (uint256(bytes32(_blob)));
   }
 
   /**
-   * @notice Set exchangeToken.
+   * @notice Set lastPurchaseTime.
    */
-  function setExchangeToken(uint8 objectTypeId, address exchangeToken) internal {
+  function setLastPurchaseTime(uint8 objectTypeId, uint256 lastPurchaseTime) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((exchangeToken)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((lastPurchaseTime)), _fieldLayout);
   }
 
   /**
-   * @notice Set exchangeToken.
+   * @notice Set lastPurchaseTime.
    */
-  function _setExchangeToken(uint8 objectTypeId, address exchangeToken) internal {
+  function _setLastPurchaseTime(uint8 objectTypeId, uint256 lastPurchaseTime) internal {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((exchangeToken)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 1, abi.encodePacked((lastPurchaseTime)), _fieldLayout);
+  }
+
+  /**
+   * @notice Get sold.
+   */
+  function getSold(uint8 objectTypeId) internal view returns (uint256 sold) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
+
+    bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Get sold.
+   */
+  function _getSold(uint8 objectTypeId) internal view returns (uint256 sold) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
+
+    bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 2, _fieldLayout);
+    return (uint256(bytes32(_blob)));
+  }
+
+  /**
+   * @notice Set sold.
+   */
+  function setSold(uint8 objectTypeId, uint256 sold) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
+
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((sold)), _fieldLayout);
+  }
+
+  /**
+   * @notice Set sold.
+   */
+  function _setSold(uint8 objectTypeId, uint256 sold) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
+
+    StoreCore.setStaticField(_tableId, _keyTuple, 2, abi.encodePacked((sold)), _fieldLayout);
   }
 
   /**
    * @notice Get the full data.
    */
-  function get(uint8 objectTypeId) internal view returns (MetadataData memory _table) {
+  function get(uint8 objectTypeId) internal view returns (ExchangeData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
@@ -168,7 +212,7 @@ library Metadata {
   /**
    * @notice Get the full data.
    */
-  function _get(uint8 objectTypeId) internal view returns (MetadataData memory _table) {
+  function _get(uint8 objectTypeId) internal view returns (ExchangeData memory _table) {
     bytes32[] memory _keyTuple = new bytes32[](1);
     _keyTuple[0] = bytes32(uint256(objectTypeId));
 
@@ -183,8 +227,8 @@ library Metadata {
   /**
    * @notice Set the full data using individual values.
    */
-  function set(uint8 objectTypeId, address chipAddress, address exchangeToken) internal {
-    bytes memory _staticData = encodeStatic(chipAddress, exchangeToken);
+  function set(uint8 objectTypeId, uint256 price, uint256 lastPurchaseTime, uint256 sold) internal {
+    bytes memory _staticData = encodeStatic(price, lastPurchaseTime, sold);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -198,8 +242,8 @@ library Metadata {
   /**
    * @notice Set the full data using individual values.
    */
-  function _set(uint8 objectTypeId, address chipAddress, address exchangeToken) internal {
-    bytes memory _staticData = encodeStatic(chipAddress, exchangeToken);
+  function _set(uint8 objectTypeId, uint256 price, uint256 lastPurchaseTime, uint256 sold) internal {
+    bytes memory _staticData = encodeStatic(price, lastPurchaseTime, sold);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -213,8 +257,8 @@ library Metadata {
   /**
    * @notice Set the full data using the data struct.
    */
-  function set(uint8 objectTypeId, MetadataData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.chipAddress, _table.exchangeToken);
+  function set(uint8 objectTypeId, ExchangeData memory _table) internal {
+    bytes memory _staticData = encodeStatic(_table.price, _table.lastPurchaseTime, _table.sold);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -228,8 +272,8 @@ library Metadata {
   /**
    * @notice Set the full data using the data struct.
    */
-  function _set(uint8 objectTypeId, MetadataData memory _table) internal {
-    bytes memory _staticData = encodeStatic(_table.chipAddress, _table.exchangeToken);
+  function _set(uint8 objectTypeId, ExchangeData memory _table) internal {
+    bytes memory _staticData = encodeStatic(_table.price, _table.lastPurchaseTime, _table.sold);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -243,10 +287,14 @@ library Metadata {
   /**
    * @notice Decode the tightly packed blob of static data using this table's field layout.
    */
-  function decodeStatic(bytes memory _blob) internal pure returns (address chipAddress, address exchangeToken) {
-    chipAddress = (address(Bytes.getBytes20(_blob, 0)));
+  function decodeStatic(
+    bytes memory _blob
+  ) internal pure returns (uint256 price, uint256 lastPurchaseTime, uint256 sold) {
+    price = (uint256(Bytes.getBytes32(_blob, 0)));
 
-    exchangeToken = (address(Bytes.getBytes20(_blob, 20)));
+    lastPurchaseTime = (uint256(Bytes.getBytes32(_blob, 32)));
+
+    sold = (uint256(Bytes.getBytes32(_blob, 64)));
   }
 
   /**
@@ -259,8 +307,8 @@ library Metadata {
     bytes memory _staticData,
     EncodedLengths,
     bytes memory
-  ) internal pure returns (MetadataData memory _table) {
-    (_table.chipAddress, _table.exchangeToken) = decodeStatic(_staticData);
+  ) internal pure returns (ExchangeData memory _table) {
+    (_table.price, _table.lastPurchaseTime, _table.sold) = decodeStatic(_staticData);
   }
 
   /**
@@ -287,8 +335,8 @@ library Metadata {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(address chipAddress, address exchangeToken) internal pure returns (bytes memory) {
-    return abi.encodePacked(chipAddress, exchangeToken);
+  function encodeStatic(uint256 price, uint256 lastPurchaseTime, uint256 sold) internal pure returns (bytes memory) {
+    return abi.encodePacked(price, lastPurchaseTime, sold);
   }
 
   /**
@@ -298,10 +346,11 @@ library Metadata {
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
   function encode(
-    address chipAddress,
-    address exchangeToken
+    uint256 price,
+    uint256 lastPurchaseTime,
+    uint256 sold
   ) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(chipAddress, exchangeToken);
+    bytes memory _staticData = encodeStatic(price, lastPurchaseTime, sold);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;

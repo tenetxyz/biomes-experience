@@ -1,0 +1,274 @@
+{
+    "items": [
+      {
+        "targetPrice": 25000000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 4000000000000000000,
+        "objectTypeId": 91
+      },
+      {
+        "targetPrice": 25560000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 88
+      },
+      {
+        "targetPrice": 26800000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 3000000000000000000,
+        "objectTypeId": 89
+      },
+      {
+        "targetPrice": 62150000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 2000000000000000000,
+        "objectTypeId": 93
+      },
+      {
+        "targetPrice": 252800000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 1000000000000000000,
+        "objectTypeId": 95
+      },
+      {
+        "targetPrice": 16590000000000000000,
+        "priceDecayPercent": 200000000000000000,
+        "perTimeUnit": 10000000000000000000,
+        "objectTypeId": 102
+      },
+      {
+        "targetPrice": 16960000000000000000,
+        "priceDecayPercent": 200000000000000000,
+        "perTimeUnit": 10000000000000000000,
+        "objectTypeId": 100
+      },
+      {
+        "targetPrice": 16330000000000000000,
+        "priceDecayPercent": 200000000000000000,
+        "perTimeUnit": 10000000000000000000,
+        "objectTypeId": 105
+      },
+      {
+        "targetPrice": 5000000000000000000,
+        "priceDecayPercent": 200000000000000000,
+        "perTimeUnit": 20000000000000000000,
+        "objectTypeId": 97
+      },
+      {
+        "targetPrice": 7500000000000000000,
+        "priceDecayPercent": 200000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 99
+      },
+      {
+        "targetPrice": 7500000000000000000,
+        "priceDecayPercent": 200000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 107
+      },
+      {
+        "targetPrice": 7500000000000000000,
+        "priceDecayPercent": 200000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 104
+      },
+      {
+        "targetPrice": 5000000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 115
+      },
+      {
+        "targetPrice": 750000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 123
+      },
+      {
+        "targetPrice": 750000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 122
+      },
+      {
+        "targetPrice": 2000000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 111
+      },
+      {
+        "targetPrice": 2000000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 112
+      },
+      {
+        "targetPrice": 2000000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 113
+      },
+      {
+        "targetPrice": 2000000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 114
+      },
+      {
+        "targetPrice": 2000000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 117
+      },
+      {
+        "targetPrice": 2000000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 118
+      },
+      {
+        "targetPrice": 500000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 120
+      },
+      {
+        "targetPrice": 2000000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 119
+      },
+      {
+        "targetPrice": 750000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 121
+      },
+      {
+        "targetPrice": 3000000000000000000,
+        "priceDecayPercent": 250000000000000000,
+        "perTimeUnit": 8000000000000000000,
+        "objectTypeId": 110
+      },
+      {
+        "targetPrice": 7000000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 30
+      },
+      {
+        "targetPrice": 7500000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 28
+      },
+      {
+        "targetPrice": 8000000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 33
+      },
+      {
+        "targetPrice": 7250000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 31
+      },
+      {
+        "targetPrice": 7750000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 27
+      },
+      {
+        "targetPrice": 7500000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 29
+      },
+      {
+        "targetPrice": 7500000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 22
+      },
+      {
+        "targetPrice": 8500000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 32
+      },
+      {
+        "targetPrice": 8000000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 23
+      },
+      {
+        "targetPrice": 7750000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 21
+      },
+      {
+        "targetPrice": 7750000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 24
+      },
+      {
+        "targetPrice": 7500000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 25
+      },
+      {
+        "targetPrice": 7250000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 26
+      },
+      {
+        "targetPrice": 25000000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 10000000000000000000,
+        "objectTypeId": 44
+      },
+      {
+        "targetPrice": 10000000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 109
+      },
+      {
+        "targetPrice": 10500000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 108
+      },
+      {
+        "targetPrice": 11000000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 80
+      },
+      {
+        "targetPrice": 11500000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 81
+      },
+      {
+        "targetPrice": 12000000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 82
+      },
+      {
+        "targetPrice": 9500000000000000000,
+        "priceDecayPercent": 150000000000000000,
+        "perTimeUnit": 5000000000000000000,
+        "objectTypeId": 43
+      }
+    ]
+  }
