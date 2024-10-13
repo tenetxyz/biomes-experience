@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { WorldContextConsumerLib } from "@latticexyz/world/src/WorldContext.sol";
@@ -40,17 +41,70 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance, setBuyPrice, setSellPrice, setShopObjectTypeId, emitShopNotif, deleteShopNotif } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 
-contract Chip is IChestChip {
-  constructor(address _biomeWorldAddress) {
-    StoreSwitch.setStoreAddress(_biomeWorldAddress);
+import { IERC20Mintable } from "@latticexyz/world-modules/src/modules/erc20-puppet/IERC20Mintable.sol";
+import { BankMetadata } from "./codegen/tables/BankMetadata.sol";
+import { AllowedSetup } from "./codegen/tables/AllowedSetup.sol";
+import { Tokens } from "@biomesaw/experience/src/codegen/tables/Tokens.sol";
+import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+import { ItemShop, ItemShopData } from "@biomesaw/experience/src/codegen/tables/ItemShop.sol";
+import { ShopType } from "@biomesaw/experience/src/codegen/common.sol";
+import { ItemShopNotifData } from "@biomesaw/experience/src/codegen/tables/ItemShopNotif.sol";
+import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { SilverBarObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
 
-    initChip();
+contract Chip is IChestChip, Ownable {
+  constructor(address _biomeWorldAddress) Ownable(msg.sender) {
+    StoreSwitch.setStoreAddress(_biomeWorldAddress);
   }
 
-  function initChip() internal {
-    setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+  function setDisplayData(bytes32 chestEntityId, string memory name, string memory description) public {
+    require(
+      ChipAttachment.getAttacher(chestEntityId) == msg.sender,
+      "Only the attacher can set the chest display data"
     );
+    setChestMetadata(chestEntityId, ChestMetadataData({ name: name, description: description }));
+  }
+
+  function renounceNamespaceOwnership(ResourceId namespaceId) public onlyOwner {
+    IWorld(WorldContextConsumerLib._world()).transferOwnership(namespaceId, _msgSender());
+  }
+
+  function addAllowedSetup(address attacher) public onlyOwner {
+    AllowedSetup.set(attacher, true);
+  }
+
+  function setBankToken(address tokenAddress) public onlyOwner {
+    address[] memory tokens = new address[](1);
+    tokens[0] = tokenAddress;
+    setTokens(tokens);
+    BankMetadata.setBankToken(tokenAddress);
+    BankMetadata.setObjectSupply(0);
+  }
+
+  function getBuyUnitPrice(bytes32 chestEntityId) public view returns (uint256) {
+    return
+      blocksToTokens(
+        IERC20Mintable(BankMetadata.getBankToken()).totalSupply(),
+        BankMetadata.getObjectSupply(),
+        ItemShop.getObjectTypeId(chestEntityId),
+        1,
+        false
+      );
+  }
+
+  function getSellUnitPrice(bytes32 chestEntityId) public view returns (uint256) {
+    return
+      blocksToTokens(
+        IERC20Mintable(BankMetadata.getBankToken()).totalSupply(),
+        BankMetadata.getObjectSupply(),
+        ItemShop.getObjectTypeId(chestEntityId),
+        1,
+        true
+      );
+  }
+
+  function getBuySellUnitPrices(bytes32 chestEntityId) public view returns (uint256, uint256) {
+    return (getBuyUnitPrice(chestEntityId), getSellUnitPrice(chestEntityId));
   }
 
   modifier onlyBiomeWorld() {
@@ -67,8 +121,25 @@ contract Chip is IChestChip {
     bytes32 entityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
-    return true;
+    require(getNumInventoryObjects(entityId) == 0, "Chest must be empty");
+    address player = getPlayerFromEntity(playerEntityId);
+    setChipAttacher(entityId, player);
+
+    address tokenAddress = BankMetadata.getBankToken();
+    require(tokenAddress != address(0), "Token address cannot be 0");
+
+    setShop(
+      entityId,
+      ItemShopData({
+        shopType: ShopType.BuySell,
+        objectTypeId: SilverBarObjectID,
+        buyPrice: 0,
+        sellPrice: 0,
+        balance: 0,
+        paymentToken: tokenAddress
+      })
+    );
+    return AllowedSetup.get(player);
   }
 
   function onDetached(
@@ -78,6 +149,24 @@ contract Chip is IChestChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address owner = ChipAttachment.getAttacher(entityId);
     address player = getPlayerFromEntity(playerEntityId);
+
+    uint8 shopObjectTypeId = ItemShop.getObjectTypeId(entityId);
+
+    if (shopObjectTypeId != NullObjectTypeId) {
+      uint16 currentSupplyInChest = getCount(entityId, shopObjectTypeId);
+      if (currentSupplyInChest > 0) {
+        uint256 currentObjectSupply = BankMetadata.getObjectSupply();
+        uint256 newObjectSupply = currentObjectSupply > currentSupplyInChest
+          ? currentObjectSupply - currentSupplyInChest
+          : 0;
+        BankMetadata.setObjectSupply(newObjectSupply);
+      }
+
+      // Clear existing shop data
+      deleteShop(entityId);
+    }
+
+    deleteChestMetadata(entityId);
     deleteChipAttacher(entityId);
     return owner == player;
   }
@@ -86,6 +175,42 @@ contract Chip is IChestChip {
 
   function onChipHit(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {}
 
+  function blocksToTokens(
+    uint256 tokenSupply,
+    uint256 objectSupply,
+    uint8 objectTypeId,
+    uint16 transferAmount,
+    bool isDeposit
+  ) internal view returns (uint256) {
+    // Cumulatively sum the objectSupply as it increases/decreases
+    uint256 tokens = 0;
+    for (uint16 i = 0; i < transferAmount; i++) {
+      uint256 tokenIncrease = 0;
+      if (objectSupply == 0) {
+        tokenIncrease = 100 * 10 ** 18;
+      } else {
+        tokenIncrease = tokenSupply / objectSupply;
+      }
+      tokens += tokenIncrease;
+
+      if (isDeposit) {
+        objectSupply++;
+        tokenSupply += tokenIncrease;
+      } else {
+        if (objectSupply > 0) {
+          objectSupply--;
+        }
+        if (tokenSupply > tokenIncrease) {
+          tokenSupply -= tokenIncrease;
+        } else {
+          tokenSupply = 0;
+        }
+      }
+    }
+
+    return tokens;
+  }
+
   function onTransfer(
     bytes32 srcEntityId,
     bytes32 dstEntityId,
@@ -93,5 +218,59 @@ contract Chip is IChestChip {
     uint16 numToTransfer,
     bytes32[] memory toolEntityIds,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool) {
+    bool isDeposit = getObjectType(srcEntityId) == PlayerObjectID;
+    bytes32 chestEntityId = isDeposit ? dstEntityId : srcEntityId;
+    {
+      ItemShopData memory chestShopData = ItemShop.get(chestEntityId);
+      if (chestShopData.objectTypeId != transferObjectTypeId) {
+        return false;
+      }
+      for (uint i = 0; i < toolEntityIds.length; i++) {
+        require(
+          getNumUsesLeft(toolEntityIds[i]) != getDurability(chestShopData.objectTypeId),
+          "Tool must have full durability"
+        );
+      }
+    }
+
+    address tokenAddress = BankMetadata.getBankToken();
+    require(tokenAddress != address(0), "Token not set up");
+    uint256 tokenSupply = IERC20Mintable(tokenAddress).totalSupply();
+    address player = getPlayerFromEntity(isDeposit ? srcEntityId : dstEntityId);
+    require(player != address(0), "Player does not exist");
+
+    uint256 objectSupply = BankMetadata.getObjectSupply();
+    uint256 blockTokens = blocksToTokens(tokenSupply, objectSupply, transferObjectTypeId, numToTransfer, isDeposit);
+
+    {
+      uint256 newObjectSupply = isDeposit
+        ? objectSupply + numToTransfer
+        : objectSupply > numToTransfer
+          ? objectSupply - numToTransfer
+          : 0;
+      BankMetadata.setObjectSupply(newObjectSupply);
+    }
+
+    if (isDeposit) {
+      IERC20Mintable(tokenAddress).mint(player, blockTokens);
+    } else {
+      // Note: ERC20 will check if the player has enough tokens
+      IERC20Mintable(tokenAddress).burn(player, blockTokens);
+    }
+
+    emitShopNotif(
+      chestEntityId,
+      ItemShopNotifData({
+        player: player,
+        shopTxType: isDeposit ? ShopTxType.Sell : ShopTxType.Buy,
+        objectTypeId: transferObjectTypeId,
+        price: blockTokens,
+        amount: numToTransfer,
+        paymentToken: tokenAddress
+      })
+    );
+
+    return true;
+  }
 }
