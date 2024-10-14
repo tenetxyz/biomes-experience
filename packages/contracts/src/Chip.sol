@@ -43,7 +43,6 @@ import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadat
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Metadata } from "./codegen/tables/Metadata.sol";
-import { Fees } from "./codegen/tables/Fees.sol";
 import { ItemShop, ItemShopData } from "@biomesaw/experience/src/codegen/tables/ItemShop.sol";
 import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
 import { ShopType } from "@biomesaw/experience/src/codegen/common.sol";
@@ -53,6 +52,7 @@ import { ShopMetadata } from "./codegen/tables/ShopMetadata.sol";
 import { AllowedSetup } from "./codegen/tables/AllowedSetup.sol";
 import { MintedNFT } from "./codegen/tables/MintedNFT.sol";
 import { BoughtObject } from "./codegen/tables/BoughtObject.sol";
+import { SoldObject } from "./codegen/tables/SoldObject.sol";
 import { IERC721Mintable } from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 
 contract Chip is IChestChip, Ownable {
@@ -123,17 +123,15 @@ contract Chip is IChestChip, Ownable {
     setBuyShop(chestEntityId, buyObjectTypeId, buyPrice, paymentToken);
 
     uint256 addingBalance = buyPrice * buyAmount;
-    uint256 fee = (addingBalance * 1) / 100; // 1% fee
-    addingBalance += fee;
     uint256 newBalance = ItemShop.getBalance(chestEntityId) + addingBalance;
     setShopBalance(chestEntityId, newBalance);
 
-    if (paymentToken == address(0)) {
-      require(msg.value == addingBalance, "Insufficient Ether sent");
-    } else {
-      IERC20 token = IERC20(paymentToken);
-      require(token.transferFrom(msg.sender, address(this), addingBalance), "Failed to transfer tokens");
-    }
+    // if (paymentToken == address(0)) {
+    //   require(msg.value == addingBalance, "Insufficient Ether sent");
+    // } else {
+    //   IERC20 token = IERC20(paymentToken);
+    //   require(token.transferFrom(msg.sender, address(this), addingBalance), "Failed to transfer tokens");
+    // }
   }
 
   function setupSellShop(
@@ -160,8 +158,6 @@ contract Chip is IChestChip, Ownable {
     require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
 
     uint256 addingBalance = buyPrice * buyAmount;
-    uint256 fee = (addingBalance * 1) / 100; // 1% fee
-    addingBalance += fee;
     uint256 newBalance = ItemShop.getBalance(chestEntityId) + addingBalance;
 
     setShop(
@@ -176,12 +172,12 @@ contract Chip is IChestChip, Ownable {
       })
     );
 
-    if (paymentToken == address(0)) {
-      require(msg.value == addingBalance, "Insufficient Ether sent");
-    } else {
-      IERC20 token = IERC20(paymentToken);
-      require(token.transferFrom(msg.sender, address(this), addingBalance), "Failed to transfer tokens");
-    }
+    // if (paymentToken == address(0)) {
+    //   require(msg.value == addingBalance, "Insufficient Ether sent");
+    // } else {
+    //   IERC20 token = IERC20(paymentToken);
+    //   require(token.transferFrom(msg.sender, address(this), addingBalance), "Failed to transfer tokens");
+    // }
   }
 
   function changeBuyPrice(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 newPrice) public {
@@ -281,18 +277,6 @@ contract Chip is IChestChip, Ownable {
     return owner == player;
   }
 
-  function withdrawFees(address paymentToken) public onlyOwner {
-    uint256 withdrawAmount = Fees.get(paymentToken);
-    Fees.set(paymentToken, 0);
-    if (paymentToken == address(0)) {
-      (bool sent, ) = owner().call{ value: withdrawAmount }("");
-      require(sent, "Failed to send Ether");
-    } else {
-      IERC20 token = IERC20(paymentToken);
-      require(token.transfer(owner(), withdrawAmount), "Failed to transfer tokens");
-    }
-  }
-
   function onPowered(bytes32 playerEntityId, bytes32 entityId, uint16 numBattery) public override onlyBiomeWorld {}
 
   function onChipHit(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {}
@@ -325,57 +309,32 @@ contract Chip is IChestChip, Ownable {
       );
     }
 
-    uint256 shopTotalPrice = numToTransfer * (isDeposit ? chestShopData.buyPrice : chestShopData.sellPrice);
-    if (shopTotalPrice == 0) {
-      return true;
-    }
-    uint256 fee = (shopTotalPrice * 1) / 100; // 1% fee
-
     address nftAddress = ShopMetadata.getShopNFT();
     require(nftAddress != address(0), "NFT not set up");
 
     if (isDeposit) {
-      // Check if there is enough balance in the chest
-      uint256 balance = chestShopData.balance;
-      require(balance >= shopTotalPrice + fee, "Insufficient balance in chest");
-      uint256 newBalance = balance - (shopTotalPrice + fee);
-      setShopBalance(chestEntityId, newBalance);
+      uint256 newNumSold = SoldObject.getNumSold(player, transferObjectTypeId);
+      newNumSold += numToTransfer;
+      SoldObject.setNumSold(player, transferObjectTypeId, newNumSold);
+      if (transferObjectTypeId == StoneObjectID && newNumSold >= 20 && !MintedNFT.getMinted(player)) {
+        uint256 nextTokenId = ShopMetadata.getShopNFTNextTokenId() + 1;
+        IERC721Mintable(nftAddress).safeMint(player, nextTokenId);
+        ShopMetadata.setShopNFTNextTokenId(nextTokenId);
+        MintedNFT.setMinted(player, true);
 
-      if (chestShopData.paymentToken == address(0)) {
-        Fees.set(address(this), Fees.get(address(this)) + fee);
-
-        (bool sent, ) = player.call{ value: shopTotalPrice }("");
-        require(sent, "Failed to send Ether");
-      } else {
-        Fees.set(chestShopData.paymentToken, Fees.get(chestShopData.paymentToken) + fee);
-
-        IERC20 token = IERC20(chestShopData.paymentToken);
-        require(token.transfer(player, shopTotalPrice), "Failed to transfer tokens");
-      }
-
-      if (transferObjectTypeId == StoneObjectID) {
-        if (!MintedNFT.getMinted(player)) {
-          uint256 nextTokenId = ShopMetadata.getShopNFTNextTokenId() + 1;
-          IERC721Mintable(nftAddress).safeMint(player, nextTokenId);
-          ShopMetadata.setShopNFTNextTokenId(nextTokenId);
-          MintedNFT.setMinted(player, true);
-        }
+        emitShopNotif(
+          chestEntityId,
+          ItemShopNotifData({
+            player: player,
+            shopTxType: ShopTxType.Sell,
+            objectTypeId: chestShopData.objectTypeId,
+            price: 1,
+            amount: numToTransfer,
+            paymentToken: nftAddress
+          })
+        );
       }
     } else {
-      if (chestShopData.paymentToken == address(0)) {
-        require(msg.value >= shopTotalPrice + fee, "Insufficient Ether sent");
-        Fees.set(address(this), Fees.get(address(this)) + fee);
-
-        (bool sent, ) = owner.call{ value: shopTotalPrice }("");
-        require(sent, "Failed to send Ether");
-      } else {
-        Fees.set(chestShopData.paymentToken, Fees.get(chestShopData.paymentToken) + fee);
-
-        IERC20 token = IERC20(chestShopData.paymentToken);
-        require(token.transferFrom(player, owner, shopTotalPrice), "Failed to transfer tokens");
-        require(token.transferFrom(player, address(this), fee), "Failed to transfer tokens");
-      }
-
       if (
         transferObjectTypeId == ChipObjectID ||
         transferObjectTypeId == ChipBatteryObjectID ||
@@ -385,6 +344,8 @@ contract Chip is IChestChip, Ownable {
         require(!BoughtObject.getBought(player, transferObjectTypeId), "Player has already bought this item");
         require(IERC721Mintable(nftAddress).balanceOf(player) > 0, "Player does not own the required NFT");
         BoughtObject.setBought(player, transferObjectTypeId, true);
+      } else {
+        revert("Invalid object type ID");
       }
     }
 
@@ -394,7 +355,7 @@ contract Chip is IChestChip, Ownable {
         player: player,
         shopTxType: isDeposit ? ShopTxType.Sell : ShopTxType.Buy,
         objectTypeId: chestShopData.objectTypeId,
-        price: shopTotalPrice + fee,
+        price: numToTransfer * (isDeposit ? chestShopData.buyPrice : chestShopData.sellPrice),
         amount: numToTransfer,
         paymentToken: chestShopData.paymentToken
       })

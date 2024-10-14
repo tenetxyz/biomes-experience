@@ -42,12 +42,13 @@ export default defineWorld({
       },
       key: ["player", "objectTypeId"],
     },
-    Fees: {
+    SoldObject: {
       schema: {
-        token: "address",
-        fee: "uint256",
+        player: "address",
+        objectTypeId: "uint8",
+        numSold: "uint256",
       },
-      key: ["token"],
-    },
+      key: ["player", "objectTypeId"],
+    }
   },
 });
