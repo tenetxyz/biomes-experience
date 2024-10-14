@@ -8,4 +8,4 @@ import { ShopMetadata, ShopMetadataData } from "./tables/ShopMetadata.sol";
 import { AllowedSetup } from "./tables/AllowedSetup.sol";
 import { MintedNFT } from "./tables/MintedNFT.sol";
 import { BoughtObject } from "./tables/BoughtObject.sol";
-import { Fees } from "./tables/Fees.sol";
+import { SoldObject } from "./tables/SoldObject.sol";
