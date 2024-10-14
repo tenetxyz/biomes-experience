@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { WorldContextConsumerLib } from "@latticexyz/world/src/WorldContext.sol";
@@ -26,7 +27,7 @@ import { ShopType, ShopTxType } from "@biomesaw/experience/src/codegen/common.so
 
 // Available utils, remove the ones you don't need
 // See ObjectTypeIds.sol for all available object types
-import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID, StoneObjectID, ChipObjectID, ChipBatteryObjectID, ForceFieldObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
 import { getBuildArgs, getMineArgs, getMoveArgs, getHitArgs, getDropArgs, getTransferArgs, getCraftArgs, getEquipArgs, getLoginArgs, getSpawnArgs } from "@biomesaw/experience/src/utils/HookUtils.sol";
 import { getSystemId, isSystemId, callBuild, callMine, callMove, callHit, callDrop, callTransfer, callCraft, callEquip, callUnequip, callLogin, callLogout, callSpawn, callActivate } from "@biomesaw/experience/src/utils/DelegationUtils.sol";
 import { hasBeforeAndAfterSystemHook, getObjectTypeAtCoord, getTerrainBlock, getEntityAtCoord, getPosition, getObjectType, getMiningDifficulty, getStackable, getDamage, getDurability, isTool, isBlock, getEntityFromPlayer, getPlayerFromEntity, getEquipped, getHealth, getStamina, getIsLoggedOff, getLastHitTime, getInventoryTool, getInventoryObjects, getNumInventoryObjects, getCount, getNumSlotsUsed, getNumUsesLeft } from "@biomesaw/experience/src/utils/EntityUtils.sol";
@@ -39,17 +40,194 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance, setBuyPrice, setSellPrice, setShopObjectTypeId, emitShopNotif, deleteShopNotif } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 
-contract Chip is IChestChip {
-  constructor(address _biomeWorldAddress) {
-    StoreSwitch.setStoreAddress(_biomeWorldAddress);
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Metadata } from "./codegen/tables/Metadata.sol";
+import { ItemShop, ItemShopData } from "@biomesaw/experience/src/codegen/tables/ItemShop.sol";
+import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+import { ShopType } from "@biomesaw/experience/src/codegen/common.sol";
+import { ChipAttachment } from "@biomesaw/experience/src/codegen/tables/ChipAttachment.sol";
+import { ItemShopNotifData } from "@biomesaw/experience/src/codegen/tables/ItemShopNotif.sol";
+import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { ShopMetadata } from "./codegen/tables/ShopMetadata.sol";
+import { AllowedSetup } from "./codegen/tables/AllowedSetup.sol";
+import { MintedNFT } from "./codegen/tables/MintedNFT.sol";
+import { BoughtObject } from "./codegen/tables/BoughtObject.sol";
+import { SoldObject } from "./codegen/tables/SoldObject.sol";
+import { IERC721Mintable } from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 
-    initChip();
+contract Chip is IChestChip, Ownable {
+  constructor(address _biomeWorldAddress) Ownable(msg.sender) {
+    StoreSwitch.setStoreAddress(_biomeWorldAddress);
   }
 
-  function initChip() internal {
-    setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+  function setDisplayData(bytes32 chestEntityId, string memory name, string memory description) public {
+    require(
+      ChipAttachment.getAttacher(chestEntityId) == msg.sender,
+      "Only the attacher can set the chest display data"
     );
+    setChestMetadata(chestEntityId, ChestMetadataData({ name: name, description: description }));
+  }
+
+  function renounceNamespaceOwnership(ResourceId namespaceId) public onlyOwner {
+    IWorld(WorldContextConsumerLib._world()).transferOwnership(namespaceId, _msgSender());
+  }
+
+  function addAllowedSetup(address attacher) public onlyOwner {
+    AllowedSetup.set(attacher, true);
+  }
+
+  function setShopNFT(address nftAddres) public onlyOwner {
+    address[] memory nfts = new address[](1);
+    nfts[0] = nftAddres;
+    setNfts(nfts);
+    ShopMetadata.setShopNFT(nftAddres);
+    ShopMetadata.setShopNFTNextTokenId(0);
+  }
+
+  function doWithdraw(address player, bytes32 chestEntityId, uint256 amount) internal returns (uint256) {
+    require(amount > 0, "Amount must be greater than 0");
+    uint256 currentBalance = ItemShop.getBalance(chestEntityId);
+    require(currentBalance >= amount, "Insufficient balance");
+    uint256 newBalance = currentBalance - amount;
+
+    address paymentToken = ItemShop.getPaymentToken(chestEntityId);
+    if (paymentToken == address(0)) {
+      (bool sent, ) = player.call{ value: amount }("");
+      require(sent, "Failed to send Ether");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transfer(player, amount), "Failed to transfer tokens");
+    }
+
+    return newBalance;
+  }
+
+  function hasBought(address player, uint8 objectTypeId) public view returns (bool) {
+    return BoughtObject.getBought(player, objectTypeId);
+  }
+
+  function getShopNFT() public view returns (address) {
+    return ShopMetadata.getShopNFT();
+  }
+
+  function setupBuyShop(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    address paymentToken
+  ) public payable {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can set up the shop");
+    require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
+
+    setBuyShop(chestEntityId, buyObjectTypeId, buyPrice, paymentToken);
+
+    uint256 addingBalance = buyPrice * buyAmount;
+    uint256 newBalance = ItemShop.getBalance(chestEntityId) + addingBalance;
+    setShopBalance(chestEntityId, newBalance);
+
+    // if (paymentToken == address(0)) {
+    //   require(msg.value == addingBalance, "Insufficient Ether sent");
+    // } else {
+    //   IERC20 token = IERC20(paymentToken);
+    //   require(token.transferFrom(msg.sender, address(this), addingBalance), "Failed to transfer tokens");
+    // }
+  }
+
+  function setupSellShop(
+    bytes32 chestEntityId,
+    uint8 sellObjectTypeId,
+    uint256 sellPrice,
+    address paymentToken
+  ) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can set up the shop");
+    require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
+
+    setSellShop(chestEntityId, sellObjectTypeId, sellPrice, paymentToken);
+  }
+
+  function setupBuySellShop(
+    bytes32 chestEntityId,
+    uint8 objectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    uint256 sellPrice,
+    address paymentToken
+  ) public payable {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can set up the shop");
+    require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
+
+    uint256 addingBalance = buyPrice * buyAmount;
+    uint256 newBalance = ItemShop.getBalance(chestEntityId) + addingBalance;
+
+    setShop(
+      chestEntityId,
+      ItemShopData({
+        shopType: ShopType.BuySell,
+        objectTypeId: objectTypeId,
+        buyPrice: buyPrice,
+        sellPrice: sellPrice,
+        balance: newBalance,
+        paymentToken: paymentToken
+      })
+    );
+
+    // if (paymentToken == address(0)) {
+    //   require(msg.value == addingBalance, "Insufficient Ether sent");
+    // } else {
+    //   IERC20 token = IERC20(paymentToken);
+    //   require(token.transferFrom(msg.sender, address(this), addingBalance), "Failed to transfer tokens");
+    // }
+  }
+
+  function changeBuyPrice(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 newPrice) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can change the price");
+    require(ItemShop.getObjectTypeId(chestEntityId) == buyObjectTypeId, "Chest is not set up");
+
+    setBuyPrice(chestEntityId, newPrice);
+  }
+
+  function changeSellPrice(bytes32 chestEntityId, uint8 sellObjectTypeId, uint256 newPrice) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can change the price");
+    require(ItemShop.getObjectTypeId(chestEntityId) == sellObjectTypeId, "Chest is not set up");
+
+    setSellPrice(chestEntityId, newPrice);
+  }
+
+  function refillBuyShopBalance(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 refillAmount) public payable {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can refill the chest");
+    require(ItemShop.getObjectTypeId(chestEntityId) == buyObjectTypeId, "Chest is not set up");
+
+    address paymentToken = ItemShop.getPaymentToken(chestEntityId);
+
+    uint256 newBalance = ItemShop.getBalance(chestEntityId) + refillAmount;
+    setShopBalance(chestEntityId, newBalance);
+
+    if (paymentToken == address(0)) {
+      require(msg.value == refillAmount, "Insufficient Ether sent");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transferFrom(msg.sender, address(this), refillAmount), "Failed to transfer tokens");
+    }
+  }
+
+  function withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can withdraw the balance");
+    uint256 newBalance = doWithdraw(msg.sender, chestEntityId, amount);
+    setShopBalance(chestEntityId, newBalance);
+  }
+
+  function destroyShop(bytes32 chestEntityId, uint8 objectTypeId) public {
+    require(ChipAttachment.getAttacher(chestEntityId) == msg.sender, "Only the attacher can destroy the chest");
+    require(ItemShop.getObjectTypeId(chestEntityId) == objectTypeId, "Chest is not set up");
+
+    uint256 currentBalance = ItemShop.getBalance(chestEntityId);
+    if (currentBalance > 0) {
+      doWithdraw(msg.sender, chestEntityId, currentBalance);
+    }
+    deleteChestMetadata(chestEntityId);
+
+    deleteShop(chestEntityId);
   }
 
   modifier onlyBiomeWorld() {
@@ -62,10 +240,29 @@ contract Chip is IChestChip {
   }
 
   function onAttached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
-    setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
+    require(getNumInventoryObjects(entityId) == 0, "Chest must be empty");
+    address player = getPlayerFromEntity(playerEntityId);
+    setChipAttacher(entityId, player);
+
+    require(AllowedSetup.get(player), "Not allowed to use this chip");
+
+    address nftAddress = ShopMetadata.getShopNFT();
+    require(nftAddress != address(0), "NFT address cannot be 0");
   }
 
   function onDetached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
+    deleteChestMetadata(entityId);
+    address previousOwner = ChipAttachment.getAttacher(entityId);
+    uint256 currentBalance = ItemShop.getBalance(entityId);
+    if (currentBalance > 0) {
+      doWithdraw(previousOwner, entityId, currentBalance);
+    }
+
+    if (ItemShop.getObjectTypeId(entityId) != NullObjectTypeId) {
+      // Clear existing shop data
+      deleteShop(entityId);
+    }
+
     deleteChipAttacher(entityId);
   }
 
@@ -80,5 +277,79 @@ contract Chip is IChestChip {
     uint16 numToTransfer,
     bytes32 toolEntityId,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool) {
+    bool isDeposit = getObjectType(srcEntityId) == PlayerObjectID;
+    bytes32 chestEntityId = isDeposit ? dstEntityId : srcEntityId;
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(owner != address(0), "Chest does not exist");
+    address player = getPlayerFromEntity(isDeposit ? srcEntityId : dstEntityId);
+    if (player == owner) {
+      return true;
+    }
+
+    ItemShopData memory chestShopData = ItemShop.get(chestEntityId);
+    if (chestShopData.objectTypeId != transferObjectTypeId) {
+      return false;
+    }
+    if (toolEntityId != bytes32(0)) {
+      require(
+        getNumUsesLeft(toolEntityId) == getDurability(chestShopData.objectTypeId),
+        "Tool must have full durability"
+      );
+    }
+
+    address nftAddress = ShopMetadata.getShopNFT();
+    require(nftAddress != address(0), "NFT not set up");
+
+    if (isDeposit) {
+      uint256 newNumSold = SoldObject.getNumSold(player, transferObjectTypeId);
+      newNumSold += numToTransfer;
+      SoldObject.setNumSold(player, transferObjectTypeId, newNumSold);
+      if (transferObjectTypeId == StoneObjectID && newNumSold >= 20 && !MintedNFT.getMinted(player)) {
+        uint256 nextTokenId = ShopMetadata.getShopNFTNextTokenId() + 1;
+        IERC721Mintable(nftAddress).safeMint(player, nextTokenId);
+        ShopMetadata.setShopNFTNextTokenId(nextTokenId);
+        MintedNFT.setMinted(player, true);
+
+        emitShopNotif(
+          chestEntityId,
+          ItemShopNotifData({
+            player: player,
+            shopTxType: ShopTxType.Sell,
+            objectTypeId: chestShopData.objectTypeId,
+            price: 1,
+            amount: numToTransfer,
+            paymentToken: nftAddress
+          })
+        );
+      }
+    } else {
+      if (
+        transferObjectTypeId == ChipObjectID ||
+        transferObjectTypeId == ChipBatteryObjectID ||
+        transferObjectTypeId == ForceFieldObjectID
+      ) {
+        require(numToTransfer == 1, "Can only buy one of these items from the shop");
+        require(!BoughtObject.getBought(player, transferObjectTypeId), "Player has already bought this item");
+        require(IERC721Mintable(nftAddress).balanceOf(player) > 0, "Player does not own the required NFT");
+        BoughtObject.setBought(player, transferObjectTypeId, true);
+      } else {
+        revert("Invalid object type ID");
+      }
+    }
+
+    emitShopNotif(
+      chestEntityId,
+      ItemShopNotifData({
+        player: player,
+        shopTxType: isDeposit ? ShopTxType.Sell : ShopTxType.Buy,
+        objectTypeId: chestShopData.objectTypeId,
+        price: numToTransfer * (isDeposit ? chestShopData.buyPrice : chestShopData.sellPrice),
+        amount: numToTransfer,
+        paymentToken: chestShopData.paymentToken
+      })
+    );
+
+    return true;
+  }
 }
