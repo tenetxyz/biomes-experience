@@ -21,6 +21,7 @@ import { voxelCoordsAreEqual, inSurroundingCube } from "@biomesaw/utils/src/Voxe
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 import { ExperienceMetadata, ExperienceMetadataData } from "@biomesaw/experience/src/codegen/tables/ExperienceMetadata.sol";
 import { ChipMetadata, ChipMetadataData } from "@biomesaw/experience/src/codegen/tables/ChipMetadata.sol";
+import { ChipAttachment } from "@biomesaw/experience/src/codegen/tables/ChipAttachment.sol";
 import { ChipType } from "@biomesaw/experience/src/codegen/common.sol";
 import { ShopType, ShopTxType } from "@biomesaw/experience/src/codegen/common.sol";
 
@@ -67,6 +68,7 @@ contract Chip is IChestChip {
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
+    return true;
   }
 
   function onDetached(
@@ -74,7 +76,10 @@ contract Chip is IChestChip {
     bytes32 entityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+    address owner = ChipAttachment.getAttacher(entityId);
+    address player = getPlayerFromEntity(playerEntityId);
     deleteChipAttacher(entityId);
+    return owner == player;
   }
 
   function onPowered(bytes32 playerEntityId, bytes32 entityId, uint16 numBattery) public override onlyBiomeWorld {}
