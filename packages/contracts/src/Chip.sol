@@ -61,11 +61,19 @@ contract Chip is IChestChip {
     return interfaceId == type(IChestChip).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
-  function onAttached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
+  function onAttached(
+    bytes32 playerEntityId,
+    bytes32 entityId,
+    bytes memory extraData
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
   }
 
-  function onDetached(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {
+  function onDetached(
+    bytes32 playerEntityId,
+    bytes32 entityId,
+    bytes memory extraData
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     deleteChipAttacher(entityId);
   }
 
