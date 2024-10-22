@@ -40,7 +40,11 @@ import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttache
 import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance, setBuyPrice, setSellPrice, setShopObjectTypeId, emitShopNotif, deleteShopNotif } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 
-contract Chip is IChestChip {
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { ForceFieldApprovals } from "@biomesaw/experience/src/codegen/tables/ForceFieldApprovals.sol";
+import { FFMetadataData } from "@biomesaw/experience/src/codegen/tables/FFMetadata.sol";
+
+contract Chip is IForceFieldChip {
   constructor(address _biomeWorldAddress) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
 
@@ -49,8 +53,80 @@ contract Chip is IChestChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.ForceField,
+        name: "Settlement",
+        description: "You control this area - decide which players or pass-holders can build and mine inside."
+      })
     );
+  }
+
+  function setDisplayData(bytes32 entityId, string memory name, string memory description) public {
+    require(ChipAttachment.getAttacher(entityId) == msg.sender, "Only the attacher can set the force field name");
+    setForceFieldMetadata(entityId, FFMetadataData({ name: name, description: description }));
+  }
+
+  function addApprovedPlayer(bytes32 entityId, address player) public {
+    require(ChipAttachment.getAttacher(entityId) == msg.sender, "Only the attacher can add approved players");
+    address[] memory approvedPlayers = ForceFieldApprovals.getPlayers(entityId);
+    address[] memory newApprovedPlayers = new address[](approvedPlayers.length + 1);
+    for (uint256 i = 0; i < approvedPlayers.length; i++) {
+      require(approvedPlayers[i] != player, "Player is already approved");
+      newApprovedPlayers[i] = approvedPlayers[i];
+    }
+    newApprovedPlayers[approvedPlayers.length] = player;
+    setFFApprovedPlayers(entityId, newApprovedPlayers);
+  }
+
+  function removeApprovedPlayer(bytes32 entityId, address player) public {
+    require(ChipAttachment.getAttacher(entityId) == msg.sender, "Only the attacher can remove approved players");
+    require(isApprovedPlayer(entityId, player), "Player is not approved");
+    address[] memory approvedPlayers = ForceFieldApprovals.getPlayers(entityId);
+    address[] memory newApprovedPlayers = new address[](approvedPlayers.length - 1);
+    uint256 j = 0;
+    for (uint256 i = 0; i < approvedPlayers.length; i++) {
+      if (approvedPlayers[i] == player) {
+        continue;
+      }
+      newApprovedPlayers[j] = approvedPlayers[i];
+      j++;
+    }
+    setFFApprovedPlayers(entityId, newApprovedPlayers);
+  }
+
+  function addApprovedNFT(bytes32 entityId, address nft) public {
+    require(ChipAttachment.getAttacher(entityId) == msg.sender, "Only the attacher can add approved NFTs");
+    address[] memory approvedNfts = ForceFieldApprovals.getNfts(entityId);
+    address[] memory newApprovedNfts = new address[](approvedNfts.length + 1);
+    for (uint256 i = 0; i < approvedNfts.length; i++) {
+      require(approvedNfts[i] != nft, "NFT is already approved");
+      newApprovedNfts[i] = approvedNfts[i];
+    }
+    newApprovedNfts[approvedNfts.length] = nft;
+    setFFApprovedNFT(entityId, newApprovedNfts);
+  }
+
+  function removeApprovedNFT(bytes32 entityId, address nft) public {
+    require(ChipAttachment.getAttacher(entityId) == msg.sender, "Only the attacher can remove approved NFTs");
+    address[] memory approvedNfts = ForceFieldApprovals.getNfts(entityId);
+    bool hasApprovedNft = false;
+    for (uint256 i = 0; i < approvedNfts.length; i++) {
+      if (approvedNfts[i] == nft) {
+        hasApprovedNft = true;
+        break;
+      }
+    }
+    require(hasApprovedNft, "NFT is not approved");
+    address[] memory newApprovedNfts = new address[](approvedNfts.length - 1);
+    uint256 j = 0;
+    for (uint256 i = 0; i < approvedNfts.length; i++) {
+      if (approvedNfts[i] == nft) {
+        continue;
+      }
+      newApprovedNfts[j] = approvedNfts[i];
+      j++;
+    }
+    setFFApprovedNFT(entityId, newApprovedNfts);
   }
 
   modifier onlyBiomeWorld() {
@@ -59,7 +135,7 @@ contract Chip is IChestChip {
   }
 
   function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
-    return interfaceId == type(IChestChip).interfaceId || interfaceId == type(IERC165).interfaceId;
+    return interfaceId == type(IForceFieldChip).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
   function onAttached(
@@ -68,6 +144,9 @@ contract Chip is IChestChip {
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
+    address[] memory approvedPlayers = new address[](1);
+    approvedPlayers[0] = getPlayerFromEntity(playerEntityId);
+    setFFApprovedPlayers(entityId, approvedPlayers);
     return true;
   }
 
@@ -76,22 +155,63 @@ contract Chip is IChestChip {
     bytes32 entityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    address owner = ChipAttachment.getAttacher(entityId);
     address player = getPlayerFromEntity(playerEntityId);
+    bool approvedInForceField = isApproved(entityId, player);
+    deleteForceFieldMetadata(entityId);
+    deleteForceFieldApprovals(entityId);
     deleteChipAttacher(entityId);
-    return owner == player;
+    return approvedInForceField;
   }
 
   function onPowered(bytes32 playerEntityId, bytes32 entityId, uint16 numBattery) public override onlyBiomeWorld {}
 
   function onChipHit(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    bytes32 srcEntityId,
-    bytes32 dstEntityId,
-    uint8 transferObjectTypeId,
-    uint16 numToTransfer,
-    bytes32[] memory toolEntityIds,
+  function isApprovedPlayer(bytes32 forceFieldEntityId, address player) internal returns (bool) {
+    address[] memory approvedPlayers = ForceFieldApprovals.getPlayers(forceFieldEntityId);
+    for (uint256 i = 0; i < approvedPlayers.length; i++) {
+      if (approvedPlayers[i] == player) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function hasApprovedNft(bytes32 forceFieldEntityId, address player) internal returns (bool) {
+    address[] memory approvedNfts = ForceFieldApprovals.getNfts(forceFieldEntityId);
+    for (uint256 i = 0; i < approvedNfts.length; i++) {
+      if (IERC721(approvedNfts[i]).balanceOf(player) > 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function isApproved(bytes32 forceFieldEntityId, address player) internal returns (bool) {
+    return isApprovedPlayer(forceFieldEntityId, player) || hasApprovedNft(forceFieldEntityId, player);
+  }
+
+  function onBuild(
+    bytes32 forceFieldEntityId,
+    bytes32 playerEntityId,
+    uint8 objectTypeId,
+    VoxelCoord memory coord,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+    address player = getPlayerFromEntity(playerEntityId);
+    return isApproved(forceFieldEntityId, player);
+  }
+
+  function onMine(
+    bytes32 forceFieldEntityId,
+    bytes32 playerEntityId,
+    uint8 objectTypeId,
+    VoxelCoord memory coord,
+    bytes memory extraData
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+    address player = getPlayerFromEntity(playerEntityId);
+    return isApproved(forceFieldEntityId, player);
+  }
 }
