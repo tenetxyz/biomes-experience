@@ -14,6 +14,9 @@ import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { Chip } from "../src/Chip.sol";
 import { CHIP_NAMESPACE } from "../src/Constants.sol";
 
+import { ShopToken } from "../src/ShopToken.sol";
+import { GrassObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
+
 contract PostDeploy is Script {
   function run(address worldAddress) external {
     // Specify a store so that you can use tables directly in PostDeploy
@@ -44,6 +47,14 @@ contract PostDeploy is Script {
     console.logAddress(chipAddress);
     IWorld(worldAddress).grantAccess(namespaceId, chipAddress);
     Metadata.setChipAddress(chipAddress);
+
+    console.log("Deploying Grass ShopToken contract...");
+    ShopToken grassToken = new ShopToken("BGrass", "BGRS", chipAddress);
+    console.log("Deployed Grassc ShopToken contract at address: ");
+    address grassTokenAddress = address(grassToken);
+    console.logAddress(grassTokenAddress);
+
+    chipAddress.call(abi.encodeWithSignature("updateObjectToToken(uint8,address)", GrassObjectID, grassTokenAddress));
 
     vm.stopBroadcast();
   }

@@ -16,15 +16,15 @@ import { Schema } from "@latticexyz/store/src/Schema.sol";
 import { EncodedLengths, EncodedLengthsLib } from "@latticexyz/store/src/EncodedLengths.sol";
 import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
 
-library Metadata {
-  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "dynamicchest", name: "Metadata", typeId: RESOURCE_TABLE });`
-  ResourceId constant _tableId = ResourceId.wrap(0x746264796e616d6963636865737400004d657461646174610000000000000000);
+library ObjectToken {
+  // Hex below is the result of `WorldResourceIdLib.encode({ namespace: "dynamicchest", name: "ObjectToken", typeId: RESOURCE_TABLE });`
+  ResourceId constant _tableId = ResourceId.wrap(0x746264796e616d6963636865737400004f626a656374546f6b656e0000000000);
 
   FieldLayout constant _fieldLayout =
     FieldLayout.wrap(0x0014010014000000000000000000000000000000000000000000000000000000);
 
-  // Hex-encoded key schema of ()
-  Schema constant _keySchema = Schema.wrap(0x0000000000000000000000000000000000000000000000000000000000000000);
+  // Hex-encoded key schema of (uint8)
+  Schema constant _keySchema = Schema.wrap(0x0001010000000000000000000000000000000000000000000000000000000000);
   // Hex-encoded value schema of (address)
   Schema constant _valueSchema = Schema.wrap(0x0014010061000000000000000000000000000000000000000000000000000000);
 
@@ -33,7 +33,8 @@ library Metadata {
    * @return keyNames An array of strings with the names of key fields.
    */
   function getKeyNames() internal pure returns (string[] memory keyNames) {
-    keyNames = new string[](0);
+    keyNames = new string[](1);
+    keyNames[0] = "objectTypeId";
   }
 
   /**
@@ -42,7 +43,7 @@ library Metadata {
    */
   function getFieldNames() internal pure returns (string[] memory fieldNames) {
     fieldNames = new string[](1);
-    fieldNames[0] = "chipAddress";
+    fieldNames[0] = "tokenAddress";
   }
 
   /**
@@ -60,86 +61,95 @@ library Metadata {
   }
 
   /**
-   * @notice Get chipAddress.
+   * @notice Get tokenAddress.
    */
-  function getChipAddress() internal view returns (address chipAddress) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function getTokenAddress(uint8 objectTypeId) internal view returns (address tokenAddress) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Get chipAddress.
+   * @notice Get tokenAddress.
    */
-  function _getChipAddress() internal view returns (address chipAddress) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _getTokenAddress(uint8 objectTypeId) internal view returns (address tokenAddress) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Get chipAddress.
+   * @notice Get tokenAddress.
    */
-  function get() internal view returns (address chipAddress) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function get(uint8 objectTypeId) internal view returns (address tokenAddress) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     bytes32 _blob = StoreSwitch.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Get chipAddress.
+   * @notice Get tokenAddress.
    */
-  function _get() internal view returns (address chipAddress) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _get(uint8 objectTypeId) internal view returns (address tokenAddress) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     bytes32 _blob = StoreCore.getStaticField(_tableId, _keyTuple, 0, _fieldLayout);
     return (address(bytes20(_blob)));
   }
 
   /**
-   * @notice Set chipAddress.
+   * @notice Set tokenAddress.
    */
-  function setChipAddress(address chipAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function setTokenAddress(uint8 objectTypeId, address tokenAddress) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tokenAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set chipAddress.
+   * @notice Set tokenAddress.
    */
-  function _setChipAddress(address chipAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _setTokenAddress(uint8 objectTypeId, address tokenAddress) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tokenAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set chipAddress.
+   * @notice Set tokenAddress.
    */
-  function set(address chipAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function set(uint8 objectTypeId, address tokenAddress) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
-    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
+    StoreSwitch.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tokenAddress)), _fieldLayout);
   }
 
   /**
-   * @notice Set chipAddress.
+   * @notice Set tokenAddress.
    */
-  function _set(address chipAddress) internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _set(uint8 objectTypeId, address tokenAddress) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
-    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((chipAddress)), _fieldLayout);
+    StoreCore.setStaticField(_tableId, _keyTuple, 0, abi.encodePacked((tokenAddress)), _fieldLayout);
   }
 
   /**
    * @notice Delete all data for given keys.
    */
-  function deleteRecord() internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function deleteRecord(uint8 objectTypeId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     StoreSwitch.deleteRecord(_tableId, _keyTuple);
   }
@@ -147,8 +157,9 @@ library Metadata {
   /**
    * @notice Delete all data for given keys.
    */
-  function _deleteRecord() internal {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function _deleteRecord(uint8 objectTypeId) internal {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     StoreCore.deleteRecord(_tableId, _keyTuple, _fieldLayout);
   }
@@ -157,8 +168,8 @@ library Metadata {
    * @notice Tightly pack static (fixed length) data using this table's schema.
    * @return The static data, encoded into a sequence of bytes.
    */
-  function encodeStatic(address chipAddress) internal pure returns (bytes memory) {
-    return abi.encodePacked(chipAddress);
+  function encodeStatic(address tokenAddress) internal pure returns (bytes memory) {
+    return abi.encodePacked(tokenAddress);
   }
 
   /**
@@ -167,8 +178,8 @@ library Metadata {
    * @return The lengths of the dynamic fields (packed into a single bytes32 value).
    * @return The dynamic (variable length) data, encoded into a sequence of bytes.
    */
-  function encode(address chipAddress) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
-    bytes memory _staticData = encodeStatic(chipAddress);
+  function encode(address tokenAddress) internal pure returns (bytes memory, EncodedLengths, bytes memory) {
+    bytes memory _staticData = encodeStatic(tokenAddress);
 
     EncodedLengths _encodedLengths;
     bytes memory _dynamicData;
@@ -179,8 +190,9 @@ library Metadata {
   /**
    * @notice Encode keys as a bytes32 array using this table's field layout.
    */
-  function encodeKeyTuple() internal pure returns (bytes32[] memory) {
-    bytes32[] memory _keyTuple = new bytes32[](0);
+  function encodeKeyTuple(uint8 objectTypeId) internal pure returns (bytes32[] memory) {
+    bytes32[] memory _keyTuple = new bytes32[](1);
+    _keyTuple[0] = bytes32(uint256(objectTypeId));
 
     return _keyTuple;
   }
