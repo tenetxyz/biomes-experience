@@ -22,7 +22,7 @@ import { ERC20MetadataData } from "@biomesaw/experience/src/codegen/tables/ERC20
 
 bytes14 constant BANK_TOKEN_NAMESPACE = "SUB";
 
-contract TestScript is Script {
+contract MintScript is Script {
   function run(address worldAddress) external {
     IWorld world = IWorld(worldAddress);
 
@@ -39,40 +39,12 @@ contract TestScript is Script {
     address chipAddress = Metadata.getChipAddress();
     console.logAddress(chipAddress);
 
-    console.log("Deploying Bank token contract...");
-    IERC20Mintable bankToken = registerERC20(
-      world,
-      BANK_TOKEN_NAMESPACE,
-      MUDERC20MetadataData({ decimals: 18, name: "Settlers Union Bank Coin", symbol: "SUB" })
-    );
-    console.log("Deployed Bank token contract at address: ");
-    address bankTokenAddress = address(bankToken);
+    address bankTokenAddress = 0x2FF827f8750dbe1A7dbAD0f7354d0D0395551d2F;
     console.logAddress(bankTokenAddress);
 
+    IERC20Mintable(bankTokenAddress).mint(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a, 100e18);
+
     ResourceId namespaceId = WorldResourceIdLib.encodeNamespace(BANK_TOKEN_NAMESPACE);
-
-    IExperienceWorld(worldAddress).experience__setMUDTokenMetadata(
-      namespaceId,
-      ERC20MetadataData({
-        creator: 0xA32EC0cc74FBdD0a7c2B7b654ca6B886000E2B65,
-        decimals: 18,
-        symbol: "SUB",
-        name: "Settlers Union Bank Coin",
-        description: "The Settlement Union's Bank chest mints SUB, backed 100:1 by the silver bars it possesses, and is used to purchase essential tools for cheap in their shops.",
-        icon: "https://static.biomes.aw/sub-coin.png",
-        systemId: _erc20SystemId(BANK_TOKEN_NAMESPACE)
-      })
-    );
-
-    world.transferOwnership(namespaceId, chipAddress);
-
-    chipAddress.call(abi.encodeWithSignature("setBankToken(address)", bankTokenAddress));
-    chipAddress.call(abi.encodeWithSignature("addAllowedSetup(address)", 0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a));
-    chipAddress.call(abi.encodeWithSignature("addAllowedSetup(address)", 0xA32EC0cc74FBdD0a7c2B7b654ca6B886000E2B65));
-
-    // console.logBool(
-    //   AllowedSetup.get(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a)
-    // );
 
     // chipAddress.call(abi.encodeWithSignature("renounceNamespaceOwnership(bytes32)", namespaceId));
     // console.log(ERC20Metadata.getName(_metadataTableId(BANK_TOKEN_NAMESPACE)));
