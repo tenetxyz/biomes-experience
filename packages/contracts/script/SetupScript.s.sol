@@ -18,10 +18,10 @@ import { Metadata } from "../src/codegen/tables/Metadata.sol";
 
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 import { ERC721MetadataData } from "@biomesaw/experience/src/codegen/tables/ERC721Metadata.sol";
-
+import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID, StoneObjectID, ChipObjectID, ChipBatteryObjectID, ForceFieldObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
 bytes14 constant SHOP_NFT_NAMESPACE = "psub_official";
 
-contract TestScript is Script {
+contract SetupScript is Script {
   function run(address worldAddress) external {
     IWorld world = IWorld(worldAddress);
 
@@ -38,39 +38,33 @@ contract TestScript is Script {
     address chipAddress = Metadata.getChipAddress();
     console.logAddress(chipAddress);
 
-    console.log("Deploying Shop NFT contract...");
-    IERC721Mintable shopNFT = registerERC721(
-      world,
-      SHOP_NFT_NAMESPACE,
-      MUDERC721MetadataData({
-        symbol: "PSUB",
-        name: "Settlers Union Bank Pass",
-        baseURI: "https://static.biomes.aw/sub-nft.png"
-      })
+    bytes32 chestEntityId = 0x0000000000000000000000000000000000000000000000000000000000001414;
+    uint8 buyObjectTypeId = StoneObjectID;
+    uint256 buyPrice = 1e18;
+    uint256 buyAmount = 99 * 12;
+    address paymentToken = 0x2FF827f8750dbe1A7dbAD0f7354d0D0395551d2F;
+    // chipAddress.call(
+    //   abi.encodeWithSignature(
+    //     "setupBuyShop(bytes32,uint8,uint256,uint256,address)",
+    //     chestEntityId,
+    //     buyObjectTypeId,
+    //     buyPrice,
+    //     buyAmount,
+    //     paymentToken
+    //   )
+    // );
+
+    uint8 sellObjectTypeId = ForceFieldObjectID;
+    uint256 sellPrice = 1e18;
+    chipAddress.call(
+      abi.encodeWithSignature(
+        "setupSellShop(bytes32,uint8,uint256,address)",
+        chestEntityId,
+        sellObjectTypeId,
+        sellPrice,
+        paymentToken
+      )
     );
-    console.log("Deployed Shop NFT contract at address: ");
-    address shopNFTAddress = address(shopNFT);
-    console.logAddress(shopNFTAddress);
-
-    ResourceId namespaceId = WorldResourceIdLib.encodeNamespace(SHOP_NFT_NAMESPACE);
-
-    IExperienceWorld(worldAddress).experience__setMUDNFTMetadata(
-      namespaceId,
-      ERC721MetadataData({
-        creator: 0xA32EC0cc74FBdD0a7c2B7b654ca6B886000E2B65,
-        symbol: "PSUB",
-        name: "Settlers Union Bank Pass",
-        description: "The Settlement Union's Bank pass allows you to access the bank's services.",
-        baseURI: "https://static.biomes.aw/sub-nft.png",
-        systemId: _erc721SystemId(SHOP_NFT_NAMESPACE)
-      })
-    );
-
-    world.transferOwnership(namespaceId, chipAddress);
-
-    chipAddress.call(abi.encodeWithSignature("setShopNFT(address)", shopNFTAddress));
-    chipAddress.call(abi.encodeWithSignature("addAllowedSetup(address)", 0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a));
-    chipAddress.call(abi.encodeWithSignature("addAllowedSetup(address)", 0xA32EC0cc74FBdD0a7c2B7b654ca6B886000E2B65));
 
     vm.stopBroadcast();
   }
