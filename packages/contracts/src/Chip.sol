@@ -91,7 +91,7 @@ contract Chip is IChestChip {
     bytes32 dstEntityId,
     uint8 transferObjectTypeId,
     uint16 numToTransfer,
-    bytes32 toolEntityId,
+    bytes32[] memory toolEntityIds,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
 }
