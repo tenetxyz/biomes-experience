@@ -45,6 +45,8 @@ contract PostDeploy is Script {
     IWorld(worldAddress).grantAccess(namespaceId, chipAddress);
     Metadata.setChipAddress(chipAddress);
 
+    chipAddress.call(abi.encodeWithSignature("addAllowedSetup(address)", 0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a));
+
     vm.stopBroadcast();
   }
 }
