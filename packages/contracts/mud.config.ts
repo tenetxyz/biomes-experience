@@ -5,13 +5,21 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "uniswapchest",
   tables: {
     Metadata: {
       schema: {
         chipAddress: "address",
       },
       key: [],
+    },
+    Exchange: {
+      schema: {
+        chestEntityId: "bytes32",
+        objectTypeId: "uint8",
+        kConstant: "uint256",
+      },
+      key: ["chestEntityId", "objectTypeId"],
     },
   },
 });
