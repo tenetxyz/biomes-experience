@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { WorldContextConsumerLib } from "@latticexyz/world/src/WorldContext.sol";
@@ -30,7 +31,7 @@ import { ChipType, ResourceType } from "@biomesaw/experience/src/codegen/common.
 
 // Available utils, remove the ones you don't need
 // See ObjectTypeIds.sol for all available object types
-import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID, StoneObjectID, SakuraLogObjectID, ChipObjectID, ChipBatteryObjectID, ForceFieldObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
 import { getBuildArgs, getMineArgs, getMoveArgs, getHitArgs, getDropArgs, getTransferArgs, getCraftArgs, getEquipArgs, getLoginArgs, getSpawnArgs } from "@biomesaw/experience/src/utils/HookUtils.sol";
 import { getSystemId, isSystemId, callBuild, callMine, callMove, callHit, callDrop, callTransfer, callCraft, callEquip, callUnequip, callLogin, callLogout, callSpawn, callActivate } from "@biomesaw/experience/src/utils/DelegationUtils.sol";
 import { hasBeforeAndAfterSystemHook, getObjectTypeAtCoord, getTerrainBlock, getEntityAtCoord, getPosition, getObjectType, getMiningDifficulty, getStackable, getDamage, getDurability, isTool, isBlock, getEntityFromPlayer, getPlayerFromEntity, getEquipped, getHealth, getStamina, getIsLoggedOff, getLastHitTime, getInventoryTool, getInventoryObjects, getNumInventoryObjects, getCount, getNumSlotsUsed, getNumUsesLeft, numMaxInChest } from "@biomesaw/experience/src/utils/EntityUtils.sol";
@@ -48,40 +49,83 @@ import { isApprovedPlayerForGate, hasApprovedNftForGate, isApprovedForGate } fro
 import { encodeAddressExchangeResourceId, decodeAddressExchangeResourceId, encodeObjectExchangeResourceId, decodeObjectExchangeResourceId, exchangeExists } from "@biomesaw/experience/src/utils/ExchangeUtils.sol";
 import { pipeAccessExists } from "@biomesaw/experience/src/utils/PipeUtils.sol";
 
-import { CHIP_NAMESPACE } from "./Constants.sol";
-import { IChip } from "./IChip.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Metadata } from "./codegen/tables/Metadata.sol";
+import { ItemShop, ItemShopData } from "@biomesaw/experience/src/codegen/tables/ItemShop.sol";
+import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+import { ShopType } from "@biomesaw/experience/src/codegen/common.sol";
+import { ItemShopNotifData } from "@biomesaw/experience/src/codegen/tables/ItemShopNotif.sol";
+import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { ShopMetadata, ShopMetadataData } from "./codegen/tables/ShopMetadata.sol";
+import { AllowedSetup } from "./codegen/tables/AllowedSetup.sol";
+import { MintedNFT } from "./codegen/tables/MintedNFT.sol";
+import { IERC721Mintable } from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
+import { DirtObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
 
-import { SmartItemMetadataData } from "@biomesaw/experience/src/codegen/tables/SmartItemMetadata.sol";
-
-contract Chip is IChip {
-  constructor(address _biomeWorldAddress) {
+contract Chip is IChestChip, Ownable {
+  constructor(address _biomeWorldAddress) Ownable(msg.sender) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
-
-    initChip();
   }
 
-  function initChip() internal {
-    setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+  function setDisplayData(bytes32 chestEntityId, string memory name, string memory description) public {
+    require(
+      ChipAttachment.getAttacher(chestEntityId) == msg.sender,
+      "Only the attacher can set the chest display data"
     );
-    setNamespaceId(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
+    setChestMetadata(chestEntityId, ChestMetadataData({ name: name, description: description }));
   }
 
-  modifier onlyChipNamespace() {
-    require(getCallerNamespace(msg.sender) == CHIP_NAMESPACE, "Caller is not a system in the Chip namespace");
-    _; // Continue execution
+  function renounceNamespaceOwnership(ResourceId namespaceId) public onlyOwner {
+    IWorld(WorldContextConsumerLib._world()).transferOwnership(namespaceId, _msgSender());
   }
 
-  function changeAdmin(bytes32 entityId, address newAdmin) public onlyChipNamespace {
-    setChipAdmin(entityId, newAdmin);
+  function addAllowedSetup(address attacher) public onlyOwner {
+    AllowedSetup.set(attacher, true);
   }
 
-  function setDisplayData(
-    bytes32 chestEntityId,
-    string memory name,
-    string memory description
-  ) public onlyChipNamespace {
-    setSmartItemMetadata(chestEntityId, SmartItemMetadataData({ name: name, description: description }));
+  function setShopPaymentToken(address paymentToken) public onlyOwner {
+    ShopMetadata.setPaymentToken(paymentToken);
+  }
+
+  function setShopNFT(address nftAddres) public onlyOwner {
+    address[] memory nfts = new address[](1);
+    nfts[0] = nftAddres;
+    setNfts(nfts);
+    ShopMetadata.setShopNFT(nftAddres);
+    ShopMetadata.setShopNFTNextTokenId(0);
+  }
+
+  function claimNft() public {
+    address player = msg.sender;
+    ShopMetadataData memory shopMetadata = ShopMetadata.get();
+    require(shopMetadata.chestEntityId != bytes32(0), "Chest not set up");
+    require(shopMetadata.shopNFT != address(0), "NFT not set up");
+    require(!MintedNFT.getMinted(player), "NFT already minted");
+
+    bytes32 playerEntityId = getEntityFromPlayer(player);
+    require(playerEntityId != bytes32(0), "Player does not exist");
+    VoxelCoord memory playerPos = getPosition(playerEntityId);
+    VoxelCoord memory chestPos = getPosition(shopMetadata.chestEntityId);
+    require(inSurroundingCube(chestPos, 2, playerPos), "Player must be near the chest");
+
+    uint256 nextTokenId = shopMetadata.shopNFTNextTokenId + 1;
+    IERC721Mintable(shopMetadata.shopNFT).safeMint(player, nextTokenId);
+    ShopMetadata.setShopNFTNextTokenId(nextTokenId);
+    MintedNFT.setMinted(player, true);
+
+    ItemShopData memory chestShopData = ItemShop.get(shopMetadata.chestEntityId);
+    require(chestShopData.paymentToken != address(0), "Payment token not set");
+    address owner = ChipAttachment.getAttacher(shopMetadata.chestEntityId);
+    require(owner != address(0), "Chest does not exist");
+
+    setNotification(player, unicode"You've earned the parkøur cømpleter pass!");
+
+    IERC20 token = IERC20(chestShopData.paymentToken);
+    require(token.transferFrom(player, owner, chestShopData.buyPrice), "Failed to transfer tokens");
+  }
+
+  function getShopNFT() public view returns (address) {
+    return ShopMetadata.getShopNFT();
   }
 
   modifier onlyBiomeWorld() {
@@ -98,10 +142,28 @@ contract Chip is IChip {
     bytes32 targetEntityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+    require(getNumInventoryObjects(targetEntityId) == 0, "Chest must be empty");
     address player = getPlayerFromEntity(callerEntityId);
     setChipAttacher(targetEntityId, player);
-    setChipAdmin(targetEntityId, player);
-    return true;
+
+    address paymentToken = ShopMetadata.getPaymentToken();
+    require(paymentToken != address(0), "Payment address cannot be 0");
+
+    setShop(
+      targetEntityId,
+      ItemShopData({
+        shopType: ShopType.BuySell,
+        objectTypeId: DirtObjectID,
+        buyPrice: 1e18,
+        sellPrice: 1e18,
+        balance: 0,
+        paymentToken: paymentToken
+      })
+    );
+
+    ShopMetadata.setChestEntityId(targetEntityId);
+
+    return AllowedSetup.get(player);
   }
 
   function onDetached(
@@ -111,7 +173,15 @@ contract Chip is IChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address admin = ChipAdmin.get(targetEntityId);
     address player = getPlayerFromEntity(callerEntityId);
-    deleteSmartItemMetadata(targetEntityId);
+    deleteChestMetadata(targetEntityId);
+
+    if (ItemShop.getObjectTypeId(targetEntityId) != NullObjectTypeId) {
+      // Clear existing shop data
+      deleteShop(targetEntityId);
+    }
+
+    ShopMetadata.setChestEntityId(bytes32(0));
+
     deleteChipAttacher(targetEntityId);
     deleteChipAdmin(targetEntityId);
     return admin == player;
@@ -125,9 +195,14 @@ contract Chip is IChip {
 
   function onChipHit(bytes32 callerEntityId, bytes32 targetEntityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    ChipOnTransferData memory transferContext
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+  function onTransfer(ChipOnTransferData memory transferContext) public payable override onlyBiomeWorld returns (bool) {
+    address owner = ChipAttachment.getAttacher(transferData.targetEntityId);
+    require(owner != address(0), "Chest does not exist");
+    address player = getPlayerFromEntity(transferData.callerEntityId);
+    if (player == owner) {
+      return true;
+    }
+
     return false;
   }
 

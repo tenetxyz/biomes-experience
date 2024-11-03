@@ -5,13 +5,36 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "parkourchest",
   tables: {
     Metadata: {
       schema: {
         chipAddress: "address",
       },
       key: [],
+    },
+    ShopMetadata: {
+      schema: {
+        chestEntityId: "bytes32",
+        paymentToken: "address",
+        shopNFT: "address",
+        shopNFTNextTokenId: "uint256",
+      },
+      key: [],
+    },
+    AllowedSetup: {
+      schema: {
+        player: "address",
+        allowed: "bool",
+      },
+      key: ["player"],
+    },
+    MintedNFT: {
+      schema: {
+        player: "address",
+        minted: "bool",
+      },
+      key: ["player"],
     },
   },
 });
