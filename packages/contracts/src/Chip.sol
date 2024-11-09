@@ -62,7 +62,7 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({ chipType: ChipType.Chest, name: "Storage Chest", description: "Only you can use this chest" })
     );
     setNamespaceId(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
@@ -125,9 +125,13 @@ contract Chip is IChip {
 
   function onChipHit(bytes32 callerEntityId, bytes32 targetEntityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    ChipOnTransferData memory transferContext
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+  function onTransfer(ChipOnTransferData memory transferContext) public payable override onlyBiomeWorld returns (bool) {
+    address owner = ChipAttachment.getAttacher(transferData.targetEntityId);
+    address player = getPlayerFromEntity(transferData.callerEntityId);
+    if (player == owner) {
+      return true;
+    }
+
     return false;
   }
 
