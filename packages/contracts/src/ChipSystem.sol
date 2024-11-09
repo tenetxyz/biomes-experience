@@ -15,4 +15,10 @@ contract ChipSystem is System {
   function onlyAttacher(bytes32 entityId) internal view {
     require(ChipAttachment.getAttacher(entityId) == _msgSender(), "Only the attacher can call this function");
   }
+
+  function setDisplayData(bytes32 entityId, string memory name, string memory description) public {
+    onlyAttacher(entityId);
+    IChip chip = getChipContract();
+    chip.setDisplayData(entityId, name, description);
+  }
 }

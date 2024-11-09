@@ -46,6 +46,8 @@ import { getForceField, isApprovedPlayer, hasApprovedNft, isApproved } from "@bi
 import { CHIP_NAMESPACE } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
 
+import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+
 contract Chip is IChestChip {
   constructor(address _biomeWorldAddress) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
@@ -62,6 +64,14 @@ contract Chip is IChestChip {
   modifier onlyChipNamespace() {
     require(getCallerNamespace(msg.sender) == CHIP_NAMESPACE, "Caller is not a system in the Chip namespace");
     _; // Continue execution
+  }
+
+  function setDisplayData(
+    bytes32 chestEntityId,
+    string memory name,
+    string memory description
+  ) public onlyChipNamespace {
+    setChestMetadata(chestEntityId, ChestMetadataData({ name: name, description: description }));
   }
 
   modifier onlyBiomeWorld() {
