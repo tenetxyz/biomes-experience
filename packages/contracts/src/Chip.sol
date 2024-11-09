@@ -14,10 +14,12 @@ import { RESOURCE_SYSTEM } from "@latticexyz/world/src/worldResourceTypes.sol";
 import { OptionalSystemHooks } from "@latticexyz/world/src/codegen/tables/OptionalSystemHooks.sol";
 import { IChestChip } from "@biomesaw/world/src/prototypes/IChestChip.sol";
 import { IForceFieldChip } from "@biomesaw/world/src/prototypes/IForceFieldChip.sol";
+import { IDisplayChip } from "@biomesaw/world/src/prototypes/IDisplayChip.sol";
 
 import { IWorld } from "@biomesaw/world/src/codegen/world/IWorld.sol";
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { voxelCoordsAreEqual, inSurroundingCube } from "@biomesaw/utils/src/VoxelCoordUtils.sol";
+import { getCallerNamespace } from "@biomesaw/utils/src/CallUtils.sol";
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 import { ExperienceMetadata, ExperienceMetadataData } from "@biomesaw/experience/src/codegen/tables/ExperienceMetadata.sol";
 import { ChipMetadata, ChipMetadataData } from "@biomesaw/experience/src/codegen/tables/ChipMetadata.sol";
@@ -39,6 +41,10 @@ import { setPlayers, pushPlayers, popPlayers, updatePlayers, deletePlayers, setA
 import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttacher } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance, setBuyPrice, setSellPrice, setShopObjectTypeId, emitShopNotif, deleteShopNotif } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
+import { getForceField, isApprovedPlayer, hasApprovedNft, isApproved } from "@biomesaw/experience/src/utils/ForceFieldUtils.sol";
+
+import { CHIP_NAMESPACE } from "./Constants.sol";
+import { IChip } from "./IChip.sol";
 
 contract Chip is IChestChip {
   constructor(address _biomeWorldAddress) {
@@ -51,6 +57,11 @@ contract Chip is IChestChip {
     setChipMetadata(
       ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
     );
+  }
+
+  modifier onlyChipNamespace() {
+    require(getCallerNamespace(msg.sender) == CHIP_NAMESPACE, "Caller is not a system in the Chip namespace");
+    _; // Continue execution
   }
 
   modifier onlyBiomeWorld() {

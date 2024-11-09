@@ -9,6 +9,7 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
+import { IChip } from "../src/IChip.sol";
 
 contract TestScript is Script {
   function run(address worldAddress) external {
@@ -24,6 +25,7 @@ contract TestScript is Script {
     console.log("Using Chip contract at address: ");
     address chipAddress = Metadata.getChipAddress();
     console.logAddress(chipAddress);
+    IChip chip = IChip(chipAddress);
 
     vm.stopBroadcast();
   }

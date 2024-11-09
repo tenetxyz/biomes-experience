@@ -34,6 +34,7 @@ contract PostDeploy is Script {
     address currentChipAddress = Metadata.getChipAddress();
     if (currentChipAddress != address(0)) {
       console.log("Revoking access to current Chip contract...");
+      console.logAddress(currentChipAddress);
       IWorld(worldAddress).revokeAccess(namespaceId, currentChipAddress);
     }
 
