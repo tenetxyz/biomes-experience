@@ -48,7 +48,7 @@ import { IChip } from "./IChip.sol";
 
 import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
 
-contract Chip is IChestChip {
+contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
 
