@@ -116,4 +116,8 @@ contract Chip is IChip {
     bytes32[] memory toolEntityIds,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+
+  receive() external payable {
+    // This function is executed when a contract receives plain Ether (without data)
+  }
 }
