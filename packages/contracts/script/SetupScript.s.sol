@@ -15,14 +15,13 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
-import { IChip } from "../src/IChip.sol";
 
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 import { ERC721MetadataData } from "@biomesaw/experience/src/codegen/tables/ERC721Metadata.sol";
+import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID, SakuraLogObjectID, StoneObjectID, ChipObjectID, ChipBatteryObjectID, ForceFieldObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { IChip } from "../src/IChip.sol";
 
-bytes14 constant SHOP_NFT_NAMESPACE = "downtown";
-
-contract TestScript is Script {
+contract SetupScript is Script {
   function run(address worldAddress) external {
     IWorld world = IWorld(worldAddress);
 
@@ -38,41 +37,13 @@ contract TestScript is Script {
     console.log("Using Chip contract at address: ");
     address chipAddress = Metadata.getChipAddress();
     console.logAddress(chipAddress);
-    IChip chip = IChip(chipAddress);
 
-    console.log("Deploying Shop NFT contract...");
-    IERC721Mintable shopNFT = registerERC721(
-      world,
-      SHOP_NFT_NAMESPACE,
-      MUDERC721MetadataData({
-        symbol: unicode"dø",
-        name: unicode"døwntøwn",
-        baseURI: "https://static.biomes.aw/downtown.png"
-      })
-    );
-    console.log("Deployed Shop NFT contract at address: ");
-    address shopNFTAddress = address(shopNFT);
-    console.logAddress(shopNFTAddress);
-
-    ResourceId namespaceId = WorldResourceIdLib.encodeNamespace(SHOP_NFT_NAMESPACE);
-
-    IExperienceWorld(worldAddress).experience__setMUDNFTMetadata(
-      namespaceId,
-      ERC721MetadataData({
-        creator: 0x94E27174cd7Ec9C274ec4Fbdc1186fD2C311D1dA,
-        symbol: unicode"dø",
-        name: unicode"døwntøwn",
-        description: "grants access to some of ordens secrets",
-        baseURI: "https://static.biomes.aw/downtown.png",
-        systemId: _erc721SystemId(SHOP_NFT_NAMESPACE)
-      })
-    );
-
-    world.transferOwnership(namespaceId, chipAddress);
-
-    world.ordendowntown__setShopNFT(shopNFTAddress);
-    world.ordendowntown__addAllowedSetup(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a);
-    world.ordendowntown__addAllowedSetup(0x94E27174cd7Ec9C274ec4Fbdc1186fD2C311D1dA);
+    bytes32 chestEntityId = 0x0000000000000000000000000000000000000000000000000000000000258775;
+    uint8 buyObjectTypeId = StoneObjectID;
+    uint256 buyPrice = 1e18;
+    uint256 buyAmount = 99 * 12;
+    address paymentToken = 0x4e77442A934D997E8121B741Af39419e75EF9282;
+    world.ordendowntown__setupBuyShop(chestEntityId, buyObjectTypeId, buyPrice, buyAmount, paymentToken);
 
     vm.stopBroadcast();
   }

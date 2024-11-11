@@ -9,5 +9,21 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IChipSystem {
-  function testchip__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+  function ordendowntown__setShopNFT(address nftAddres) external;
+
+  function ordendowntown__addAllowedSetup(address attacher) external;
+
+  function ordendowntown__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+
+  function ordendowntown__setupBuyShop(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    address paymentToken
+  ) external payable;
+
+  function ordendowntown__destroyShop(bytes32 chestEntityId, uint8 objectTypeId) external;
+
+  function ordendowntown__getShopNFT() external view returns (address);
 }

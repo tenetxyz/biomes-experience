@@ -606,6 +606,119 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "ordendowntown__addAllowedSetup",
+    "inputs": [
+      {
+        "name": "attacher",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ordendowntown__destroyShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "objectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ordendowntown__getShopNFT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ordendowntown__setDisplayData",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ordendowntown__setShopNFT",
+    "inputs": [
+      {
+        "name": "nftAddres",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ordendowntown__setupBuyShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "buyPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "buyAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "paymentToken",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
     "name": "popFromDynamicField",
     "inputs": [
       {
@@ -1171,29 +1284,6 @@ declare const abi: [
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "testchip__setDisplayData",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "description",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.24;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
 import { WorldContextConsumerLib } from "@latticexyz/world/src/WorldContext.sol";
@@ -29,7 +30,7 @@ import { ShopType, ShopTxType } from "@biomesaw/experience/src/codegen/common.so
 
 // Available utils, remove the ones you don't need
 // See ObjectTypeIds.sol for all available object types
-import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID, StoneObjectID, SakuraLogObjectID, ChipObjectID, ChipBatteryObjectID, ForceFieldObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
 import { getBuildArgs, getMineArgs, getMoveArgs, getHitArgs, getDropArgs, getTransferArgs, getCraftArgs, getEquipArgs, getLoginArgs, getSpawnArgs } from "@biomesaw/experience/src/utils/HookUtils.sol";
 import { getSystemId, isSystemId, callBuild, callMine, callMove, callHit, callDrop, callTransfer, callCraft, callEquip, callUnequip, callLogin, callLogout, callSpawn, callActivate } from "@biomesaw/experience/src/utils/DelegationUtils.sol";
 import { hasBeforeAndAfterSystemHook, getObjectTypeAtCoord, getTerrainBlock, getEntityAtCoord, getPosition, getObjectType, getMiningDifficulty, getStackable, getDamage, getDurability, isTool, isBlock, getEntityFromPlayer, getPlayerFromEntity, getEquipped, getHealth, getStamina, getIsLoggedOff, getLastHitTime, getInventoryTool, getInventoryObjects, getNumInventoryObjects, getCount, getNumSlotsUsed, getNumUsesLeft } from "@biomesaw/experience/src/utils/EntityUtils.sol";
@@ -46,25 +47,33 @@ import { getForceField, isApprovedPlayer, hasApprovedNft, isApproved } from "@bi
 import { CHIP_NAMESPACE } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
 
+import { AccessControlLib } from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Metadata } from "./codegen/tables/Metadata.sol";
+import { ItemShop, ItemShopData } from "@biomesaw/experience/src/codegen/tables/ItemShop.sol";
 import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+import { ShopType } from "@biomesaw/experience/src/codegen/common.sol";
+import { ItemShopNotifData } from "@biomesaw/experience/src/codegen/tables/ItemShopNotif.sol";
+import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { ShopMetadata } from "./codegen/tables/ShopMetadata.sol";
+import { AllowedSetup } from "./codegen/tables/AllowedSetup.sol";
+import { MintedNFT } from "./codegen/tables/MintedNFT.sol";
+import { SoldObject } from "./codegen/tables/SoldObject.sol";
+import { IERC721Mintable } from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
 
 contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
     StoreSwitch.setStoreAddress(_biomeWorldAddress);
-
-    initChip();
-  }
-
-  function initChip() internal {
-    setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
-    );
-    setChipNamespace(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
 
   modifier onlyChipNamespace() {
     require(getCallerNamespace(msg.sender) == CHIP_NAMESPACE, "Caller is not a system in the Chip namespace");
     _; // Continue execution
+  }
+
+  function renounceNamespaceOwnership(ResourceId namespaceId) public {
+    AccessControlLib.requireOwner(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE), msg.sender);
+    IWorld(WorldContextConsumerLib._world()).transferOwnership(namespaceId, msg.sender);
   }
 
   function setDisplayData(
@@ -73,6 +82,46 @@ contract Chip is IChip {
     string memory description
   ) public onlyChipNamespace {
     setChestMetadata(chestEntityId, ChestMetadataData({ name: name, description: description }));
+  }
+
+  function setShopNFT(address nftAddres) public onlyChipNamespace {
+    address[] memory nfts = new address[](1);
+    nfts[0] = nftAddres;
+    setNfts(nfts);
+    ShopMetadata.setShopNFT(nftAddres);
+    ShopMetadata.setShopNFTNextTokenId(0);
+  }
+
+  function setupBuyShop(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    address paymentToken
+  ) public payable onlyChipNamespace {
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
+
+    setBuyShop(chestEntityId, buyObjectTypeId, buyPrice, paymentToken);
+
+    uint256 addingBalance = buyPrice * buyAmount;
+    uint256 newBalance = ItemShop.getBalance(chestEntityId) + addingBalance;
+    setShopBalance(chestEntityId, newBalance);
+
+    // if (paymentToken == address(0)) {
+    //   require(msg.value == addingBalance, "Insufficient Ether sent");
+    // } else {
+    //   IERC20 token = IERC20(paymentToken);
+    //   require(token.transferFrom(msg.sender, address(this), addingBalance), "Failed to transfer tokens");
+    // }
+  }
+
+  function destroyShop(bytes32 chestEntityId, uint8 objectTypeId) public onlyChipNamespace {
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(ItemShop.getObjectTypeId(chestEntityId) == objectTypeId, "Chest is not set up");
+    deleteChestMetadata(chestEntityId);
+
+    deleteShop(chestEntityId);
   }
 
   modifier onlyBiomeWorld() {
@@ -89,8 +138,14 @@ contract Chip is IChip {
     bytes32 entityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
-    return true;
+    require(getNumInventoryObjects(entityId) == 0, "Chest must be empty");
+    address player = getPlayerFromEntity(playerEntityId);
+    setChipAttacher(entityId, player);
+
+    address nftAddress = ShopMetadata.getShopNFT();
+    require(nftAddress != address(0), "NFT address cannot be 0");
+
+    return AllowedSetup.get(player);
   }
 
   function onDetached(
@@ -100,6 +155,13 @@ contract Chip is IChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address owner = ChipAttachment.getAttacher(entityId);
     address player = getPlayerFromEntity(playerEntityId);
+    deleteChestMetadata(entityId);
+
+    if (ItemShop.getObjectTypeId(entityId) != NullObjectTypeId) {
+      // Clear existing shop data
+      deleteShop(entityId);
+    }
+
     deleteChipAttacher(entityId);
     return owner == player;
   }
@@ -115,5 +177,70 @@ contract Chip is IChip {
     uint16 numToTransfer,
     bytes32[] memory toolEntityIds,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool) {
+    bool isDeposit = getObjectType(srcEntityId) == PlayerObjectID;
+    bytes32 chestEntityId = isDeposit ? dstEntityId : srcEntityId;
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(owner != address(0), "Chest does not exist");
+    address player = getPlayerFromEntity(isDeposit ? srcEntityId : dstEntityId);
+    if (player == owner) {
+      return true;
+    }
+
+    ItemShopData memory chestShopData = ItemShop.get(chestEntityId);
+    if (chestShopData.objectTypeId != transferObjectTypeId) {
+      return false;
+    }
+    for (uint i = 0; i < toolEntityIds.length; i++) {
+      require(
+        getNumUsesLeft(toolEntityIds[i]) != getDurability(chestShopData.objectTypeId),
+        "Tool must have full durability"
+      );
+    }
+
+    address nftAddress = ShopMetadata.getShopNFT();
+    require(nftAddress != address(0), "NFT not set up");
+
+    if (isDeposit) {
+      uint256 newNumSold = SoldObject.getNumSold(player, transferObjectTypeId);
+      newNumSold += numToTransfer;
+      SoldObject.setNumSold(player, transferObjectTypeId, newNumSold);
+      if (transferObjectTypeId == StoneObjectID && newNumSold >= 5 && !MintedNFT.getMinted(player)) {
+        uint256 nextTokenId = ShopMetadata.getShopNFTNextTokenId() + 1;
+        IERC721Mintable(nftAddress).safeMint(player, nextTokenId);
+        ShopMetadata.setShopNFTNextTokenId(nextTokenId);
+        MintedNFT.setMinted(player, true);
+
+        setNotification(player, unicode"You've earned the døwntøwn pass!");
+
+        emitShopNotif(
+          chestEntityId,
+          ItemShopNotifData({
+            player: player,
+            shopTxType: ShopTxType.Sell,
+            objectTypeId: chestShopData.objectTypeId,
+            price: 1,
+            amount: numToTransfer,
+            paymentToken: nftAddress
+          })
+        );
+      }
+    } else {
+      revert("Cannot buy from chest");
+    }
+
+    emitShopNotif(
+      chestEntityId,
+      ItemShopNotifData({
+        player: player,
+        shopTxType: isDeposit ? ShopTxType.Sell : ShopTxType.Buy,
+        objectTypeId: chestShopData.objectTypeId,
+        price: numToTransfer * (isDeposit ? chestShopData.buyPrice : chestShopData.sellPrice),
+        amount: numToTransfer,
+        paymentToken: chestShopData.paymentToken
+      })
+    );
+
+    return true;
+  }
 }
