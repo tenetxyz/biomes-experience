@@ -9,5 +9,43 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IChipSystem {
-  function testchip__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+  function buysellchest__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+
+  function buysellchest__setupBuyShop(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    address paymentToken
+  ) external payable;
+
+  function buysellchest__setupSellShop(
+    bytes32 chestEntityId,
+    uint8 sellObjectTypeId,
+    uint256 sellPrice,
+    address paymentToken
+  ) external;
+
+  function buysellchest__setupBuySellShop(
+    bytes32 chestEntityId,
+    uint8 objectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    uint256 sellPrice,
+    address paymentToken
+  ) external payable;
+
+  function buysellchest__changeBuyPrice(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 newPrice) external;
+
+  function buysellchest__changeSellPrice(bytes32 chestEntityId, uint8 sellObjectTypeId, uint256 newPrice) external;
+
+  function buysellchest__refillBuyShopBalance(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 refillAmount
+  ) external payable;
+
+  function buysellchest__withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) external;
+
+  function buysellchest__destroyShop(bytes32 chestEntityId, uint8 objectTypeId) external;
 }

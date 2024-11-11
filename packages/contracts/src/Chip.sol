@@ -47,7 +47,15 @@ import { encodeAddressExchangeResourceId, decodeAddressExchangeResourceId, encod
 import { CHIP_NAMESPACE } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
 
+import { AccessControlLib } from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
 import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Metadata } from "./codegen/tables/Metadata.sol";
+import { Fees } from "./codegen/tables/Fees.sol";
+import { ItemShop, ItemShopData } from "@biomesaw/experience/src/codegen/tables/ItemShop.sol";
+import { ShopType } from "@biomesaw/experience/src/codegen/common.sol";
+import { ItemShopNotifData } from "@biomesaw/experience/src/codegen/tables/ItemShopNotif.sol";
+import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
 
 contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
@@ -58,7 +66,11 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.Chest,
+        name: "Shop Chest",
+        description: "Buy & sell items for token prices you set"
+      })
     );
     setChipNamespace(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
@@ -76,6 +88,175 @@ contract Chip is IChip {
     setChestMetadata(chestEntityId, ChestMetadataData({ name: name, description: description }));
   }
 
+  function withdrawFees(address paymentToken) public {
+    address owner = msg.sender;
+    AccessControlLib.requireOwner(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE), owner);
+    uint256 withdrawAmount = Fees.get(paymentToken);
+    Fees.set(paymentToken, 0);
+    if (paymentToken == address(this)) {
+      (bool sent, ) = owner.call{ value: withdrawAmount }("");
+      require(sent, "Failed to send Ether");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transfer(owner, withdrawAmount), "Failed to transfer tokens");
+    }
+  }
+
+  function adminWithdraw(address paymentToken, uint256 amount) public {
+    address owner = msg.sender;
+    AccessControlLib.requireOwner(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE), owner);
+    if (paymentToken == address(this)) {
+      (bool sent, ) = owner.call{ value: amount }("");
+      require(sent, "Failed to send Ether");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transfer(owner, amount), "Failed to transfer tokens");
+    }
+  }
+
+  function doWithdraw(address player, bytes32 chestEntityId, uint256 amount) internal returns (uint256) {
+    require(amount > 0, "Amount must be greater than 0");
+    uint256 currentBalance = ItemShop.getBalance(chestEntityId);
+    require(currentBalance >= amount, "Insufficient balance");
+    uint256 newBalance = currentBalance - amount;
+
+    address paymentToken = ItemShop.getPaymentToken(chestEntityId);
+    if (paymentToken == address(0)) {
+      (bool sent, ) = player.call{ value: amount }("");
+      require(sent, "Failed to send Ether");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transfer(player, amount), "Failed to transfer tokens");
+    }
+
+    return newBalance;
+  }
+
+  function setupBuyShop(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    address paymentToken
+  ) public payable onlyChipNamespace {
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
+
+    setBuyShop(chestEntityId, buyObjectTypeId, buyPrice, paymentToken);
+
+    uint256 addingBalance = buyPrice * buyAmount;
+    uint256 fee = (addingBalance * 1) / 100; // 1% fee
+    addingBalance += fee;
+    uint256 newBalance = ItemShop.getBalance(chestEntityId) + addingBalance;
+    setShopBalance(chestEntityId, newBalance);
+
+    if (paymentToken == address(0)) {
+      require(msg.value == addingBalance, "Insufficient Ether sent");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transferFrom(owner, address(this), addingBalance), "Failed to transfer tokens");
+    }
+  }
+
+  function setupSellShop(
+    bytes32 chestEntityId,
+    uint8 sellObjectTypeId,
+    uint256 sellPrice,
+    address paymentToken
+  ) public onlyChipNamespace {
+    require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
+
+    setSellShop(chestEntityId, sellObjectTypeId, sellPrice, paymentToken);
+  }
+
+  function setupBuySellShop(
+    bytes32 chestEntityId,
+    uint8 objectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    uint256 sellPrice,
+    address paymentToken
+  ) public payable onlyChipNamespace {
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(ItemShop.getObjectTypeId(chestEntityId) == NullObjectTypeId, "Chest already has a shop");
+
+    uint256 addingBalance = buyPrice * buyAmount;
+    uint256 fee = (addingBalance * 1) / 100; // 1% fee
+    addingBalance += fee;
+    uint256 newBalance = ItemShop.getBalance(chestEntityId) + addingBalance;
+
+    setShop(
+      chestEntityId,
+      ItemShopData({
+        shopType: ShopType.BuySell,
+        objectTypeId: objectTypeId,
+        buyPrice: buyPrice,
+        sellPrice: sellPrice,
+        balance: newBalance,
+        paymentToken: paymentToken
+      })
+    );
+
+    if (paymentToken == address(0)) {
+      require(msg.value == addingBalance, "Insufficient Ether sent");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transferFrom(owner, address(this), addingBalance), "Failed to transfer tokens");
+    }
+  }
+
+  function changeBuyPrice(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 newPrice) public onlyChipNamespace {
+    require(ItemShop.getObjectTypeId(chestEntityId) == buyObjectTypeId, "Chest is not set up");
+
+    setBuyPrice(chestEntityId, newPrice);
+  }
+
+  function changeSellPrice(bytes32 chestEntityId, uint8 sellObjectTypeId, uint256 newPrice) public onlyChipNamespace {
+    require(ItemShop.getObjectTypeId(chestEntityId) == sellObjectTypeId, "Chest is not set up");
+
+    setSellPrice(chestEntityId, newPrice);
+  }
+
+  function refillBuyShopBalance(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 refillAmount
+  ) public payable onlyChipNamespace {
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(ItemShop.getObjectTypeId(chestEntityId) == buyObjectTypeId, "Chest is not set up");
+
+    address paymentToken = ItemShop.getPaymentToken(chestEntityId);
+
+    uint256 newBalance = ItemShop.getBalance(chestEntityId) + refillAmount;
+    setShopBalance(chestEntityId, newBalance);
+
+    if (paymentToken == address(0)) {
+      require(msg.value == refillAmount, "Insufficient Ether sent");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transferFrom(owner, address(this), refillAmount), "Failed to transfer tokens");
+    }
+  }
+
+  function withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) public onlyChipNamespace {
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    uint256 newBalance = doWithdraw(owner, chestEntityId, amount);
+    setShopBalance(chestEntityId, newBalance);
+  }
+
+  function destroyShop(bytes32 chestEntityId, uint8 objectTypeId) public onlyChipNamespace {
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(ItemShop.getObjectTypeId(chestEntityId) == objectTypeId, "Chest is not set up");
+
+    uint256 currentBalance = ItemShop.getBalance(chestEntityId);
+    if (currentBalance > 0) {
+      doWithdraw(owner, chestEntityId, currentBalance);
+    }
+    deleteChestMetadata(chestEntityId);
+
+    deleteShop(chestEntityId);
+  }
+
   modifier onlyBiomeWorld() {
     require(msg.sender == WorldContextConsumerLib._world(), "Caller is not the Biomes World contract");
     _; // Continue execution
@@ -90,6 +271,7 @@ contract Chip is IChip {
     bytes32 entityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+    require(getNumInventoryObjects(entityId) == 0, "Chest must be empty");
     setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
     return true;
   }
@@ -101,6 +283,18 @@ contract Chip is IChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address owner = ChipAttachment.getAttacher(entityId);
     address player = getPlayerFromEntity(playerEntityId);
+
+    deleteChestMetadata(entityId);
+    uint256 currentBalance = ItemShop.getBalance(entityId);
+    if (currentBalance > 0) {
+      doWithdraw(owner, entityId, currentBalance);
+    }
+
+    if (ItemShop.getObjectTypeId(entityId) != NullObjectTypeId) {
+      // Clear existing shop data
+      deleteShop(entityId);
+    }
+
     deleteChipAttacher(entityId);
     return owner == player;
   }
@@ -116,5 +310,85 @@ contract Chip is IChip {
     uint16 numToTransfer,
     bytes32[] memory toolEntityIds,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool) {
+    bool isDeposit = getObjectType(srcEntityId) == PlayerObjectID;
+    bytes32 chestEntityId = isDeposit ? dstEntityId : srcEntityId;
+    address owner = ChipAttachment.getAttacher(chestEntityId);
+    require(owner != address(0), "Chest does not exist");
+    address player = getPlayerFromEntity(isDeposit ? srcEntityId : dstEntityId);
+    if (player == owner) {
+      return true;
+    }
+
+    ItemShopData memory chestShopData = ItemShop.get(chestEntityId);
+    if (chestShopData.objectTypeId != transferObjectTypeId) {
+      return false;
+    }
+    for (uint i = 0; i < toolEntityIds.length; i++) {
+      require(
+        getNumUsesLeft(toolEntityIds[i]) != getDurability(chestShopData.objectTypeId),
+        "Tool must have full durability"
+      );
+    }
+
+    uint256 shopPrice = isDeposit ? chestShopData.buyPrice : chestShopData.sellPrice;
+    if (shopPrice == 0) {
+      return true;
+    }
+
+    uint256 shopTotalPrice = numToTransfer * shopPrice;
+    uint256 fee = (shopTotalPrice * 1) / 100; // 1% fee
+
+    if (isDeposit) {
+      // Check if there is enough balance in the chest
+      uint256 balance = chestShopData.balance;
+      require(balance >= shopTotalPrice + fee, "Insufficient balance in chest");
+      uint256 newBalance = balance - (shopTotalPrice + fee);
+      setShopBalance(chestEntityId, newBalance);
+
+      if (chestShopData.paymentToken == address(0)) {
+        Fees.set(address(this), Fees.get(address(this)) + fee);
+
+        (bool sent, ) = player.call{ value: shopTotalPrice }("");
+        require(sent, "Failed to send Ether");
+      } else {
+        Fees.set(chestShopData.paymentToken, Fees.get(chestShopData.paymentToken) + fee);
+
+        IERC20 token = IERC20(chestShopData.paymentToken);
+        require(token.transfer(player, shopTotalPrice), "Failed to transfer tokens");
+      }
+    } else {
+      if (chestShopData.paymentToken == address(0)) {
+        require(msg.value >= shopTotalPrice + fee, "Insufficient Ether sent");
+        Fees.set(address(this), Fees.get(address(this)) + fee);
+
+        (bool sent, ) = owner.call{ value: shopTotalPrice }("");
+        require(sent, "Failed to send Ether");
+      } else {
+        Fees.set(chestShopData.paymentToken, Fees.get(chestShopData.paymentToken) + fee);
+
+        IERC20 token = IERC20(chestShopData.paymentToken);
+        require(token.transferFrom(player, owner, shopTotalPrice), "Failed to transfer tokens");
+        require(token.transferFrom(player, address(this), fee), "Failed to transfer tokens");
+      }
+    }
+
+    emitShopNotif(
+      chestEntityId,
+      ItemShopNotifData({
+        player: player,
+        shopTxType: isDeposit ? ShopTxType.Sell : ShopTxType.Buy,
+        objectTypeId: chestShopData.objectTypeId,
+        price: shopTotalPrice + fee,
+        amount: numToTransfer,
+        paymentToken: chestShopData.paymentToken
+      })
+    );
+
+    return true;
+  }
+
+  receive() external payable {
+    // This function is executed when a contract receives plain Ether (without data)
+  }
 }

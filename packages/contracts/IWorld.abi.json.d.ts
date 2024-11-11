@@ -68,6 +68,233 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "buysellchest__changeBuyPrice",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "newPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "buysellchest__changeSellPrice",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "sellObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "newPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "buysellchest__destroyShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "objectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "buysellchest__refillBuyShopBalance",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "refillAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "buysellchest__setDisplayData",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "buysellchest__setupBuySellShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "objectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "buyPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "buyAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "sellPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "paymentToken",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "buysellchest__setupBuyShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "buyPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "buyAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "paymentToken",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "buysellchest__setupSellShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "sellObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "sellPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "paymentToken",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "buysellchest__withdrawBuyShopBalance",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "call",
     "inputs": [
       {
@@ -1171,29 +1398,6 @@ declare const abi: [
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "testchip__setDisplayData",
-    "inputs": [
-      {
-        "name": "entityId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "name",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "description",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
