@@ -15,14 +15,13 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
-import { IChip } from "../src/IChip.sol";
 
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 import { ERC721MetadataData } from "@biomesaw/experience/src/codegen/tables/ERC721Metadata.sol";
+import { PlayerObjectID, AirObjectID, DirtObjectID, ChestObjectID, SakuraLogObjectID, StoneObjectID, ChipObjectID, ChipBatteryObjectID, ForceFieldObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { IChip } from "../src/IChip.sol";
 
-bytes14 constant SHOP_NFT_NAMESPACE = "psub_official";
-
-contract TestScript is Script {
+contract SetupScript is Script {
   function run(address worldAddress) external {
     IWorld world = IWorld(worldAddress);
 
@@ -38,41 +37,13 @@ contract TestScript is Script {
     console.log("Using Chip contract at address: ");
     address chipAddress = Metadata.getChipAddress();
     console.logAddress(chipAddress);
-    IChip chip = IChip(chipAddress);
 
-    console.log("Deploying Shop NFT contract...");
-    IERC721Mintable shopNFT = registerERC721(
-      world,
-      SHOP_NFT_NAMESPACE,
-      MUDERC721MetadataData({
-        symbol: "PSUB",
-        name: "Settlers Union Bank Pass",
-        baseURI: "https://static.biomes.aw/sub-nft.png"
-      })
-    );
-    console.log("Deployed Shop NFT contract at address: ");
-    address shopNFTAddress = address(shopNFT);
-    console.logAddress(shopNFTAddress);
-
-    ResourceId namespaceId = WorldResourceIdLib.encodeNamespace(SHOP_NFT_NAMESPACE);
-
-    IExperienceWorld(worldAddress).experience__setMUDNFTMetadata(
-      namespaceId,
-      ERC721MetadataData({
-        creator: 0xA32EC0cc74FBdD0a7c2B7b654ca6B886000E2B65,
-        symbol: "PSUB",
-        name: "Settlers Union Bank Pass",
-        description: "The Settlement Union's Bank pass allows you to access the bank's services.",
-        baseURI: "https://static.biomes.aw/sub-nft.png",
-        systemId: _erc721SystemId(SHOP_NFT_NAMESPACE)
-      })
-    );
-
-    world.transferOwnership(namespaceId, chipAddress);
-
-    world.subpasschest__setShopNFT(shopNFTAddress);
-    world.subpasschest__addAllowedSetup(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a);
-    world.subpasschest__addAllowedSetup(0xA32EC0cc74FBdD0a7c2B7b654ca6B886000E2B65);
+    bytes32 chestEntityId = 0x000000000000000000000000000000000000000000000000000000000044ee46;
+    uint8 buyObjectTypeId = ChipObjectID;
+    uint256 buyPrice = 1e18;
+    uint256 buyAmount = 99 * 12;
+    address paymentToken = 0xE0aC150d02e4a9808403F94a289bcEc20d30A3fB;
+    world.subpasschest__setupBuyShop(chestEntityId, buyObjectTypeId, buyPrice, buyAmount, paymentToken);
 
     vm.stopBroadcast();
   }
