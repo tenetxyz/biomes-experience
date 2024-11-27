@@ -9,6 +9,7 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
+import { ImageDisplay } from "../src/codegen/tables/ImageDisplay.sol";
 import { IChip } from "../src/IChip.sol";
 
 contract TestScript is Script {
@@ -26,6 +27,12 @@ contract TestScript is Script {
     address chipAddress = Metadata.getChipAddress();
     console.logAddress(chipAddress);
     IChip chip = IChip(chipAddress);
+
+    bytes32 entityId = 0x0000000000000000000000000000000000000000000000000000000000001415;
+    console.log(ImageDisplay.get(entityId));
+    console.logBytes(abi.encode(ImageDisplay.get(entityId)));
+
+    // ImageDisplay.set(entityId, "https://example.com/image.png");
 
     vm.stopBroadcast();
   }

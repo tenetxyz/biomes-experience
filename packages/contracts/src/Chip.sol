@@ -47,6 +47,8 @@ import { CHIP_NAMESPACE } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
 
 import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+import { DisplayContent } from "@biomesaw/world/src/Types.sol";
+import { ImageDisplay } from "./codegen/tables/ImageDisplay.sol";
 
 contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
@@ -57,7 +59,11 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.Display,
+        name: "Image Display",
+        description: "Only players approved in the settlement can set the display image"
+      })
     );
     setChipNamespace(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
@@ -67,21 +73,13 @@ contract Chip is IChip {
     _; // Continue execution
   }
 
-  function setDisplayData(
-    bytes32 chestEntityId,
-    string memory name,
-    string memory description
-  ) public onlyChipNamespace {
-    setChestMetadata(chestEntityId, ChestMetadataData({ name: name, description: description }));
-  }
-
   modifier onlyBiomeWorld() {
     require(msg.sender == WorldContextConsumerLib._world(), "Caller is not the Biomes World contract");
     _; // Continue execution
   }
 
   function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
-    return interfaceId == type(IChestChip).interfaceId || interfaceId == type(IERC165).interfaceId;
+    return interfaceId == type(IDisplayChip).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
   function onAttached(
@@ -101,6 +99,7 @@ contract Chip is IChip {
     address owner = ChipAttachment.getAttacher(entityId);
     address player = getPlayerFromEntity(playerEntityId);
     deleteChipAttacher(entityId);
+    ImageDisplay.deleteRecord(entityId);
     return owner == player;
   }
 
@@ -108,12 +107,7 @@ contract Chip is IChip {
 
   function onChipHit(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    bytes32 srcEntityId,
-    bytes32 dstEntityId,
-    uint8 transferObjectTypeId,
-    uint16 numToTransfer,
-    bytes32[] memory toolEntityIds,
-    bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  function getDisplayContent(bytes32 entityId) public view returns (DisplayContent memory) {
+    return DisplayContent({ contentType: 2, content: abi.encode(ImageDisplay.get(entityId)) });
+  }
 }
