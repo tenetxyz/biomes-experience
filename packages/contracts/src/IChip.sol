@@ -5,6 +5,4 @@ import { IChestChip } from "@biomesaw/world/src/prototypes/IChestChip.sol";
 import { IForceFieldChip } from "@biomesaw/world/src/prototypes/IForceFieldChip.sol";
 import { IDisplayChip } from "@biomesaw/world/src/prototypes/IDisplayChip.sol";
 
-interface IChip is IChestChip {
-  function setDisplayData(bytes32 entityId, string memory name, string memory description) external;
-}
+interface IChip is IDisplayChip {}

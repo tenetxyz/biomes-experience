@@ -5,13 +5,20 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "privateimage",
   tables: {
     Metadata: {
       schema: {
         chipAddress: "address",
       },
       key: [],
+    },
+    ImageDisplay: {
+      schema: {
+        signEntityId: "bytes32",
+        url: "string",
+      },
+      key: ["signEntityId"],
     },
   },
 });
