@@ -56,9 +56,6 @@ contract Chip is IChip {
   }
 
   function initChip() internal {
-    setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
-    );
     setChipNamespace(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
 
@@ -115,5 +112,7 @@ contract Chip is IChip {
     uint16 numToTransfer,
     bytes32[] memory toolEntityIds,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool) {
+    return true;
+  }
 }
