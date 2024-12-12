@@ -9,7 +9,25 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IChipSystem {
-  function testchip__changeAdmin(bytes32 entityId, address newAdmin) external;
+  function privatearea__changeAdmin(bytes32 entityId, address newAdmin) external;
 
-  function testchip__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+  function privatearea__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+
+  function privatearea__addApprovedPlayer(bytes32 entityId, address player) external;
+
+  function privatearea__removeApprovedPlayer(bytes32 entityId, address player) external;
+
+  function privatearea__addApprovedNFT(bytes32 entityId, address nft) external;
+
+  function privatearea__removeApprovedNFT(bytes32 entityId, address nft) external;
+
+  function privatearea__setApprovedPlayers(bytes32 entityId, address[] memory players) external;
+
+  function privatearea__setApprovedNFTs(bytes32 entityId, address[] memory nfts) external;
+
+  function privatearea__setForceFieldApprovals(
+    bytes32 entityId,
+    address[] memory players,
+    address[] memory nfts
+  ) external;
 }

@@ -52,6 +52,7 @@ import { CHIP_NAMESPACE } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
 
 import { SmartItemMetadataData } from "@biomesaw/experience/src/codegen/tables/SmartItemMetadata.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
@@ -62,7 +63,11 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.ForceField,
+        name: "Settlement",
+        description: "You control this area - decide which players or pass-holders can build and mine inside."
+      })
     );
     setNamespaceId(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
@@ -76,12 +81,16 @@ contract Chip is IChip {
     setChipAdmin(entityId, newAdmin);
   }
 
-  function setDisplayData(
-    bytes32 chestEntityId,
-    string memory name,
-    string memory description
-  ) public onlyChipNamespace {
-    setSmartItemMetadata(chestEntityId, SmartItemMetadataData({ name: name, description: description }));
+  function setDisplayData(bytes32 entityId, string memory name, string memory description) public onlyChipNamespace {
+    setSmartItemMetadata(entityId, SmartItemMetadataData({ name: name, description: description }));
+  }
+
+  function setApprovedPlayers(bytes32 entityId, address[] memory players) public onlyChipNamespace {
+    setGateApprovedPlayers(entityId, players);
+  }
+
+  function setApprovedNFTs(bytes32 entityId, address[] memory nfts) public onlyChipNamespace {
+    setGateApprovedNFT(entityId, nfts);
   }
 
   modifier onlyBiomeWorld() {
@@ -90,7 +99,7 @@ contract Chip is IChip {
   }
 
   function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
-    return interfaceId == type(IChestChip).interfaceId || interfaceId == type(IERC165).interfaceId;
+    return interfaceId == type(IForceFieldChip).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
   function onAttached(
@@ -111,6 +120,7 @@ contract Chip is IChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address admin = ChipAdmin.get(targetEntityId);
     address player = getPlayerFromEntity(callerEntityId);
+    deleteGateApprovals(targetEntityId);
     deleteSmartItemMetadata(targetEntityId);
     deleteChipAttacher(targetEntityId);
     deleteChipAdmin(targetEntityId);
@@ -125,15 +135,25 @@ contract Chip is IChip {
 
   function onChipHit(bytes32 callerEntityId, bytes32 targetEntityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    ChipOnTransferData memory transferContext
+  function onBuild(
+    bytes32 targetEntityId,
+    bytes32 callerEntityId,
+    uint8 objectTypeId,
+    VoxelCoord memory coord,
+    bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    return false;
+    address player = getPlayerFromEntity(callerEntityId);
+    return isApprovedForGate(targetEntityId, player);
   }
 
-  function onPipeTransfer(
-    ChipOnPipeTransferData memory transferContext
+  function onMine(
+    bytes32 targetEntityId,
+    bytes32 callerEntityId,
+    uint8 objectTypeId,
+    VoxelCoord memory coord,
+    bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    return false;
+    address player = getPlayerFromEntity(callerEntityId);
+    return isApprovedForGate(targetEntityId, player);
   }
 }
