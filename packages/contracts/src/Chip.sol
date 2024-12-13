@@ -43,7 +43,7 @@ import { setShop, deleteShop, setBuyShop, setSellShop, setShopBalance, setBuyPri
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT, setGateApprovals, deleteGateApprovals, setGateApprovedPlayers, pushGateApprovedPlayer, popGateApprovedPlayer, updateGateApprovedPlayer, setGateApprovedNFT, pushGateApprovedNFT, popGateApprovedNFT, updateGateApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { getForceField, isApprovedPlayer, hasApprovedNft, isApproved } from "@biomesaw/experience/src/utils/ForceFieldUtils.sol";
 import { isApprovedPlayerForGate, hasApprovedNftForGate, isApprovedForGate } from "@biomesaw/experience/src/utils/GateUtils.sol";
-import { setExchangeChest, deleteExchangeChest, setExchangeChestOutBalance, setExchangeChestInAmount, setExchangeChestOutAmount } from "@biomesaw/experience/src/utils/ExchangeUtils.sol";
+import { setExchangeInChest, setExchangeOutChest, setExchangeInChestInUnitAmount, setExchangeInChestOutUnitAmount, setExchangeInChestOutBalance, setExchangeOutChestInUnitAmount, setExchangeOutChestOutUnitAmount, setExchangeOutChestOutBalance, deleteExchangeInChest, deleteExchangeOutChest } from "@biomesaw/experience/src/utils/ExchangeUtils.sol";
 
 import { CHIP_NAMESPACE } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
