@@ -24,8 +24,8 @@ import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/wor
 import { ExperienceMetadata, ExperienceMetadataData } from "@biomesaw/experience/src/codegen/tables/ExperienceMetadata.sol";
 import { ChipMetadata, ChipMetadataData } from "@biomesaw/experience/src/codegen/tables/ChipMetadata.sol";
 import { ChipAttachment } from "@biomesaw/experience/src/codegen/tables/ChipAttachment.sol";
+import { ChipAdmin } from "@biomesaw/experience/src/codegen/tables/ChipAdmin.sol";
 import { ChipType } from "@biomesaw/experience/src/codegen/common.sol";
-import { ShopType, ShopTxType } from "@biomesaw/experience/src/codegen/common.sol";
 
 // Available utils, remove the ones you don't need
 // See ObjectTypeIds.sol for all available object types
@@ -38,7 +38,7 @@ import { Build, BuildWithPos, buildExistsInWorld, buildWithPosExistsInWorld, get
 import { weiToString, getEmptyBlockOnGround } from "@biomesaw/experience/src/utils/GameUtils.sol";
 import { setExperienceMetadata, setJoinFee, deleteExperienceMetadata, setNotification, deleteNotifications, setStatus, deleteStatus, setRegisterMsg, deleteRegisterMsg, setUnregisterMsg, deleteUnregisterMsg, setNamespaceId, deleteNamespaceId } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 import { setPlayers, pushPlayers, popPlayers, updatePlayers, deletePlayers, setArea, deleteArea, setBuild, deleteBuild, setBuildWithPos, deleteBuildWithPos, setCountdown, setCountdownEndTimestamp, setCountdownEndBlock, setTokenMetadata, deleteTokenMetadata, setNFTMetadata, setMUDNFTMetadata, deleteNFTMetadata, setTokens, pushTokens, popTokens, updateTokens, deleteTokens, setNfts, pushNfts, popNfts, updateNfts, deleteNfts } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
-import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttacher } from "@biomesaw/experience/src/utils/ChipUtils.sol";
+import { setChipMetadata, deleteChipMetadata, setChipAttacher, deleteChipAttacher, setChipAdmin, deleteChipAdmin } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { setChestMetadata, setChestName, setChestDescription, deleteChestMetadata, setForceFieldMetadata, setForceFieldName, setForceFieldDescription, deleteForceFieldMetadata, setForceFieldApprovals, deleteForceFieldApprovals, setFFApprovedPlayers, pushFFApprovedPlayer, popFFApprovedPlayer, updateFFApprovedPlayer, setFFApprovedNFT, pushFFApprovedNFT, popFFApprovedNFT, updateFFApprovedNFT, setGateApprovals, deleteGateApprovals, setGateApprovedPlayers, pushGateApprovedPlayer, popGateApprovedPlayer, updateGateApprovedPlayer, setGateApprovedNFT, pushGateApprovedNFT, popGateApprovedNFT, updateGateApprovedNFT } from "@biomesaw/experience/src/utils/ChipUtils.sol";
 import { getForceField, isApprovedPlayer, hasApprovedNft, isApproved } from "@biomesaw/experience/src/utils/ForceFieldUtils.sol";
 import { isApprovedPlayerForGate, hasApprovedNftForGate, isApprovedForGate } from "@biomesaw/experience/src/utils/GateUtils.sol";
@@ -68,6 +68,10 @@ contract Chip is IChip {
     _; // Continue execution
   }
 
+  function changeAdmin(bytes32 entityId, address newAdmin) public onlyChipNamespace {
+    setChipAdmin(entityId, newAdmin);
+  }
+
   function setDisplayData(
     bytes32 chestEntityId,
     string memory name,
@@ -90,7 +94,9 @@ contract Chip is IChip {
     bytes32 entityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    setChipAttacher(entityId, getPlayerFromEntity(playerEntityId));
+    address player = getPlayerFromEntity(playerEntityId);
+    setChipAttacher(entityId, player);
+    setChipAdmin(entityId, player);
     return true;
   }
 
@@ -99,10 +105,11 @@ contract Chip is IChip {
     bytes32 entityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    address owner = ChipAttachment.getAttacher(entityId);
+    address admin = ChipAdmin.get(entityId);
     address player = getPlayerFromEntity(playerEntityId);
     deleteChipAttacher(entityId);
-    return owner == player;
+    deleteChipAdmin(entityId);
+    return admin == player;
   }
 
   function onPowered(bytes32 playerEntityId, bytes32 entityId, uint16 numBattery) public override onlyBiomeWorld {}

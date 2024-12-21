@@ -1174,6 +1174,24 @@ declare const abi: [
   },
   {
     "type": "function",
+    "name": "testchip__changeAdmin",
+    "inputs": [
+      {
+        "name": "entityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "newAdmin",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "testchip__setDisplayData",
     "inputs": [
       {

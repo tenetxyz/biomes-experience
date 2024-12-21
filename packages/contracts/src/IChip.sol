@@ -6,5 +6,7 @@ import { IForceFieldChip } from "@biomesaw/world/src/prototypes/IForceFieldChip.
 import { IDisplayChip } from "@biomesaw/world/src/prototypes/IDisplayChip.sol";
 
 interface IChip is IChestChip {
+  function changeAdmin(bytes32 entityId, address newAdmin) external;
+
   function setDisplayData(bytes32 entityId, string memory name, string memory description) external;
 }
