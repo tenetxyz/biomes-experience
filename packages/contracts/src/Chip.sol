@@ -51,7 +51,10 @@ import { pipeAccessExists } from "@biomesaw/experience/src/utils/PipeUtils.sol";
 import { CHIP_NAMESPACE } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
 
-import { SmartItemMetadataData } from "@biomesaw/experience/src/codegen/tables/SmartItemMetadata.sol";
+import { ChestMetadataData } from "@biomesaw/experience/src/codegen/tables/ChestMetadata.sol";
+import { DisplayContent, DisplayContentData } from "@biomesaw/world/src/codegen/tables/DisplayContent.sol";
+import { DisplayContentType } from "@biomesaw/world/src/codegen/common.sol";
+import { TextSign } from "./codegen/tables/TextSign.sol";
 
 contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
@@ -62,7 +65,11 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.Display,
+        name: "Text Sign",
+        description: "You control this sign - decide which players or pass-holders can edit the text"
+      })
     );
     setNamespaceId(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
@@ -76,12 +83,12 @@ contract Chip is IChip {
     setChipAdmin(entityId, newAdmin);
   }
 
-  function setDisplayData(
-    bytes32 chestEntityId,
-    string memory name,
-    string memory description
-  ) public onlyChipNamespace {
-    setSmartItemMetadata(chestEntityId, SmartItemMetadataData({ name: name, description: description }));
+  function setApprovedPlayers(bytes32 entityId, address[] memory players) public onlyChipNamespace {
+    setGateApprovedPlayers(entityId, players);
+  }
+
+  function setApprovedNFTs(bytes32 entityId, address[] memory nfts) public onlyChipNamespace {
+    setGateApprovedNFT(entityId, nfts);
   }
 
   modifier onlyBiomeWorld() {
@@ -90,7 +97,7 @@ contract Chip is IChip {
   }
 
   function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
-    return interfaceId == type(IChestChip).interfaceId || interfaceId == type(IERC165).interfaceId;
+    return interfaceId == type(IDisplayChip).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
   function onAttached(
@@ -111,7 +118,8 @@ contract Chip is IChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address admin = ChipAdmin.get(targetEntityId);
     address player = getPlayerFromEntity(callerEntityId);
-    deleteSmartItemMetadata(targetEntityId);
+    deleteGateApprovals(targetEntityId);
+    TextSign.deleteRecord(targetEntityId);
     deleteChipAttacher(targetEntityId);
     deleteChipAdmin(targetEntityId);
     return admin == player;
@@ -125,15 +133,7 @@ contract Chip is IChip {
 
   function onChipHit(bytes32 callerEntityId, bytes32 targetEntityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    ChipOnTransferData memory transferContext
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    return false;
-  }
-
-  function onPipeTransfer(
-    ChipOnPipeTransferData memory transferContext
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    return false;
+  function getDisplayContent(bytes32 entityId) public view returns (DisplayContentData memory) {
+    return DisplayContentData({ contentType: DisplayContentType.Text, content: abi.encode(TextSign.get(entityId)) });
   }
 }
