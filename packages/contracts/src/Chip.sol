@@ -108,6 +108,7 @@ contract Chip is IChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address admin = ChipAdmin.get(entityId);
     address player = getPlayerFromEntity(playerEntityId);
+    deleteSmartItemMetadata(entityId);
     deleteChipAttacher(entityId);
     deleteChipAdmin(entityId);
     return admin == player;
