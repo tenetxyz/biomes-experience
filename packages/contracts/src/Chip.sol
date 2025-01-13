@@ -17,7 +17,7 @@ import { IForceFieldChip } from "@biomesaw/world/src/prototypes/IForceFieldChip.
 import { IDisplayChip } from "@biomesaw/world/src/prototypes/IDisplayChip.sol";
 
 import { IWorld } from "@biomesaw/world/src/codegen/world/IWorld.sol";
-import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
+import { VoxelCoord, VoxelCoordDirectionVonNeumann } from "@biomesaw/utils/src/Types.sol";
 import { voxelCoordsAreEqual, inSurroundingCube } from "@biomesaw/utils/src/VoxelCoordUtils.sol";
 import { getCallerNamespace } from "@biomesaw/utils/src/CallUtils.sol";
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
@@ -121,6 +121,16 @@ contract Chip is IChip {
   function onTransfer(
     bytes32 srcEntityId,
     bytes32 dstEntityId,
+    uint8 transferObjectTypeId,
+    uint16 numToTransfer,
+    bytes32[] memory toolEntityIds,
+    bytes memory extraData
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+
+  function onPipeTransfer(
+    bytes32 srcEntityId,
+    bytes32 dstEntityId,
+    VoxelCoordDirectionVonNeumann[] memory path,
     uint8 transferObjectTypeId,
     uint16 numToTransfer,
     bytes32[] memory toolEntityIds,
