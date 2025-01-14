@@ -26,4 +26,23 @@ contract ChipSystem is System {
     IChip chip = getChipContract();
     chip.setDisplayData(entityId, name, description);
   }
+
+  function setApprovedPlayers(bytes32 entityId, address[] memory players) public {
+    onlyAdmin(entityId);
+    IChip chip = getChipContract();
+    chip.setApprovedPlayers(entityId, players);
+  }
+
+  function setApprovedNFTs(bytes32 entityId, address[] memory nfts) public {
+    onlyAdmin(entityId);
+    IChip chip = getChipContract();
+    chip.setApprovedNFTs(entityId, nfts);
+  }
+
+  function setChestApprovals(bytes32 entityId, address[] memory players, address[] memory nfts) public {
+    onlyAdmin(entityId);
+    IChip chip = getChipContract();
+    chip.setApprovedPlayers(entityId, players);
+    chip.setApprovedNFTs(entityId, nfts);
+  }
 }

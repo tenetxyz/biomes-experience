@@ -12,4 +12,10 @@ interface IChipSystem {
   function privatechest__changeAdmin(bytes32 entityId, address newAdmin) external;
 
   function privatechest__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+
+  function privatechest__setApprovedPlayers(bytes32 entityId, address[] memory players) external;
+
+  function privatechest__setApprovedNFTs(bytes32 entityId, address[] memory nfts) external;
+
+  function privatechest__setChestApprovals(bytes32 entityId, address[] memory players, address[] memory nfts) external;
 }
