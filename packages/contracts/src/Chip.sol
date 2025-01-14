@@ -18,6 +18,7 @@ import { IDisplayChip } from "@biomesaw/world/src/prototypes/IDisplayChip.sol";
 
 import { IWorld } from "@biomesaw/world/src/codegen/world/IWorld.sol";
 import { VoxelCoord, VoxelCoordDirectionVonNeumann } from "@biomesaw/utils/src/Types.sol";
+import { ChipOnTransferData, ChipOnPipeTransferData, TransferData } from "@biomesaw/world/src/Types.sol";
 import { voxelCoordsAreEqual, inSurroundingCube } from "@biomesaw/utils/src/VoxelCoordUtils.sol";
 import { getCallerNamespace } from "@biomesaw/utils/src/CallUtils.sol";
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
@@ -91,49 +92,48 @@ contract Chip is IChip {
   }
 
   function onAttached(
-    bytes32 playerEntityId,
-    bytes32 entityId,
+    bytes32 callerEntityId,
+    bytes32 targetEntityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    address player = getPlayerFromEntity(playerEntityId);
-    setChipAttacher(entityId, player);
-    setChipAdmin(entityId, player);
+    address player = getPlayerFromEntity(callerEntityId);
+    setChipAttacher(targetEntityId, player);
+    setChipAdmin(targetEntityId, player);
     return true;
   }
 
   function onDetached(
-    bytes32 playerEntityId,
-    bytes32 entityId,
+    bytes32 callerEntityId,
+    bytes32 targetEntityId,
     bytes memory extraData
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    address admin = ChipAdmin.get(entityId);
-    address player = getPlayerFromEntity(playerEntityId);
-    deleteSmartItemMetadata(entityId);
-    deleteChipAttacher(entityId);
-    deleteChipAdmin(entityId);
+    address admin = ChipAdmin.get(targetEntityId);
+    address player = getPlayerFromEntity(callerEntityId);
+    deleteSmartItemMetadata(targetEntityId);
+    deleteChipAttacher(targetEntityId);
+    deleteChipAdmin(targetEntityId);
     return admin == player;
   }
 
-  function onPowered(bytes32 playerEntityId, bytes32 entityId, uint16 numBattery) public override onlyBiomeWorld {}
+  function onPowered(
+    bytes32 callerEntityId,
+    bytes32 targetEntityId,
+    uint16 numBattery
+  ) public override onlyBiomeWorld {}
 
-  function onChipHit(bytes32 playerEntityId, bytes32 entityId) public override onlyBiomeWorld {}
+  function onChipHit(bytes32 callerEntityId, bytes32 targetEntityId) public override onlyBiomeWorld {}
 
   function onTransfer(
-    bytes32 srcEntityId,
-    bytes32 dstEntityId,
-    uint8 transferObjectTypeId,
-    uint16 numToTransfer,
-    bytes32[] memory toolEntityIds,
+    ChipOnTransferData memory transferData,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+    return false;
+  }
 
   function onPipeTransfer(
-    bytes32 srcEntityId,
-    bytes32 dstEntityId,
-    VoxelCoordDirectionVonNeumann[] memory path,
-    uint8 transferObjectTypeId,
-    uint16 numToTransfer,
-    bytes32[] memory toolEntityIds,
+    ChipOnPipeTransferData memory pipeTransferData,
     bytes memory extraData
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {}
+  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+    return false;
+  }
 }
