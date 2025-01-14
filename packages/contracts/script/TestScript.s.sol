@@ -19,10 +19,11 @@ import { IChip } from "../src/IChip.sol";
 
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 import { Exchange } from "../src/codegen/tables/Exchange.sol";
+import { ResourceType } from "@biomesaw/experience/src/codegen/common.sol";
 
 import { CoalOreObjectID } from "@biomesaw/world/src/ObjectTypeIds.sol";
 import { ERC20MetadataData } from "@biomesaw/experience/src/codegen/tables/ERC20Metadata.sol";
-import { setTokens } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
+import { setAsset } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
 
 bytes14 constant BANK_TOKEN_NAMESPACE = "SUB";
 
@@ -58,7 +59,7 @@ contract TestScript is Script {
         decimals: 18,
         symbol: "SUB",
         name: "Settlers Union Bank Coin",
-        description: "The Settlement Union's Bank chest mints SUB, backed 100:1 by the silver bars it possesses, and is used to purchase essential tools for cheap in their shops.",
+        description: "The Settlement Union's official currency",
         icon: "https://static.biomes.aw/sub-coin.png",
         systemId: _erc20SystemId(BANK_TOKEN_NAMESPACE)
       })
@@ -67,9 +68,7 @@ contract TestScript is Script {
     bankToken.mint(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a, 1000000e18);
     bankToken.mint(0x1B1240e0c3F3D4EB227916aB2BEb86E01C85d48f, 1000000e18);
 
-    address[] memory tokens = new address[](1);
-    tokens[0] = bankTokenAddress;
-    setTokens(tokens);
+    setAsset(bankTokenAddress, ResourceType.ERC20);
 
     vm.stopBroadcast();
   }

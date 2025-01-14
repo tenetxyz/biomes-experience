@@ -15,13 +15,16 @@ interface IChipSystem {
 
   function uniswapchest__setExchangeFee(bytes32 chestEntityId, uint8 objectTypeId, uint256 feePercentage) external;
 
-  function uniswapchest__refillBuyShopBalance(
-    bytes32 chestEntityId,
-    uint8 buyObjectTypeId,
-    uint256 refillAmount
-  ) external payable;
-
   function uniswapchest__withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) external;
+
+  function uniswapchest__setupBuySellShop(
+    bytes32 chestEntityId,
+    uint8 objectTypeId,
+    uint16 initialItemAmount,
+    uint256 initialCurrencyAmount,
+    address paymentToken,
+    uint256 feePercentage
+  ) external payable;
 
   function uniswapchest__setupBuySellShop(
     bytes32 chestEntityId,
@@ -43,4 +46,10 @@ interface IChipSystem {
     uint16 buyAmount,
     uint16 sellAmount
   ) external view returns (uint256, uint256);
+
+  function uniswapchest__refillBuyShopBalance(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 refillAmount
+  ) external payable;
 }

@@ -1469,6 +1469,44 @@
   },
   {
     "type": "function",
+    "name": "uniswapchest__setupBuySellShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "objectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "initialItemAmount",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "initialCurrencyAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "paymentToken",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "feePercentage",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
     "name": "uniswapchest__withdrawBuyShopBalance",
     "inputs": [
       {

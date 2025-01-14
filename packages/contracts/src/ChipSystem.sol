@@ -14,8 +14,11 @@ import { Metadata } from "./codegen/tables/Metadata.sol";
 import { ExchangeFee } from "./codegen/tables/ExchangeFee.sol";
 import { Exchange } from "./codegen/tables/Exchange.sol";
 
-import { CHIP_NAMESPACE } from "./Constants.sol";
+import { CHIP_NAMESPACE, BUY_EXCHANGE_ID, SELL_EXCHANGE_ID } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
+import { ExchangeInfo, ExchangeInfoData } from "@biomesaw/experience/src/codegen/tables/ExchangeInfo.sol";
+import { decodeAddressExchangeResourceId, decodeObjectExchangeResourceId } from "@biomesaw/experience/src/utils/ExchangeUtils.sol";
+import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
 
 contract ChipSystem is System {
   function getChipContract() internal view returns (IChip) {
@@ -40,20 +43,7 @@ contract ChipSystem is System {
 
   function setExchangeFee(bytes32 chestEntityId, uint8 objectTypeId, uint256 feePercentage) public {
     onlyAdmin(chestEntityId);
-    require(ItemShop.getObjectTypeId(chestEntityId) == objectTypeId, "Chest is not set up");
-
     ExchangeFee.set(chestEntityId, objectTypeId, feePercentage);
-  }
-
-  function refillBuyShopBalance(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 refillAmount) public payable {
-    onlyAdmin(chestEntityId);
-    IChip chip = getChipContract();
-    IWorld(_world()).transferBalanceToAddress(
-      WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE),
-      address(this),
-      _msgValue()
-    );
-    chip.refillBuyShopBalance{ value: _msgValue() }(chestEntityId, buyObjectTypeId, refillAmount);
   }
 
   function withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) public {
@@ -65,7 +55,7 @@ contract ChipSystem is System {
   function setupBuySellShop(
     bytes32 chestEntityId,
     uint8 objectTypeId,
-    uint256 initialItemAmount,
+    uint16 initialItemAmount,
     uint256 initialCurrencyAmount,
     address paymentToken,
     uint256 feePercentage
@@ -86,6 +76,25 @@ contract ChipSystem is System {
     );
   }
 
+  // For compatibility with old setupBuySellShop
+  function setupBuySellShop(
+    bytes32 chestEntityId,
+    uint8 objectTypeId,
+    uint256 initialItemAmount,
+    uint256 initialCurrencyAmount,
+    address paymentToken,
+    uint256 feePercentage
+  ) public payable {
+    setupBuySellShop(
+      chestEntityId,
+      objectTypeId,
+      initialItemAmount,
+      initialCurrencyAmount,
+      paymentToken,
+      feePercentage
+    );
+  }
+
   function getExchangeFee(bytes32 chestEntityId, uint8 objectTypeId) public view returns (uint256) {
     return ExchangeFee.get(chestEntityId, objectTypeId);
   }
@@ -95,21 +104,23 @@ contract ChipSystem is System {
       return 0;
     }
 
-    ItemShopData memory chestShopData = ItemShop.get(chestEntityId);
-    require(chestShopData.objectTypeId > 0, "Chest is not set up");
+    ExchangeInfoData memory sellExchangeInfo = ExchangeInfo.get(chestEntityId, SELL_EXCHANGE_ID);
+    uint8 exchangeObjectTypeId = decodeObjectExchangeResourceId(sellExchangeInfo.outResourceId);
+    require(exchangeObjectTypeId != NullObjectTypeId, "Chest is not set up");
 
-    uint16 newNumItemsInChest = getCount(chestEntityId, chestShopData.objectTypeId);
+    uint16 newNumItemsInChest = getCount(chestEntityId, exchangeObjectTypeId);
     require(buyAmount <= newNumItemsInChest, "Insufficient items in chest");
     newNumItemsInChest -= buyAmount;
     require(newNumItemsInChest > 0, "Chest must have at least one item");
 
-    uint256 itemExchangeConstant = Exchange.get(chestEntityId, chestShopData.objectTypeId);
+    uint256 itemExchangeConstant = Exchange.get(chestEntityId, exchangeObjectTypeId);
     uint256 newBalance = itemExchangeConstant / newNumItemsInChest;
 
-    require(newBalance >= chestShopData.balance, "Insufficient balance in chest");
-    uint256 shopTotalPrice = newBalance - chestShopData.balance;
+    ExchangeInfoData memory buyExchangeInfo = ExchangeInfo.get(chestEntityId, BUY_EXCHANGE_ID);
+    require(newBalance >= buyExchangeInfo.outMaxAmount, "Insufficient balance in chest");
+    uint256 shopTotalPrice = newBalance - buyExchangeInfo.outMaxAmount;
 
-    uint256 feePercentage = ExchangeFee.get(chestEntityId, chestShopData.objectTypeId);
+    uint256 feePercentage = ExchangeFee.get(chestEntityId, exchangeObjectTypeId);
     uint256 totalFee = (shopTotalPrice * feePercentage) / 100;
     shopTotalPrice += totalFee;
 
@@ -121,19 +132,20 @@ contract ChipSystem is System {
       return 0;
     }
 
-    ItemShopData memory chestShopData = ItemShop.get(chestEntityId);
-    require(chestShopData.objectTypeId > 0, "Chest is not set up");
+    ExchangeInfoData memory buyExchangeInfo = ExchangeInfo.get(chestEntityId, BUY_EXCHANGE_ID);
+    uint8 exchangeObjectTypeId = decodeObjectExchangeResourceId(buyExchangeInfo.inResourceId);
+    require(exchangeObjectTypeId != NullObjectTypeId, "Chest is not set up");
 
-    uint16 newNumItemsInChest = getCount(chestEntityId, chestShopData.objectTypeId);
+    uint16 newNumItemsInChest = getCount(chestEntityId, exchangeObjectTypeId);
     newNumItemsInChest += sellAmount;
 
-    uint256 itemExchangeConstant = Exchange.get(chestEntityId, chestShopData.objectTypeId);
+    uint256 itemExchangeConstant = Exchange.get(chestEntityId, exchangeObjectTypeId);
 
     require(newNumItemsInChest > 0, "Chest must have at least one item");
     uint256 newBalance = itemExchangeConstant / newNumItemsInChest;
 
-    require(chestShopData.balance >= newBalance, "Insufficient balance in chest");
-    uint256 shopTotalPrice = chestShopData.balance - newBalance;
+    require(buyExchangeInfo.outMaxAmount >= newBalance, "Insufficient balance in chest");
+    uint256 shopTotalPrice = buyExchangeInfo.outMaxAmount - newBalance;
 
     return shopTotalPrice;
   }
@@ -144,6 +156,10 @@ contract ChipSystem is System {
     uint16 sellAmount
   ) public view returns (uint256, uint256) {
     return (getBuyPrice(chestEntityId, buyAmount), getSellPrice(chestEntityId, sellAmount));
+  }
+
+  function refillBuyShopBalance(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 refillAmount) public payable {
+    revert("Deprecated");
   }
 
   receive() external payable {
