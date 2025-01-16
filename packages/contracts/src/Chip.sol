@@ -52,6 +52,7 @@ import { CHIP_NAMESPACE } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
 
 import { SmartItemMetadataData } from "@biomesaw/experience/src/codegen/tables/SmartItemMetadata.sol";
+import { PipeAccess } from "@biomesaw/experience/src/codegen/tables/PipeAccess.sol";
 
 contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
@@ -62,7 +63,11 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.Chest,
+        name: "Overflow",
+        description: "You control this chest - decide which chests can deposit and withdraw items."
+      })
     );
     setNamespaceId(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
@@ -82,6 +87,15 @@ contract Chip is IChip {
     string memory description
   ) public onlyChipNamespace {
     setSmartItemMetadata(chestEntityId, SmartItemMetadataData({ name: name, description: description }));
+  }
+
+  function configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32 callerEntityId,
+    bool depositAllowed,
+    bool withdrawAllowed
+  ) public onlyChipNamespace {
+    setPipeAccess(chestEntityId, callerEntityId, depositAllowed, withdrawAllowed);
   }
 
   modifier onlyBiomeWorld() {
@@ -111,6 +125,7 @@ contract Chip is IChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address admin = ChipAdmin.get(targetEntityId);
     address player = getPlayerFromEntity(callerEntityId);
+    deletePipeAccessList(targetEntityId);
     deleteSmartItemMetadata(targetEntityId);
     deleteChipAttacher(targetEntityId);
     deleteChipAdmin(targetEntityId);
@@ -125,15 +140,19 @@ contract Chip is IChip {
 
   function onChipHit(bytes32 callerEntityId, bytes32 targetEntityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    ChipOnTransferData memory transferContext
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
+  function onTransfer(ChipOnTransferData memory transferContext) public payable override onlyBiomeWorld returns (bool) {
+    // Players can't transfer items in or out of the chest
+    // Only chests can via onPipeTransfer
     return false;
   }
 
   function onPipeTransfer(
     ChipOnPipeTransferData memory transferContext
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    return false;
+    if (transferContext.isDeposit) {
+      return PipeAccess.getDepositAllowed(transferContext.targetEntityId, transferContext.callerEntityId);
+    } else {
+      return PipeAccess.getWithdrawAllowed(transferContext.callerEntityId, transferContext.targetEntityId);
+    }
   }
 }

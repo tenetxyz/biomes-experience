@@ -9,4 +9,11 @@ interface IChip is IChestChip {
   function changeAdmin(bytes32 entityId, address newAdmin) external;
 
   function setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+
+  function configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32 callerEntityId,
+    bool depositAllowed,
+    bool withdrawAllowed
+  ) external;
 }
