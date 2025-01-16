@@ -125,15 +125,13 @@ contract Chip is IChip {
   function onChipHit(bytes32 callerEntityId, bytes32 targetEntityId) public override onlyBiomeWorld {}
 
   function onTransfer(
-    ChipOnTransferData memory transferContext,
-    bytes memory extraData
+    ChipOnTransferData memory transferContext
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     return false;
   }
 
   function onPipeTransfer(
-    ChipOnPipeTransferData memory transferContext,
-    bytes memory extraData
+    ChipOnPipeTransferData memory transferContext
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     return false;
   }
