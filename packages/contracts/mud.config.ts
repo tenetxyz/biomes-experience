@@ -5,13 +5,21 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "batterytdc",
   tables: {
     Metadata: {
       schema: {
         chipAddress: "address",
+        paymentToken: "address",
       },
       key: [],
+    },
+    SecurityLevel: {
+      schema: {
+        chestEntityId: "bytes32",
+        minLevel: "uint256",
+      },
+      key: ["chestEntityId"],
     },
   },
 });
