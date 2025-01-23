@@ -46,6 +46,7 @@ import { setSmartItemMetadata, setSmartItemName, setSmartItemDescription, delete
 import { getForceField, getLatestChipData, isApprovedPlayer, hasApprovedNft, isApproved } from "@biomesaw/experience/src/utils/ForceFieldUtils.sol";
 import { isApprovedPlayerForGate, hasApprovedNftForGate, isApprovedForGate } from "@biomesaw/experience/src/utils/GateUtils.sol";
 import { encodeAddressExchangeResourceId, decodeAddressExchangeResourceId, encodeObjectExchangeResourceId, decodeObjectExchangeResourceId, exchangeExists } from "@biomesaw/experience/src/utils/ExchangeUtils.sol";
+import { pipeAccessExists } from "@biomesaw/experience/src/utils/PipeUtils.sol";
 
 import { CHIP_NAMESPACE } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
