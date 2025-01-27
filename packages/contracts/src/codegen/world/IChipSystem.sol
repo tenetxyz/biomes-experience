@@ -9,7 +9,60 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IChipSystem {
-  function testchip__changeAdmin(bytes32 entityId, address newAdmin) external;
+  function uniswapchest__changeAdmin(bytes32 entityId, address newAdmin) external;
 
-  function testchip__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+  function uniswapchest__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+
+  function uniswapchest__configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32 callerEntityId,
+    bool depositAllowed,
+    bool withdrawAllowed
+  ) external;
+
+  function uniswapchest__configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32[] memory addCallerEntityIds,
+    bytes32[] memory removeCallerEntityIds
+  ) external;
+
+  function uniswapchest__setExchangeFee(bytes32 chestEntityId, uint8 objectTypeId, uint256 feePercentage) external;
+
+  function uniswapchest__withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) external;
+
+  function uniswapchest__setupBuySellShop(
+    bytes32 chestEntityId,
+    uint8 objectTypeId,
+    uint16 initialItemAmount,
+    uint256 initialCurrencyAmount,
+    address paymentToken,
+    uint256 feePercentage
+  ) external payable;
+
+  function uniswapchest__setupBuySellShop(
+    bytes32 chestEntityId,
+    uint8 objectTypeId,
+    uint256 initialItemAmount,
+    uint256 initialCurrencyAmount,
+    address paymentToken,
+    uint256 feePercentage
+  ) external payable;
+
+  function uniswapchest__getExchangeFee(bytes32 chestEntityId, uint8 objectTypeId) external view returns (uint256);
+
+  function uniswapchest__getBuyPrice(bytes32 chestEntityId, uint16 buyAmount) external view returns (uint256);
+
+  function uniswapchest__getSellPrice(bytes32 chestEntityId, uint16 sellAmount) external view returns (uint256);
+
+  function uniswapchest__getBuySellPrices(
+    bytes32 chestEntityId,
+    uint16 buyAmount,
+    uint16 sellAmount
+  ) external view returns (uint256, uint256);
+
+  function uniswapchest__refillBuyShopBalance(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 refillAmount
+  ) external payable;
 }
