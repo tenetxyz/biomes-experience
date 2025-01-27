@@ -15,6 +15,8 @@ import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
+import { ShopMetadata } from "../src/codegen/tables/ShopMetadata.sol";
+import { AllowedSetup } from "../src/codegen/tables/AllowedSetup.sol";
 import { IChip } from "../src/IChip.sol";
 
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
@@ -70,10 +72,11 @@ contract TestScript is Script {
 
     world.transferOwnership(namespaceId, chipAddress);
 
-    chipAddress.call(abi.encodeWithSignature("setShopNFT(address)", shopNFTAddress));
-    // chipAddress.call(abi.encodeWithSignature("addAllowedSetup(address)", 0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a));
-    chipAddress.call(abi.encodeWithSignature("addAllowedSetup(address)", 0x4CC63DA6DE254c2E5BCEd227CacF20231E1C35d4));
-    // chipAddress.call(abi.encodeWithSignature("addAllowedSetup(address)", 0xA32EC0cc74FBdD0a7c2B7b654ca6B886000E2B65));
+    ShopMetadata.setShopNFT(shopNFTAddress);
+    ShopMetadata.setShopNFTNextTokenId(0);
+
+    AllowedSetup.set(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a, true);
+    AllowedSetup.set(0x4CC63DA6DE254c2E5BCEd227CacF20231E1C35d4, true);
 
     vm.stopBroadcast();
   }

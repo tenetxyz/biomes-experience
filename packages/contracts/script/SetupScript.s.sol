@@ -19,7 +19,7 @@ import { Metadata } from "../src/codegen/tables/Metadata.sol";
 import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
 
 import { ERC20MetadataData } from "@biomesaw/experience/src/codegen/tables/ERC20Metadata.sol";
-import { setTokens } from "@biomesaw/experience/src/utils/ExperienceUtils.sol";
+import { ShopMetadata } from "../src/codegen/tables/ShopMetadata.sol";
 
 bytes14 constant BANK_TOKEN_NAMESPACE = "SUB";
 
@@ -68,11 +68,7 @@ contract SetupScript is Script {
     bankToken.mint(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a, 1000000e18);
     bankToken.mint(0x1B1240e0c3F3D4EB227916aB2BEb86E01C85d48f, 1000000e18);
 
-    address[] memory tokens = new address[](1);
-    tokens[0] = bankTokenAddress;
-    setTokens(tokens);
-
-    chipAddress.call(abi.encodeWithSignature("setShopPaymentToken(address)", bankTokenAddress));
+    ShopMetadata.setPaymentToken(bankTokenAddress);
 
     vm.stopBroadcast();
   }
