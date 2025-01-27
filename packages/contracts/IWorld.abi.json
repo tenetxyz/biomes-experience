@@ -1174,7 +1174,30 @@
   },
   {
     "type": "function",
-    "name": "testchip__changeAdmin",
+    "name": "tokenitemchest__buyMore",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "buyAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "tokenitemchest__changeAdmin",
     "inputs": [
       {
         "name": "entityId",
@@ -1192,7 +1215,66 @@
   },
   {
     "type": "function",
-    "name": "testchip__setDisplayData",
+    "name": "tokenitemchest__changeBuyPrice",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "newPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "tokenitemchest__changeSellPrice",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "sellObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "newPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "tokenitemchest__destroyShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "tokenitemchest__setDisplayData",
     "inputs": [
       {
         "name": "entityId",
@@ -1208,6 +1290,123 @@
         "name": "description",
         "type": "string",
         "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "tokenitemchest__setupBuySellShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "objectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "buyPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "buyAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "sellPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "paymentToken",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "tokenitemchest__setupBuyShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "buyPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "buyAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "paymentToken",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "tokenitemchest__setupSellShop",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "sellObjectTypeId",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "sellPrice",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "paymentToken",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "tokenitemchest__withdrawBuyShopBalance",
+    "inputs": [
+      {
+        "name": "chestEntityId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],

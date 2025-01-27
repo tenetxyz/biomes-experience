@@ -9,7 +9,41 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IChipSystem {
-  function testchip__changeAdmin(bytes32 entityId, address newAdmin) external;
+  function tokenitemchest__changeAdmin(bytes32 entityId, address newAdmin) external;
 
-  function testchip__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+  function tokenitemchest__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+
+  function tokenitemchest__setupBuyShop(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    address paymentToken
+  ) external payable;
+
+  function tokenitemchest__setupSellShop(
+    bytes32 chestEntityId,
+    uint8 sellObjectTypeId,
+    uint256 sellPrice,
+    address paymentToken
+  ) external;
+
+  function tokenitemchest__setupBuySellShop(
+    bytes32 chestEntityId,
+    uint8 objectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    uint256 sellPrice,
+    address paymentToken
+  ) external payable;
+
+  function tokenitemchest__changeBuyPrice(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 newPrice) external;
+
+  function tokenitemchest__changeSellPrice(bytes32 chestEntityId, uint8 sellObjectTypeId, uint256 newPrice) external;
+
+  function tokenitemchest__buyMore(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 buyAmount) external payable;
+
+  function tokenitemchest__withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) external;
+
+  function tokenitemchest__destroyShop(bytes32 chestEntityId) external;
 }
