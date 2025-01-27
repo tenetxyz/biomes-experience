@@ -48,10 +48,16 @@ import { isApprovedPlayerForGate, hasApprovedNftForGate, isApprovedForGate } fro
 import { encodeAddressExchangeResourceId, decodeAddressExchangeResourceId, encodeObjectExchangeResourceId, decodeObjectExchangeResourceId, exchangeExists } from "@biomesaw/experience/src/utils/ExchangeUtils.sol";
 import { pipeAccessExists } from "@biomesaw/experience/src/utils/PipeUtils.sol";
 
-import { CHIP_NAMESPACE } from "./Constants.sol";
+import { CHIP_NAMESPACE, BUY_EXCHANGE_ID, SELL_EXCHANGE_ID } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
 
+import { AccessControl } from "@latticexyz/world/src/AccessControl.sol";
 import { SmartItemMetadataData } from "@biomesaw/experience/src/codegen/tables/SmartItemMetadata.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ExchangeInfo, ExchangeInfoData } from "@biomesaw/experience/src/codegen/tables/ExchangeInfo.sol";
+import { ResourceType } from "@biomesaw/experience/src/codegen/common.sol";
+import { ExchangeNotif, ExchangeNotifData } from "@biomesaw/experience/src/codegen/tables/ExchangeNotif.sol";
+import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
 
 contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
@@ -62,7 +68,11 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.Chest,
+        name: "Shop",
+        description: "You control this chest. Buy & sell items for token prices you set"
+      })
     );
     setNamespaceId(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
@@ -84,6 +94,198 @@ contract Chip is IChip {
     setSmartItemMetadata(chestEntityId, SmartItemMetadataData({ name: name, description: description }));
   }
 
+  function adminTransfer(address paymentToken, uint256 amount, address receiver) public {
+    AccessControl.requireOwner(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE), msg.sender);
+    if (paymentToken == address(this)) {
+      (bool sent, ) = receiver.call{ value: amount }("");
+      require(sent, "Failed to send Ether");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transfer(receiver, amount), "Failed to transfer tokens");
+    }
+  }
+
+  function doWithdraw(address player, bytes32 chestEntityId, uint256 amount) internal returns (uint256) {
+    require(amount > 0, "Amount must be greater than 0");
+    uint256 currentBalance = ExchangeInfo.getOutMaxAmount(chestEntityId, BUY_EXCHANGE_ID);
+    require(currentBalance >= amount, "Insufficient balance");
+    uint256 newBalance = currentBalance - amount;
+
+    if (ExchangeInfo.getOutResourceType(chestEntityId, BUY_EXCHANGE_ID) == ResourceType.NativeCurrency) {
+      (bool sent, ) = player.call{ value: amount }("");
+      require(sent, "Failed to send Ether");
+    } else {
+      address paymentToken = decodeAddressExchangeResourceId(
+        ExchangeInfo.getOutResourceId(chestEntityId, BUY_EXCHANGE_ID)
+      );
+      IERC20 token = IERC20(paymentToken);
+      require(token.transfer(player, amount), "Failed to transfer tokens");
+    }
+
+    return newBalance;
+  }
+
+  function setupBuyShop(
+    bytes32 chestEntityId,
+    uint8 buyObjectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    address paymentToken
+  ) public payable onlyChipNamespace {
+    address admin = ChipAdmin.get(chestEntityId);
+    uint256 addingBalance = buyPrice * buyAmount;
+
+    addExchange(
+      chestEntityId,
+      BUY_EXCHANGE_ID,
+      ExchangeInfoData({
+        inResourceType: ResourceType.Object,
+        inResourceId: encodeObjectExchangeResourceId(buyObjectTypeId),
+        inUnitAmount: 1,
+        inMaxAmount: buyAmount,
+        outResourceType: paymentToken == address(0) ? ResourceType.NativeCurrency : ResourceType.ERC20,
+        outResourceId: encodeAddressExchangeResourceId(paymentToken),
+        outUnitAmount: buyPrice,
+        outMaxAmount: addingBalance
+      })
+    );
+
+    if (paymentToken == address(0)) {
+      require(msg.value == addingBalance, "Insufficient Ether sent");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transferFrom(admin, address(this), addingBalance), "Failed to transfer tokens");
+    }
+  }
+
+  function setupSellShop(
+    bytes32 chestEntityId,
+    uint8 sellObjectTypeId,
+    uint256 sellPrice,
+    address paymentToken
+  ) public onlyChipNamespace {
+    addExchange(
+      chestEntityId,
+      SELL_EXCHANGE_ID,
+      ExchangeInfoData({
+        inResourceType: paymentToken == address(0) ? ResourceType.NativeCurrency : ResourceType.ERC20,
+        inResourceId: encodeAddressExchangeResourceId(paymentToken),
+        inUnitAmount: sellPrice,
+        inMaxAmount: type(uint256).max,
+        outResourceType: ResourceType.Object,
+        outResourceId: encodeObjectExchangeResourceId(sellObjectTypeId),
+        outUnitAmount: 1,
+        outMaxAmount: getCount(chestEntityId, sellObjectTypeId)
+      })
+    );
+  }
+
+  function setupBuySellShop(
+    bytes32 chestEntityId,
+    uint8 objectTypeId,
+    uint256 buyPrice,
+    uint256 buyAmount,
+    uint256 sellPrice,
+    address paymentToken
+  ) public payable onlyChipNamespace {
+    address admin = ChipAdmin.get(chestEntityId);
+    uint256 addingBalance = buyPrice * buyAmount;
+
+    addExchange(
+      chestEntityId,
+      BUY_EXCHANGE_ID,
+      ExchangeInfoData({
+        inResourceType: ResourceType.Object,
+        inResourceId: encodeObjectExchangeResourceId(objectTypeId),
+        inUnitAmount: 1,
+        inMaxAmount: buyAmount,
+        outResourceType: paymentToken == address(0) ? ResourceType.NativeCurrency : ResourceType.ERC20,
+        outResourceId: encodeAddressExchangeResourceId(paymentToken),
+        outUnitAmount: buyPrice,
+        outMaxAmount: addingBalance
+      })
+    );
+
+    addExchange(
+      chestEntityId,
+      SELL_EXCHANGE_ID,
+      ExchangeInfoData({
+        inResourceType: paymentToken == address(0) ? ResourceType.NativeCurrency : ResourceType.ERC20,
+        inResourceId: encodeAddressExchangeResourceId(paymentToken),
+        inUnitAmount: sellPrice,
+        inMaxAmount: type(uint256).max,
+        outResourceType: ResourceType.Object,
+        outResourceId: encodeObjectExchangeResourceId(objectTypeId),
+        outUnitAmount: 1,
+        outMaxAmount: getCount(chestEntityId, objectTypeId)
+      })
+    );
+
+    if (paymentToken == address(0)) {
+      require(msg.value == addingBalance, "Insufficient Ether sent");
+    } else {
+      IERC20 token = IERC20(paymentToken);
+      require(token.transferFrom(admin, address(this), addingBalance), "Failed to transfer tokens");
+    }
+  }
+
+  function changeBuyPrice(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 newPrice) public onlyChipNamespace {
+    ExchangeInfoData memory buyExchange = ExchangeInfo.get(chestEntityId, BUY_EXCHANGE_ID);
+    require(buyExchange.inResourceId == encodeObjectExchangeResourceId(buyObjectTypeId), "Chest is not set up");
+
+    setExchangeOutUnitAmount(chestEntityId, BUY_EXCHANGE_ID, newPrice);
+    uint256 newBuyAmount = newPrice > 0 ? buyExchange.outMaxAmount / newPrice : numMaxInChest(buyObjectTypeId);
+    setExchangeInMaxAmount(chestEntityId, BUY_EXCHANGE_ID, newBuyAmount);
+  }
+
+  function changeSellPrice(bytes32 chestEntityId, uint8 sellObjectTypeId, uint256 newPrice) public onlyChipNamespace {
+    require(
+      ExchangeInfo.getOutResourceId(chestEntityId, SELL_EXCHANGE_ID) ==
+        encodeObjectExchangeResourceId(sellObjectTypeId),
+      "Chest is not set up"
+    );
+
+    setExchangeInUnitAmount(chestEntityId, SELL_EXCHANGE_ID, newPrice);
+  }
+
+  function buyMore(bytes32 chestEntityId, uint8 buyObjectTypeId, uint256 buyAmount) public payable onlyChipNamespace {
+    address admin = ChipAdmin.get(chestEntityId);
+    ExchangeInfoData memory buyExchange = ExchangeInfo.get(chestEntityId, BUY_EXCHANGE_ID);
+    require(buyExchange.inResourceId == encodeObjectExchangeResourceId(buyObjectTypeId), "Chest is not set up");
+    uint256 refillAmount = buyAmount * buyExchange.outUnitAmount;
+    uint256 newBalance = buyExchange.outMaxAmount + refillAmount;
+    setExchangeOutMaxAmount(chestEntityId, BUY_EXCHANGE_ID, newBalance);
+    uint256 newInMaxAmount = buyExchange.inMaxAmount + buyAmount;
+    setExchangeInMaxAmount(chestEntityId, BUY_EXCHANGE_ID, newInMaxAmount);
+
+    if (buyExchange.outResourceType == ResourceType.NativeCurrency) {
+      require(msg.value == refillAmount, "Insufficient Ether sent");
+    } else {
+      IERC20 token = IERC20(decodeAddressExchangeResourceId(buyExchange.outResourceId));
+      require(token.transferFrom(admin, address(this), refillAmount), "Failed to transfer tokens");
+    }
+  }
+
+  function withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) public onlyChipNamespace {
+    address admin = ChipAdmin.get(chestEntityId);
+    uint256 newBalance = doWithdraw(admin, chestEntityId, amount);
+    setExchangeOutMaxAmount(chestEntityId, BUY_EXCHANGE_ID, newBalance);
+    uint256 buyPrice = ExchangeInfo.getOutUnitAmount(chestEntityId, BUY_EXCHANGE_ID);
+    uint256 newBuyAmount = buyPrice > 0
+      ? newBalance / buyPrice
+      : numMaxInChest(decodeObjectExchangeResourceId(ExchangeInfo.getInResourceId(chestEntityId, BUY_EXCHANGE_ID)));
+    setExchangeInMaxAmount(chestEntityId, BUY_EXCHANGE_ID, newBuyAmount);
+  }
+
+  function destroyShop(bytes32 chestEntityId) public onlyChipNamespace {
+    address admin = ChipAdmin.get(chestEntityId);
+    uint256 currentBalance = ExchangeInfo.getOutMaxAmount(chestEntityId, BUY_EXCHANGE_ID);
+    if (currentBalance > 0) {
+      doWithdraw(admin, chestEntityId, currentBalance);
+    }
+    deleteExchanges(chestEntityId);
+  }
+
   modifier onlyBiomeWorld() {
     require(msg.sender == WorldContextConsumerLib._world(), "Caller is not the Biomes World contract");
     _; // Continue execution
@@ -101,6 +303,7 @@ contract Chip is IChip {
     address player = getPlayerFromEntity(callerEntityId);
     setChipAttacher(targetEntityId, player);
     setChipAdmin(targetEntityId, player);
+    require(getNumInventoryObjects(targetEntityId) == 0, "Chest must be empty");
     return true;
   }
 
@@ -111,6 +314,13 @@ contract Chip is IChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address admin = ChipAdmin.get(targetEntityId);
     address player = getPlayerFromEntity(callerEntityId);
+
+    uint256 currentBalance = ExchangeInfo.getOutMaxAmount(targetEntityId, BUY_EXCHANGE_ID);
+    if (currentBalance > 0) {
+      doWithdraw(admin, targetEntityId, currentBalance);
+    }
+    deleteExchanges(targetEntityId);
+
     deleteSmartItemMetadata(targetEntityId);
     deleteChipAttacher(targetEntityId);
     deleteChipAdmin(targetEntityId);
@@ -125,15 +335,109 @@ contract Chip is IChip {
 
   function onChipHit(bytes32 callerEntityId, bytes32 targetEntityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    ChipOnTransferData memory transferContext
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    return false;
+  function onTransfer(ChipOnTransferData memory transferContext) public payable override onlyBiomeWorld returns (bool) {
+    address admin = ChipAdmin.get(transferContext.targetEntityId);
+    require(admin != address(0), "Chest is not setup");
+    address player = getPlayerFromEntity(transferContext.callerEntityId);
+    ExchangeInfoData memory exchangeInfo = ExchangeInfo.get(
+      transferContext.targetEntityId,
+      transferContext.isDeposit ? BUY_EXCHANGE_ID : SELL_EXCHANGE_ID
+    );
+    uint8 exchangeObjectTypeId = transferContext.isDeposit
+      ? decodeObjectExchangeResourceId(exchangeInfo.inResourceId)
+      : decodeObjectExchangeResourceId(exchangeInfo.outResourceId);
+    for (uint i = 0; i < transferContext.transferData.toolEntityIds.length; i++) {
+      require(
+        getNumUsesLeft(transferContext.transferData.toolEntityIds[i]) == getDurability(exchangeObjectTypeId),
+        "Tool must have full durability"
+      );
+    }
+
+    if (player == admin) {
+      if (transferContext.isDeposit) {
+        exchangeInfo = ExchangeInfo.get(transferContext.targetEntityId, SELL_EXCHANGE_ID);
+        exchangeObjectTypeId = decodeObjectExchangeResourceId(exchangeInfo.outResourceId);
+        if (exchangeObjectTypeId != transferContext.transferData.objectTypeId) {
+          return false;
+        }
+        uint256 newOutMaxAmount = exchangeInfo.outMaxAmount + transferContext.transferData.numToTransfer;
+        setExchangeOutMaxAmount(transferContext.targetEntityId, SELL_EXCHANGE_ID, newOutMaxAmount);
+        return true;
+      } else {
+        if (exchangeInfo.outResourceType == ResourceType.Object) {
+          uint256 newOutMaxAmount = exchangeInfo.outMaxAmount - transferContext.transferData.numToTransfer;
+          setExchangeOutMaxAmount(transferContext.targetEntityId, SELL_EXCHANGE_ID, newOutMaxAmount);
+        }
+        return true;
+      }
+    }
+
+    if (exchangeObjectTypeId != transferContext.transferData.objectTypeId) {
+      return false;
+    }
+
+    uint256 shopPrice = transferContext.isDeposit ? exchangeInfo.outUnitAmount : exchangeInfo.inUnitAmount;
+    if (shopPrice == 0) {
+      // TODO: Update max amounts
+      return true;
+    }
+
+    uint256 shopTotalPrice = transferContext.transferData.numToTransfer * shopPrice;
+
+    if (transferContext.isDeposit) {
+      // Check if there is enough balance in the chest
+      uint256 balance = exchangeInfo.outMaxAmount;
+      require(balance >= shopTotalPrice, "Insufficient balance in chest");
+      uint256 newBalance = balance - shopTotalPrice;
+      setExchangeOutMaxAmount(transferContext.targetEntityId, BUY_EXCHANGE_ID, newBalance);
+      uint256 newInMaxAmount = exchangeInfo.inMaxAmount - transferContext.transferData.numToTransfer;
+      setExchangeInMaxAmount(transferContext.targetEntityId, BUY_EXCHANGE_ID, newInMaxAmount);
+
+      if (exchangeInfo.outResourceType == ResourceType.NativeCurrency) {
+        (bool sent, ) = player.call{ value: shopTotalPrice }("");
+        require(sent, "Failed to send Ether");
+      } else {
+        IERC20 token = IERC20(decodeAddressExchangeResourceId(exchangeInfo.outResourceId));
+        require(token.transfer(player, shopTotalPrice), "Failed to transfer tokens");
+      }
+    } else {
+      if (exchangeInfo.inResourceType == ResourceType.NativeCurrency) {
+        require(msg.value == shopTotalPrice, "Insufficient Ether sent");
+
+        (bool sent, ) = admin.call{ value: shopTotalPrice }("");
+        require(sent, "Failed to send Ether");
+      } else {
+        IERC20 token = IERC20(decodeAddressExchangeResourceId(exchangeInfo.inResourceId));
+        require(token.transferFrom(player, admin, shopTotalPrice), "Failed to transfer tokens");
+      }
+
+      uint256 newOutMaxAmount = exchangeInfo.outMaxAmount - transferContext.transferData.numToTransfer;
+      setExchangeOutMaxAmount(transferContext.targetEntityId, SELL_EXCHANGE_ID, newOutMaxAmount);
+    }
+
+    emitExchangeNotif(
+      transferContext.targetEntityId,
+      ExchangeNotifData({
+        player: player,
+        inResourceType: exchangeInfo.inResourceType,
+        inResourceId: exchangeInfo.inResourceId,
+        inAmount: transferContext.isDeposit ? transferContext.transferData.numToTransfer : shopTotalPrice,
+        outResourceType: exchangeInfo.outResourceType,
+        outResourceId: exchangeInfo.outResourceId,
+        outAmount: transferContext.isDeposit ? shopTotalPrice : transferContext.transferData.numToTransfer
+      })
+    );
+
+    return true;
   }
 
   function onPipeTransfer(
     ChipOnPipeTransferData memory transferContext
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     return false;
+  }
+
+  receive() external payable {
+    // This function is executed when a contract receives plain Ether (without data)
   }
 }

@@ -5,7 +5,7 @@ export default defineWorld({
   deploy: {
     upgradeableWorldImplementation: true,
   },
-  namespace: "testchip",
+  namespace: "tokenitemchest",
   tables: {
     Metadata: {
       schema: {
