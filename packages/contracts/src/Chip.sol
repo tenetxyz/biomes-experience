@@ -62,7 +62,11 @@ contract Chip is IChip {
 
   function initChip() internal {
     setChipMetadata(
-      ChipMetadataData({ chipType: ChipType.Chest, name: "Test Chip", description: "Test Chip Description" })
+      ChipMetadataData({
+        chipType: ChipType.Chest,
+        name: "Storage",
+        description: "You control this chest - decide which players or pass-holders can transfer items in and out."
+      })
     );
     setNamespaceId(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE));
   }
@@ -82,6 +86,14 @@ contract Chip is IChip {
     string memory description
   ) public onlyChipNamespace {
     setSmartItemMetadata(chestEntityId, SmartItemMetadataData({ name: name, description: description }));
+  }
+
+  function setApprovedPlayers(bytes32 entityId, address[] memory players) public onlyChipNamespace {
+    setGateApprovedPlayers(entityId, players);
+  }
+
+  function setApprovedNFTs(bytes32 entityId, address[] memory nfts) public onlyChipNamespace {
+    setGateApprovedNFT(entityId, nfts);
   }
 
   modifier onlyBiomeWorld() {
@@ -111,6 +123,7 @@ contract Chip is IChip {
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
     address admin = ChipAdmin.get(targetEntityId);
     address player = getPlayerFromEntity(callerEntityId);
+    deleteGateApprovals(targetEntityId);
     deleteSmartItemMetadata(targetEntityId);
     deleteChipAttacher(targetEntityId);
     deleteChipAdmin(targetEntityId);
@@ -125,10 +138,9 @@ contract Chip is IChip {
 
   function onChipHit(bytes32 callerEntityId, bytes32 targetEntityId) public override onlyBiomeWorld {}
 
-  function onTransfer(
-    ChipOnTransferData memory transferContext
-  ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    return false;
+  function onTransfer(ChipOnTransferData memory transferContext) public payable override onlyBiomeWorld returns (bool) {
+    address player = getPlayerFromEntity(transferContext.callerEntityId);
+    return isApprovedForGate(transferContext.targetEntityId, player);
   }
 
   function onPipeTransfer(
