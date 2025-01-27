@@ -26,4 +26,9 @@ contract ChipSystem is System {
     IChip chip = getChipContract();
     chip.setDisplayData(entityId, name, description);
   }
+
+  function claimNft() public {
+    IChip chip = getChipContract();
+    chip.claimNft(_msgSender());
+  }
 }

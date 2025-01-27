@@ -4,15 +4,30 @@ pragma solidity >=0.8.24;
 import { Script } from "forge-std/Script.sol";
 import { console } from "forge-std/console.sol";
 import { StoreSwitch } from "@latticexyz/store/src/StoreSwitch.sol";
+import { ResourceId } from "@latticexyz/store/src/ResourceId.sol";
+import { WorldResourceIdLib } from "@latticexyz/world/src/WorldResourceId.sol";
+import { IERC721Mintable } from "@latticexyz/world-modules/src/modules/erc721-puppet/IERC721Mintable.sol";
+import { registerERC721 } from "@latticexyz/world-modules/src/modules/erc721-puppet/registerERC721.sol";
+import { ERC721MetadataData as MUDERC721MetadataData } from "@latticexyz/world-modules/src/modules/erc721-puppet/tables/ERC721Metadata.sol";
+import { _erc721SystemId } from "@latticexyz/world-modules/src/modules/erc721-puppet/utils.sol";
 
 import { IWorld } from "../src/codegen/world/IWorld.sol";
 
 import { VoxelCoord } from "@biomesaw/utils/src/Types.sol";
 import { Metadata } from "../src/codegen/tables/Metadata.sol";
+import { ShopMetadata } from "../src/codegen/tables/ShopMetadata.sol";
+import { AllowedSetup } from "../src/codegen/tables/AllowedSetup.sol";
 import { IChip } from "../src/IChip.sol";
+
+import { IWorld as IExperienceWorld } from "@biomesaw/experience/src/codegen/world/IWorld.sol";
+import { ERC721MetadataData } from "@biomesaw/experience/src/codegen/tables/ERC721Metadata.sol";
+
+bytes14 constant SHOP_NFT_NAMESPACE = "parkour_pass";
 
 contract TestScript is Script {
   function run(address worldAddress) external {
+    IWorld world = IWorld(worldAddress);
+
     // Specify a store so that you can use tables directly in PostDeploy
     StoreSwitch.setStoreAddress(worldAddress);
 
@@ -26,6 +41,42 @@ contract TestScript is Script {
     address chipAddress = Metadata.getChipAddress();
     console.logAddress(chipAddress);
     IChip chip = IChip(chipAddress);
+
+    console.log("Deploying Shop NFT contract...");
+    IERC721Mintable shopNFT = registerERC721(
+      world,
+      SHOP_NFT_NAMESPACE,
+      MUDERC721MetadataData({
+        symbol: unicode"ø",
+        name: unicode"parkøur cømpleter",
+        baseURI: "https://static.biomes.aw/parkour_completer.png"
+      })
+    );
+    console.log("Deployed Shop NFT contract at address: ");
+    address shopNFTAddress = address(shopNFT);
+    console.logAddress(shopNFTAddress);
+
+    ResourceId namespaceId = WorldResourceIdLib.encodeNamespace(SHOP_NFT_NAMESPACE);
+
+    IExperienceWorld(worldAddress).experience__setMUDNFTMetadata(
+      namespaceId,
+      ERC721MetadataData({
+        creator: 0x4CC63DA6DE254c2E5BCEd227CacF20231E1C35d4,
+        symbol: unicode"ø",
+        name: unicode"parkøur cømpleter",
+        description: "a master of the art of jumping wildly, the holder has reached the peak of the parkour course",
+        baseURI: "https://static.biomes.aw/parkour_completer.png",
+        systemId: _erc721SystemId(SHOP_NFT_NAMESPACE)
+      })
+    );
+
+    world.transferOwnership(namespaceId, chipAddress);
+
+    ShopMetadata.setShopNFT(shopNFTAddress);
+    ShopMetadata.setShopNFTNextTokenId(0);
+
+    AllowedSetup.set(0xE0ae70caBb529336e25FA7a1f036b77ad0089d2a, true);
+    AllowedSetup.set(0x4CC63DA6DE254c2E5BCEd227CacF20231E1C35d4, true);
 
     vm.stopBroadcast();
   }
