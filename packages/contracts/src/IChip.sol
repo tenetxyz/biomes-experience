@@ -10,6 +10,13 @@ interface IChip is IChestChip {
 
   function setDisplayData(bytes32 entityId, string memory name, string memory description) external;
 
+  function configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32 callerEntityId,
+    bool depositAllowed,
+    bool withdrawAllowed
+  ) external;
+
   function withdrawBuyShopBalance(bytes32 chestEntityId, uint256 amount) external;
 
   function setupBuySellShop(
@@ -25,15 +32,15 @@ interface IChip is IChestChip {
     uint256 itemExchangeConstant,
     uint256 chestBalance,
     uint256 feePercentage,
-    uint16 numItemsInChest,
-    uint16 buyAmount
+    uint256 numItemsInChest,
+    uint256 buyAmount
   ) external view returns (uint256);
 
   function getSellPrice(
     uint256 itemExchangeConstant,
     uint256 chestBalance,
-    uint16 numItemsInChest,
-    uint16 sellAmount
+    uint256 numItemsInChest,
+    uint256 sellAmount
   ) external view returns (uint256);
 
   function adminTransfer(address paymentToken, uint256 amount, address receiver) external;

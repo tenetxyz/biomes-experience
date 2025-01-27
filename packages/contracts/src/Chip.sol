@@ -51,8 +51,10 @@ import { pipeAccessExists } from "@biomesaw/experience/src/utils/PipeUtils.sol";
 import { CHIP_NAMESPACE, BUY_EXCHANGE_ID, SELL_EXCHANGE_ID } from "./Constants.sol";
 import { IChip } from "./IChip.sol";
 
-import { AccessControlLib } from "@latticexyz/world-modules/src/utils/AccessControlLib.sol";
+import { AccessControl } from "@latticexyz/world/src/AccessControl.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { PipeAccess } from "@biomesaw/experience/src/codegen/tables/PipeAccess.sol";
+import { PipeAccessList } from "@biomesaw/experience/src/codegen/tables/PipeAccessList.sol";
 import { Exchange } from "./codegen/tables/Exchange.sol";
 import { ExchangeFee } from "./codegen/tables/ExchangeFee.sol";
 import { Tokens } from "@biomesaw/experience/src/codegen/tables/Tokens.sol";
@@ -61,6 +63,7 @@ import { ExchangeInfo, ExchangeInfoData } from "@biomesaw/experience/src/codegen
 import { ResourceType } from "@biomesaw/experience/src/codegen/common.sol";
 import { ExchangeNotif, ExchangeNotifData } from "@biomesaw/experience/src/codegen/tables/ExchangeNotif.sol";
 import { NullObjectTypeId } from "@biomesaw/world/src/ObjectTypeIds.sol";
+import { isStorageContainer } from "@biomesaw/world/src/utils/ObjectTypeUtils.sol";
 
 contract Chip is IChip {
   constructor(address _biomeWorldAddress) {
@@ -97,8 +100,78 @@ contract Chip is IChip {
     setSmartItemMetadata(chestEntityId, SmartItemMetadataData({ name: name, description: description }));
   }
 
+  function configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32 callerEntityId,
+    bool depositAllowed,
+    bool withdrawAllowed
+  ) public onlyChipNamespace {
+    uint8 callerObjectTypeId = getObjectType(callerEntityId);
+    if (isStorageContainer(callerObjectTypeId)) {
+      ExchangeInfoData memory buyExchangeInfo = ExchangeInfo.get(chestEntityId, BUY_EXCHANGE_ID);
+      ExchangeInfoData memory sellExchangeInfo = ExchangeInfo.get(chestEntityId, SELL_EXCHANGE_ID);
+      require(
+        buyExchangeInfo.inResourceType == ResourceType.Object &&
+          sellExchangeInfo.outResourceType == ResourceType.Object,
+        "Chest not setup for pipe access"
+      );
+      uint8 objectTypeId = decodeObjectExchangeResourceId(buyExchangeInfo.inResourceId);
+
+      uint16 currentNumItemsInChest = getCount(callerEntityId, objectTypeId);
+
+      uint256 newNumItemsInChest = sellExchangeInfo.outMaxAmount + 1;
+      if (pipeAccessExists(chestEntityId, callerEntityId)) {
+        if (!depositAllowed && !withdrawAllowed) {
+          // removing chest from pipe access list, so decrease inMaxAmount
+          setExchangeInMaxAmount(
+            chestEntityId,
+            BUY_EXCHANGE_ID,
+            buyExchangeInfo.inMaxAmount - (numMaxInChest(objectTypeId) - currentNumItemsInChest)
+          );
+          setExchangeOutMaxAmount(
+            chestEntityId,
+            SELL_EXCHANGE_ID,
+            sellExchangeInfo.outMaxAmount - currentNumItemsInChest
+          );
+          newNumItemsInChest = (sellExchangeInfo.outMaxAmount - currentNumItemsInChest) + 1;
+        }
+      } else {
+        if (depositAllowed || withdrawAllowed) {
+          // adding chest to pipe access list, so increase inMaxAmount
+          setExchangeInMaxAmount(
+            chestEntityId,
+            BUY_EXCHANGE_ID,
+            buyExchangeInfo.inMaxAmount + (numMaxInChest(objectTypeId) - currentNumItemsInChest)
+          );
+          setExchangeOutMaxAmount(
+            chestEntityId,
+            SELL_EXCHANGE_ID,
+            sellExchangeInfo.outMaxAmount + currentNumItemsInChest
+          );
+          newNumItemsInChest = (sellExchangeInfo.outMaxAmount + currentNumItemsInChest) + 1;
+        }
+      }
+
+      uint256 itemExchangeConstant = Exchange.get(chestEntityId, objectTypeId);
+      uint256 newBalance = itemExchangeConstant / newNumItemsInChest;
+      uint256 feePercentage = ExchangeFee.get(chestEntityId, objectTypeId);
+      setExchangeOutUnitAmount(
+        chestEntityId,
+        BUY_EXCHANGE_ID,
+        getSellPrice(itemExchangeConstant, newBalance, newNumItemsInChest, 1)
+      );
+      setExchangeInUnitAmount(
+        chestEntityId,
+        SELL_EXCHANGE_ID,
+        getBuyPrice(itemExchangeConstant, newBalance, feePercentage, newNumItemsInChest, 1)
+      );
+    }
+
+    setPipeAccess(chestEntityId, callerEntityId, depositAllowed, withdrawAllowed);
+  }
+
   function adminTransfer(address paymentToken, uint256 amount, address receiver) public {
-    AccessControlLib.requireOwner(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE), msg.sender);
+    AccessControl.requireOwner(WorldResourceIdLib.encodeNamespace(CHIP_NAMESPACE), msg.sender);
     if (paymentToken == address(this)) {
       (bool sent, ) = receiver.call{ value: amount }("");
       require(sent, "Failed to send Ether");
@@ -141,6 +214,7 @@ contract Chip is IChip {
     uint256 addingBalance = initialCurrencyAmount;
 
     require(getNumInventoryObjects(chestEntityId) == 1, "Chest must only have one item");
+    require(PipeAccessList.lengthAllowedEntityIds(chestEntityId) == 0, "Chest must not have any pipe access");
     require(initialItemAmount > 1, "Initial item amount must be greater than 1");
     require(
       initialItemAmount == getCount(chestEntityId, objectTypeId),
@@ -194,6 +268,28 @@ contract Chip is IChip {
     address admin = ChipAdmin.get(chestEntityId);
     uint256 newBalance = doWithdraw(admin, chestEntityId, amount);
     setExchangeOutMaxAmount(chestEntityId, BUY_EXCHANGE_ID, newBalance);
+
+    ExchangeInfoData memory buyExchangeInfo = ExchangeInfo.get(chestEntityId, BUY_EXCHANGE_ID);
+    ExchangeInfoData memory sellExchangeInfo = ExchangeInfo.get(chestEntityId, SELL_EXCHANGE_ID);
+    if (
+      buyExchangeInfo.inResourceType == ResourceType.Object && sellExchangeInfo.outResourceType == ResourceType.Object
+    ) {
+      uint8 exchangeObjectTypeId = decodeObjectExchangeResourceId(buyExchangeInfo.inResourceId);
+      uint256 itemExchangeConstant = Exchange.get(chestEntityId, exchangeObjectTypeId);
+      uint256 newNumItemsInChest = sellExchangeInfo.outMaxAmount + 1;
+      uint256 feePercentage = ExchangeFee.get(chestEntityId, exchangeObjectTypeId);
+
+      setExchangeOutUnitAmount(
+        chestEntityId,
+        BUY_EXCHANGE_ID,
+        getSellPrice(itemExchangeConstant, newBalance, newNumItemsInChest, 1)
+      );
+      setExchangeInUnitAmount(
+        chestEntityId,
+        SELL_EXCHANGE_ID,
+        getBuyPrice(itemExchangeConstant, newBalance, feePercentage, newNumItemsInChest, 1)
+      );
+    }
   }
 
   // Buy from the perspective of the player
@@ -202,8 +298,8 @@ contract Chip is IChip {
     uint256 itemExchangeConstant,
     uint256 chestBalance,
     uint256 feePercentage,
-    uint16 numItemsInChest,
-    uint16 buyAmount
+    uint256 numItemsInChest,
+    uint256 buyAmount
   ) public view returns (uint256) {
     if (buyAmount == 0) {
       return 0;
@@ -234,8 +330,8 @@ contract Chip is IChip {
   function getSellPrice(
     uint256 itemExchangeConstant,
     uint256 chestBalance,
-    uint16 numItemsInChest,
-    uint16 sellAmount
+    uint256 numItemsInChest,
+    uint256 sellAmount
   ) public view returns (uint256) {
     if (sellAmount == 0) {
       return 0;
@@ -288,6 +384,7 @@ contract Chip is IChip {
     }
     deleteExchanges(targetEntityId);
 
+    deletePipeAccessList(targetEntityId);
     deleteSmartItemMetadata(targetEntityId);
     deleteChipAttacher(targetEntityId);
     deleteChipAdmin(targetEntityId);
@@ -333,7 +430,12 @@ contract Chip is IChip {
       transferContext.targetEntityId,
       transferContext.transferData.objectTypeId
     );
-    uint16 newNumItemsInChest = getCount(transferContext.targetEntityId, transferContext.transferData.objectTypeId);
+    uint256 newNumItemsInChest = sellExchangeInfo.outMaxAmount + 1;
+    if (transferContext.isDeposit) {
+      newNumItemsInChest += transferContext.transferData.numToTransfer;
+    } else {
+      newNumItemsInChest -= transferContext.transferData.numToTransfer;
+    }
     require(newNumItemsInChest > 0, "Chest must have at least one item");
     uint256 newBalance = itemExchangeConstant / newNumItemsInChest;
     setExchangeOutMaxAmount(transferContext.targetEntityId, BUY_EXCHANGE_ID, newBalance);
@@ -410,7 +512,10 @@ contract Chip is IChip {
   function onPipeTransfer(
     ChipOnPipeTransferData memory transferContext
   ) public payable override onlyBiomeWorld returns (bool isAllowed) {
-    return false;
+    return
+      transferContext.isDeposit
+        ? PipeAccess.getDepositAllowed(transferContext.targetEntityId, transferContext.callerEntityId)
+        : PipeAccess.getWithdrawAllowed(transferContext.targetEntityId, transferContext.callerEntityId);
   }
 
   receive() external payable {
