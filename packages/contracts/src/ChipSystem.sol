@@ -26,4 +26,30 @@ contract ChipSystem is System {
     IChip chip = getChipContract();
     chip.setDisplayData(entityId, name, description);
   }
+
+  function configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32 callerEntityId,
+    bool depositAllowed,
+    bool withdrawAllowed
+  ) public {
+    onlyAdmin(chestEntityId);
+    IChip chip = getChipContract();
+    chip.configurePipeAccess(chestEntityId, callerEntityId, depositAllowed, withdrawAllowed);
+  }
+
+  function configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32[] memory addCallerEntityIds,
+    bytes32[] memory removeCallerEntityIds
+  ) public {
+    onlyAdmin(chestEntityId);
+    IChip chip = getChipContract();
+    for (uint256 i = 0; i < addCallerEntityIds.length; i++) {
+      chip.configurePipeAccess(chestEntityId, addCallerEntityIds[i], true, true);
+    }
+    for (uint256 i = 0; i < removeCallerEntityIds.length; i++) {
+      chip.configurePipeAccess(chestEntityId, removeCallerEntityIds[i], false, false);
+    }
+  }
 }

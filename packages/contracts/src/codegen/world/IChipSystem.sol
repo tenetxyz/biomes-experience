@@ -9,7 +9,20 @@ pragma solidity >=0.8.24;
  * @dev This interface is automatically generated from the corresponding system contract. Do not edit manually.
  */
 interface IChipSystem {
-  function testchip__changeAdmin(bytes32 entityId, address newAdmin) external;
+  function overflowchest__changeAdmin(bytes32 entityId, address newAdmin) external;
 
-  function testchip__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+  function overflowchest__setDisplayData(bytes32 entityId, string memory name, string memory description) external;
+
+  function overflowchest__configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32 callerEntityId,
+    bool depositAllowed,
+    bool withdrawAllowed
+  ) external;
+
+  function overflowchest__configurePipeAccess(
+    bytes32 chestEntityId,
+    bytes32[] memory addCallerEntityIds,
+    bytes32[] memory removeCallerEntityIds
+  ) external;
 }
